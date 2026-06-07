@@ -43,8 +43,8 @@
           <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
         return;
       }
-      const aJour = profil.cotisation_payee &&
-        (!profil.cotisation_echeance || new Date(profil.cotisation_echeance) >= new Date());
+      const st = statutCotisation(profil);
+      const aJour = st.aJour;
 
       contenu.innerHTML = `
         <h2 class="section-titre">Mon espace adhérent</h2>
@@ -58,16 +58,16 @@
               <div style="display:flex;gap:1.4rem;margin:1.2rem 0 0.4rem;flex-wrap:wrap;align-items:flex-end">
                 <div>
                   <div class="label">Commune</div><div class="val">${echapper(profil.commune)||'—'}</div>
-                  <div class="label">Échéance</div><div class="val">${profil.cotisation_echeance? new Date(profil.cotisation_echeance).toLocaleDateString('fr-FR'):'—'}</div>
-                  <div class="label">Carte n°</div><div class="val" style="font-size:0.8rem">${profil.id.slice(0,8).toUpperCase()}</div>
+                  <div class="label">Échéance</div><div class="val">${st.echeance}</div>
+                  <div class="label">Carte n°</div><div class="val" style="font-size:0.8rem">${st.numero}</div>
                 </div>
                 <div id="qr"></div>
               </div>
             </div>
             <div class="carte" style="margin-top:1.2rem;border-top-color:var(--corail)">
               <h3>Cotisation</h3>
-              <p style="color:var(--gris)">Le paiement en ligne sera activé prochainement. En attendant, réglez auprès du bureau ; votre statut sera mis à jour.</p>
-              <button class="btn btn-clair" disabled style="margin-top:0.5rem;opacity:0.6">Payer en ligne (bientôt)</button>
+              <p style="color:var(--gris)">Réglez par virement, chèque ou espèces. Votre statut sera mis à jour par le bureau après réception.</p>
+              <a href="cotiser.html" class="btn btn-primaire" style="margin-top:0.5rem">Comment payer ma cotisation →</a>
             </div>
             <div class="carte" style="margin-top:1.2rem;border-top-color:var(--bleu-lagon)">
               <h3>Mes signalements</h3>

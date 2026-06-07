@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payer votre cotisation · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .prose { max-width: 820px; }
+    .encart { background:#fff4ec; border-left:4px solid var(--corail); padding:0.9rem 1.2rem; border-radius:10px; margin:1.2rem 0; }
+    .rappel { background:#fff; border-radius:var(--radius); box-shadow:var(--ombre); padding:1rem 1.3rem; margin-bottom:1.4rem; border-left:4px solid var(--vert-paix); }
+    .rappel .num { font-weight:800; color:var(--bleu-fonce); letter-spacing:1px; }
+    .badge { display:inline-block; padding:0.2rem 0.7rem; border-radius:20px; font-size:0.8rem; font-weight:700; color:#fff; }
+    .badge.ok{ background:#1d6b3f; } .badge.ko{ background:#b2381f; }
+    .pay { background:#fff; border-radius:var(--radius); box-shadow:var(--ombre); padding:1.3rem 1.5rem; margin-bottom:1.2rem; border-top:4px solid var(--bleu-lagon); }
+    .pay h3 { color:var(--bleu-fonce); margin-bottom:0.6rem; display:flex; align-items:center; gap:0.5rem; }
+    .rib { background:#f7f4ec; border-radius:10px; padding:1rem 1.2rem; margin-top:0.6rem; font-size:0.92rem; }
+    .rib dt { color:var(--gris); font-size:0.8rem; }
+    .rib dd { margin:0 0 0.6rem; font-weight:600; }
+    .rib .iban { font-family:"Courier New",monospace; font-size:1.05rem; letter-spacing:1px; }
+    .copie { margin-left:0.5rem; padding:0.2rem 0.6rem; font-size:0.78rem; border:none; border-radius:6px; background:var(--bleu-lagon); color:#fff; cursor:pointer; }
+    .adresse { background:#f7f4ec; border-radius:10px; padding:0.8rem 1.1rem; font-style:normal; line-height:1.5; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <h2 class="section-titre">Payer votre cotisation</h2>
+    <div class="prose">
+      <div id="rappel"></div>
+
+      <p>Plusieurs moyens de paiement sont à votre disposition&nbsp;: <strong>virement bancaire</strong>, <strong>chèque</strong> ou <strong>espèces</strong>. Dans la mesure du possible, privilégiez le <strong>virement</strong> ou le <strong>chèque</strong>.</p>
+
+      <div class="encart">
+        ℹ️ L'appel de cotisation est envoyé au cours du <strong>mois anniversaire de votre adhésion</strong>.
+      </div>
+
+      <div class="pay">
+        <h3>💳 Par virement bancaire</h3>
+        <dl class="rib">
+          <dt>Banque</dt><dd>BANQUE SOCREDO — Agence Tipaerui</dd>
+          <dt>Intitulé du compte</dt><dd>ASS TE ORA HAU – VIVRE EN PAIX</dd>
+          <dt>IBAN</dt><dd class="iban">FR76 1746 9000 2870 2815 0007 977
+            <button class="copie" onclick="copierIban(this)">Copier</button></dd>
+          <dt>BIC</dt><dd>SOCBPFTXXXX</dd>
+          <dt>Détail</dt><dd>Code banque 17469 · Guichet 00028 · Compte 70281500079 · Clé 77</dd>
+        </dl>
+        <p style="margin-top:0.6rem"><strong>⚠️ N'oubliez pas d'indiquer votre numéro d'adhérent</strong> en référence du virement.</p>
+      </div>
+
+      <div class="pay" style="border-top-color:var(--vert-paix)">
+        <h3>✉️ Par chèque</h3>
+        <p>Chèque rédigé à l'ordre de <strong>TE ORA HAU</strong>, adressé à&nbsp;:</p>
+        <address class="adresse">
+          ASSOCIATION TE ORA HAU<br>
+          BP 2524<br>
+          98713 PAPEETE — TAHITI
+        </address>
+        <ul style="margin:0.8rem 0 0 1.2rem">
+          <li>Notez votre <strong>numéro d'adhérent</strong> au dos (si vous le connaissez).</li>
+          <li>Avec une adresse e-mail, vous recevrez un <strong>reçu par courriel</strong>.</li>
+          <li>Pour un reçu papier, joignez une <strong>enveloppe timbrée</strong> à votre adresse.</li>
+        </ul>
+      </div>
+
+      <div class="pay" style="border-top-color:var(--or)">
+        <h3>💵 En espèces</h3>
+        <p>Adressez-vous à l'un des <a href="association.html">membres du bureau</a>, qui remettra le montant de votre cotisation au <strong>Trésorier</strong>.</p>
+      </div>
+
+      <p style="text-align:center;margin-top:1.5rem">
+        <a href="espace.html" class="btn btn-clair">← Retour à mon espace</a>
+      </p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (async function(){
+      await initPage("cotiser");
+      const profil = await monProfil();
+      const r = document.getElementById("rappel");
+      if (profil){
+        const st = statutCotisation(profil);
+        r.className = "rappel";
+        r.innerHTML = `Bonjour <strong>${echapper(profil.nom)}</strong> —
+          cotisation <span class="badge ${st.aJour?'ok':'ko'}">${st.aJour?'à jour':'à régler'}</span>
+          ${st.aJour?`(échéance le ${st.echeance})`:''}.<br>
+          Votre numéro d'adhérent&nbsp;: <span class="num">${st.numero}</span> — à indiquer lors de votre paiement.`;
+      }
+    })();
+    function copierIban(btn){
+      navigator.clipboard.writeText("FR7617469000287028150007977").then(()=>{
+        const t = btn.textContent; btn.textContent = "Copié ✓";
+        setTimeout(()=>btn.textContent = t, 1500);
+      }).catch(()=>{ btn.textContent = "FR76 1746…"; });
+    }
+  </script>
+</body>
+</html>

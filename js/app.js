@@ -59,6 +59,17 @@ async function monProfil() {
   return data || null;
 }
 
+// Statut de cotisation — source de vérité unique (utilisée par Mon espace et Cotiser)
+function statutCotisation(profil) {
+  const aJour = profil.cotisation_payee &&
+    (!profil.cotisation_echeance || new Date(profil.cotisation_echeance) >= new Date());
+  return {
+    aJour,
+    echeance: profil.cotisation_echeance ? new Date(profil.cotisation_echeance).toLocaleDateString("fr-FR") : "—",
+    numero: profil.id.slice(0, 8).toUpperCase(),
+  };
+}
+
 function traduireErreur(m) {
   if (/already registered/i.test(m)) return "Un compte existe déjà avec cet e-mail.";
   if (/Invalid login/i.test(m)) return "E-mail ou mot de passe incorrect.";
@@ -75,6 +86,7 @@ async function rendreNav(pageActive) {
     { href: "comprendre.html", label: "Comprendre le son", id: "comprendre" },
     { href: "carte.html", label: "Carte des nuisances", id: "carte" },
     { href: "association.html", label: "L'association", id: "association" },
+    { href: "cotiser.html", label: "Cotiser", id: "cotiser" },
     { href: "forum.html", label: "Forum", id: "forum" },
   ];
 

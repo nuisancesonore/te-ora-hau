@@ -86,8 +86,8 @@ async function rendreNav(pageActive) {
     { href: "carte.html", label: "Carte des nuisances", id: "carte" },
     { href: "comprendre.html", label: "Comprendre le son", id: "comprendre" },
     { href: "le-bruit.html", label: "Le bruit & la loi", id: "bruit" },
-    { href: "cotiser.html", label: "Cotiser", id: "cotiser" },
     { href: "forum.html", label: "Forum", id: "forum" },
+    { href: "cotiser.html", label: "Cotiser", id: "cotiser" },
   ];
 
   let menuLiens = liens.map(l => {

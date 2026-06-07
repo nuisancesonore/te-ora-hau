@@ -37,6 +37,33 @@
       border: 3px solid #fff;
     }
     .carte-membre-bureau p { margin-bottom: 0.2rem; }
+
+    .edito-toggle {
+      background: #fff; border-radius: var(--radius); box-shadow: var(--ombre);
+      margin-bottom: 1.2rem; border-top: 4px solid var(--bleu-lagon); overflow: hidden;
+    }
+    .edito-toggle summary {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem 1.3rem; cursor: pointer; list-style: none;
+    }
+    .edito-toggle summary::-webkit-details-marker { display: none; }
+    .edito-toggle summary:hover { background: #f7f4ec; }
+    .photo-pres {
+      width: 74px; height: 74px; border-radius: 50%;
+      object-fit: cover; object-position: center top; flex: 0 0 auto;
+      box-shadow: 0 2px 8px rgba(6,74,84,0.2); border: 2px solid #fff;
+    }
+    .avatar-initiales {
+      width: 74px; height: 74px; border-radius: 50%; flex: 0 0 auto;
+      background: var(--bleu-fonce); color: #fff; display: grid; place-items: center;
+      font-weight: 800; font-size: 1.25rem; letter-spacing: 1px;
+    }
+    .pres-titre { flex: 1; }
+    .pres-titre h3 { color: var(--bleu-fonce); margin: 0; font-size: 1.1rem; }
+    .pres-titre .sous { font-size: 0.85rem; color: var(--gris); }
+    .chevron { color: var(--corail); font-size: 1.3rem; transition: transform 0.2s; }
+    .edito-toggle[open] .chevron { transform: rotate(90deg); }
+    .edito-toggle .corps { padding: 0 1.4rem 1.4rem; }
   </style>
 </head>
 <body>
@@ -107,10 +134,18 @@
 
     <h2 class="section-titre" style="margin-top:2.5rem">Le mot des présidents</h2>
 
-    <div class="edito">
-      <h3>Éditorial de la Présidente</h3>
-      <p class="signature" style="text-align:left;margin-top:0.2rem">Élue le 16 mars 2024</p>
-      <div class="prose" style="margin-top:0.6rem">
+    <p style="color:var(--gris);margin-bottom:1rem">Cliquez sur une carte pour lire l'éditorial.</p>
+
+    <details class="edito-toggle">
+      <summary>
+        <img class="photo-pres" src="images/Linda%20Maea.png" alt="Linda Maea TEMATUA">
+        <div class="pres-titre">
+          <h3>Éditorial de la Présidente</h3>
+          <div class="sous">Linda Maea TEMATUA — élue le 16 mars 2024</div>
+        </div>
+        <span class="chevron">▸</span>
+      </summary>
+      <div class="corps prose">
         <p><em>Ia Orana,</em> chers membres et visiteurs. C'est avec gratitude et un engagement renouvelé que je vous accueille. Depuis notre création, nous nous consacrons sans relâche à la défense de ceux qui souffrent des nuisances sonores, ces fléaux invisibles qui détériorent notre qualité de vie.</p>
         <p>Qu'elles soient industrielles, liées aux transports ou à des comportements individuels irresponsables, ces nuisances affectent le sommeil, la concentration, et peuvent entraîner des troubles cardiovasculaires. Chacun a le droit de vivre dans un environnement paisible et sain. Nous nous engageons à&nbsp;:</p>
         <ul class="engagements">
@@ -120,18 +155,25 @@
           <li>Innover et adapter nos moyens d'action.</li>
         </ul>
         <p>Ensemble, nous pouvons faire la différence. En rejoignant Te Ora Hau, vous soutenez une cause vitale et contribuez à un futur où chacun profite de la tranquillité et du bien-être.</p>
+        <p class="signature">— Linda Maea TEMATUA, Présidente</p>
       </div>
-      <p class="signature">— Linda Maea TEMATUA, Présidente</p>
-    </div>
+    </details>
 
-    <div class="edito" style="border-top-color:var(--corail)">
-      <h3>Éditorial du Président fondateur</h3>
-      <div class="prose" style="margin-top:0.6rem">
+    <details class="edito-toggle" style="border-top-color:var(--corail)">
+      <summary>
+        <span class="avatar-initiales">JMC</span>
+        <div class="pres-titre">
+          <h3>Éditorial du Président fondateur</h3>
+          <div class="sous">Jean-Michel CARLSON, fondateur</div>
+        </div>
+        <span class="chevron">▸</span>
+      </summary>
+      <div class="corps prose">
         <p>Sous-produit de la civilisation technologique et urbaine, le bruit est l'un des fléaux les plus perturbants de la vie moderne. Il peut léser l'oreille interne, atteindre le système nerveux, modifier le comportement et la vigilance, altérer les fonctions sensorielles et motrices.</p>
         <p>Seule une prise de conscience collective et une ferme volonté de changer les mentalités vaincront l'indifférence et l'inertie. Si vous êtes décidé, au-delà de votre cas personnel, à mener ce rude combat contre l'incivisme, adhérez et militez à notre cause. <strong>Nous avons besoin de vous tous.</strong></p>
+        <p class="signature">— Jean-Michel CARLSON, Président fondateur</p>
       </div>
-      <p class="signature">— Jean-Michel CARLSON, Président fondateur</p>
-    </div>
+    </details>
 
     <h2 class="section-titre" style="margin-top:2.5rem">Notre histoire</h2>
     <ul class="frise">

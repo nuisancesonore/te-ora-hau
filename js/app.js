@@ -82,10 +82,10 @@ async function rendreNav(pageActive) {
   const profil = await monProfil();
   const liens = [
     { href: "index.html", label: "Accueil", id: "accueil" },
-    { href: "le-bruit.html", label: "Le bruit & la loi", id: "bruit" },
-    { href: "comprendre.html", label: "Comprendre le son", id: "comprendre" },
-    { href: "carte.html", label: "Carte des nuisances", id: "carte" },
     { href: "association.html", label: "L'association", id: "association" },
+    { href: "carte.html", label: "Carte des nuisances", id: "carte" },
+    { href: "comprendre.html", label: "Comprendre le son", id: "comprendre" },
+    { href: "le-bruit.html", label: "Le bruit & la loi", id: "bruit" },
     { href: "cotiser.html", label: "Cotiser", id: "cotiser" },
     { href: "forum.html", label: "Forum", id: "forum" },
   ];

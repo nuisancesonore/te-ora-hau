@@ -10,6 +10,7 @@ create table if not exists public.profils (
   email text,
   commune text default '',
   type_nuisance text default '',
+  type_adhesion text,                            -- adhérent/foyer, sympathisant, assesseur…
   role text not null default 'membre',          -- 'membre' ou 'bureau'
   cotisation_payee boolean not null default false,
   cotisation_echeance date,
@@ -36,6 +37,7 @@ create table if not exists public.signalements (
 );
 
 -- Mise à jour des bases existantes (idempotent)
+alter table public.profils add column if not exists type_adhesion text;
 alter table public.signalements add column if not exists quartier text;
 alter table public.signalements add column if not exists adresse_source text;
 alter table public.signalements add column if not exists adresse_plaignant text;

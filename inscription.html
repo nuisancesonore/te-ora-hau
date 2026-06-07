@@ -11,10 +11,18 @@
 
   <main>
     <div class="form-wrap">
-      <h2>Devenir membre</h2>
-      <p class="intro">Créez votre compte pour rejoindre la lutte contre les nuisances sonores.</p>
+      <h2>Adhérer à Te Ora Hau</h2>
+      <p class="intro">Rejoignez la lutte contre les nuisances sonores. Choisissez votre profil, créez votre compte, puis soutenez l'association par la cotisation.</p>
       <div id="msg" class="message"></div>
       <form id="form-inscription">
+        <div class="champ">
+          <label for="type_adhesion">Je suis…</label>
+          <select id="type_adhesion" required>
+            <option value="Adhérent individuel / foyer" selected>Adhérent individuel / foyer (3 000 XPF/an)</option>
+            <option value="Sympathisant / soutien">Sympathisant / soutien</option>
+            <option value="Assesseur">Assesseur (soutien &amp; suppléance)</option>
+          </select>
+        </div>
         <div class="champ">
           <label for="nom">Nom et prénom</label>
           <input type="text" id="nom" required placeholder="Ex. Heimata TEROOATEA">
@@ -37,11 +45,16 @@
         </div>
         <button type="submit" class="btn btn-primaire btn-bloc">Créer mon compte</button>
       </form>
-      <p class="form-foot">Déjà membre ? <a href="connexion.html">Se connecter</a></p>
+      <p class="form-foot">Déjà adhérent ? <a href="connexion.html">Se connecter</a> — le renouvellement de cotisation se fait dans <strong>Mon espace</strong>.</p>
       <p class="form-foot" style="margin-top:0.5rem">
-        Après inscription, soutenez l'association via la <a href="cotiser.html">cotisation</a> (3 000 XPF/an par foyer).<br>
-        Vous préférez le papier&nbsp;? <a href="formulaire-adhesion.html">Formulaire d'adhésion à imprimer 🖨️</a>
+        Vous préférez le papier&nbsp;? <a href="formulaire-adhesion.html">Formulaire d'adhésion à imprimer</a>
       </p>
+    </div>
+
+    <div class="form-wrap" style="margin-top:1.4rem;border-top:4px solid var(--bleu-lagon)">
+      <h2 style="color:var(--bleu-fonce)">Association ou collectif affilié&nbsp;?</h2>
+      <p class="intro">Vous représentez une <strong>association</strong> ou un <strong>collectif</strong> qui souhaite s'affilier à Te Ora Hau&nbsp;? Les modalités sont spécifiques&nbsp;: contactez-nous, nous vous accompagnons.</p>
+      <a href="contact.html" class="btn btn-clair btn-bloc">Nous contacter</a>
     </div>
   </main>
 
@@ -59,6 +72,7 @@
     document.getElementById("form-inscription").addEventListener("submit", async function(e) {
       e.preventDefault();
       if (!TOH_PRET) { montrer("err", "Supabase n'est pas configuré (voir SETUP.md)."); return; }
+      const type = document.getElementById("type_adhesion").value;
       const nom = document.getElementById("nom").value.trim();
       const commune = document.getElementById("commune").value;
       const email = document.getElementById("email").value.trim();
@@ -68,7 +82,14 @@
       montrer("ok", "Création du compte…");
       const res = await inscrire(nom, email, mdp, commune);
       montrer(res.ok ? "ok" : "err", res.msg);
-      if (res.ok) setTimeout(() => location.href = res.session ? "espace.html" : "connexion.html", 1500);
+      if (res.ok && res.session) {
+        // Enregistre le type d'adhésion (sans bloquer si la colonne n'existe pas encore)
+        try { await sb.from("profils").update({ type_adhesion: type }).eq("id", res.session.user.id); } catch (_) {}
+        montrer("ok", "Bienvenue ! Dernière étape : votre cotisation pour soutenir Te Ora Hau.");
+        setTimeout(() => location.href = "cotiser.html", 1500);
+      } else if (res.ok) {
+        setTimeout(() => location.href = "connexion.html", 1500);
+      }
     });
     function montrer(type, texte) { msg.className = "message " + type; msg.textContent = texte; }
   </script>

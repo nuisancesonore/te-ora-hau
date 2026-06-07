@@ -107,12 +107,19 @@ async function rendreNav(pageActive) {
               <a href="inscription.html" class="bouton">Adhérer</a>`;
   }
 
-  document.getElementById("nav-mount").innerHTML = `
+  const mount = document.getElementById("nav-mount");
+  mount.innerHTML = `
     <section class="banniere">
       <a href="index.html"><img src="images/bandeau.png"
          alt="STOP au bruit — Pour vivre en paix sans nuisances sonores"></a>
-    </section>
-    <header class="site">
+    </section>`;
+
+  // Le menu est inséré comme enfant direct du <body> (après #nav-mount),
+  // pour que "position: sticky" fonctionne sur tout le défilement.
+  const ancien = document.getElementById("toh-header");
+  if (ancien) ancien.remove();
+  mount.insertAdjacentHTML("afterend", `
+    <header class="site" id="toh-header">
       <div class="nav-inner">
         <a href="index.html" class="brand">
           <span class="logo"><img src="images/logo%20TOH.PNG" alt="Logo Te Ora Hau"></span>
@@ -123,7 +130,7 @@ async function rendreNav(pageActive) {
         </a>
         <nav class="menu">${menuLiens}${droite}</nav>
       </div>
-    </header>`;
+    </header>`);
 
   if (!TOH_PRET) afficherBanniereConfig();
 

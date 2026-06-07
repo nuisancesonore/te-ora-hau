@@ -27,11 +27,6 @@ a:hover { text-decoration: underline; }
 img { max-width: 100%; display: block; }
 
 /* ---------- En-tête / Navigation ---------- */
-/* #nav-mount "disparaît" en tant que boîte : la bannière et le menu se
-   comportent comme des enfants directs du <body>, ce qui permet au menu
-   de rester collé en haut pendant tout le défilement. */
-#nav-mount { display: contents; }
-
 header.site {
   background: linear-gradient(135deg, var(--bleu-fonce), var(--bleu-lagon));
   color: var(--blanc);

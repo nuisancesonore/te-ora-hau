@@ -27,10 +27,18 @@ create table if not exists public.signalements (
   intensite text,                     -- faible / moyenne / forte / insupportable
   horaire text,                       -- jour / soir / nuit
   recurrence text,                    -- ponctuel / régulier / permanent
+  quartier text,                      -- localité précise (Taravao, Afaahiti…)
+  adresse_source text,                -- adresse de la source (auto-remplie)
+  adresse_plaignant text,             -- adresse de la personne qui subit
   lat double precision,
   lng double precision,
   cree_le timestamptz not null default now()
 );
+
+-- Mise à jour des bases existantes (idempotent)
+alter table public.signalements add column if not exists quartier text;
+alter table public.signalements add column if not exists adresse_source text;
+alter table public.signalements add column if not exists adresse_plaignant text;
 
 -- ---------- 3. Journal de bruit personnel ----------
 create table if not exists public.journal_bruit (
@@ -125,6 +133,11 @@ create policy signalements_select_auth on public.signalements
 drop policy if exists signalements_insert_auth on public.signalements;
 create policy signalements_insert_auth on public.signalements
   for insert with check (auth.uid() = auteur);
+
+drop policy if exists signalements_update_owner_bureau on public.signalements;
+create policy signalements_update_owner_bureau on public.signalements
+  for update using (auteur = auth.uid() or public.is_bureau())
+  with check (auteur = auth.uid() or public.is_bureau());
 
 drop policy if exists signalements_delete_owner_bureau on public.signalements;
 create policy signalements_delete_owner_bureau on public.signalements

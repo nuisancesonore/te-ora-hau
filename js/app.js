@@ -171,4 +171,36 @@ function maintenantTexte() {
   const d = new Date(); const p = n => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
-const COMMUNES_PF = ["Papeete","Faa'a","Punaauia","Pirae","Arue","Mahina","Paea","Papara","Moorea-Maiao","Taiarapu-Est","Taiarapu-Ouest","Teva I Uta","Autre"];
+const COMMUNES_PF = ["Papeete","Faa'a","Punaauia","Paea","Papara","Teva I Uta","Taiarapu-Ouest","Taiarapu-Est","Pirae","Arue","Mahina","Hitiaa O Te Ra","Moorea-Maiao","Autre"];
+
+// Localités / communes associées par commune (pour préciser le lieu)
+const COMMUNES_DETAIL = {
+  "Papeete": ["Tipaerui","Paofai","Mamao","Titioro","Patutoa","Fare Ute","Motu Uta","Mission","Sainte-Amélie"],
+  "Faa'a": ["Puurai","Pamatai","Heiri","Tavararo","Saint-Hilaire","Hotuarea","Oremu"],
+  "Punaauia": ["Outumaoro","Punavai","Taapuna","Taina","Tiapa","Atiue","Saint-Hilaire"],
+  "Paea": ["Paea centre","Te Oropaa"],
+  "Papara": ["Papara centre","Taharuu","Mataoa"],
+  "Teva I Uta": ["Mataiea","Papeari"],
+  "Taiarapu-Ouest": ["Teahupoo","Toahotu","Vairao"],
+  "Taiarapu-Est": ["Taravao","Afaahiti","Faaone","Pueu","Tautira"],
+  "Pirae": ["Hamuta","Aorai","Pater","Tenaho","Orovini"],
+  "Arue": ["Erima","Ahonu","Auae","Hitimahana"],
+  "Mahina": ["Pointe Vénus","Tahara'a","Orofara","Ahonu"],
+  "Hitiaa O Te Ra": ["Hitiaa","Mahaena","Papenoo","Tiarei"],
+  "Moorea-Maiao": ["Afareaitu","Haapiti","Paopao","Papetoai","Teavaro","Maiao"],
+  "Autre": [],
+};
+
+// Géocodage inverse : coordonnées -> commune + quartier + adresse (OpenStreetMap)
+async function reverseGeocode(lat, lng) {
+  try {
+    const r = await fetch("https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&addressdetails=1&accept-language=fr&lat=" + lat + "&lon=" + lng);
+    const d = await r.json();
+    const a = d.address || {};
+    return {
+      commune: a.municipality || a.town || a.city || a.county || a.region || "",
+      quartier: a.suburb || a.neighbourhood || a.quarter || a.village || a.hamlet || a.locality || "",
+      adresse: d.display_name || "",
+    };
+  } catch (_) { return null; }
+}

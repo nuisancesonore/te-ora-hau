@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes signalements · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .sig { background:#fff; border-radius:var(--radius); box-shadow:var(--ombre); padding:1.1rem 1.3rem; margin-bottom:1rem; border-left:4px solid var(--bleu-lagon); }
+    .sig h3 { color:var(--bleu-fonce); font-size:1.05rem; margin-bottom:0.3rem; }
+    .sig .meta { font-size:0.85rem; color:var(--gris); margin-bottom:0.2rem; }
+    .sig .actions { margin-top:0.7rem; display:flex; gap:0.5rem; flex-wrap:wrap; }
+    .mini { padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:8px; border:none; cursor:pointer; font-weight:600; }
+    .mini.vert{ background:var(--vert-paix); color:#fff; } .mini.clair{ background:#eee; } .mini.rouge{ background:#b2381f; color:#fff; }
+    .edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.7rem; margin-top:0.6rem; }
+    @media(max-width:560px){ .edit-grid{ grid-template-columns:1fr; } }
+    .edit-grid label { font-size:0.8rem; font-weight:600; display:block; margin-bottom:0.2rem; }
+    .edit-grid input, .edit-grid select, .edit-grid textarea { width:100%; padding:0.5rem 0.6rem; border:1.5px solid #d6d6cf; border-radius:8px; font-family:inherit; }
+    .pleine { grid-column:1/-1; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <div id="footer-mount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    const TYPES = ["Voisinage (habitation)","Sono de voiture","Bar / restaurant / discothèque","Chantier / travaux","Deux-roues / moteur","Animaux","Manifestation / fête","Autre"];
+    const HORAIRES = ["Jour","Soir","Nuit (après 22h)"];
+    const INTENSITES = ["Faible","Moyenne","Forte","Insupportable"];
+    const RECURRENCES = ["Ponctuel","Régulier","Permanent"];
+    let UID = null;
+
+    (async function(){
+      await initPage("mes-signalements");
+      const contenu = document.getElementById("contenu");
+      const profil = await monProfil();
+      if (!profil){
+        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
+          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
+          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Connectez-vous pour gérer vos signalements.</p>
+          <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
+        return;
+      }
+      const s = await sessionActive(); UID = s.user.id;
+      await charger();
+    })();
+
+    function opts(liste, val){ return liste.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join(""); }
+    function optsCommune(val){ return `<option value="">— Choisir —</option>`+COMMUNES_PF.map(c=>`<option ${c===val?'selected':''}>${c}</option>`).join(""); }
+
+    async function charger(){
+      const contenu = document.getElementById("contenu");
+      const { data, error } = await sb.from("signalements").select("*").eq("auteur", UID).order("cree_le",{ascending:false});
+      if (error){ contenu.innerHTML = `<p style="color:#b2381f">Erreur : ${error.message}</p>`; return; }
+      let html = `<h2 class="section-titre">Mes signalements</h2>
+        <p style="color:var(--gris);margin-bottom:1.4rem">${data.length} signalement(s). Vous pouvez les modifier ou les supprimer.
+        <a href="signaler.html">+ Nouveau signalement</a></p>`;
+      if (!data.length){
+        html += `<div class="sig">Aucun signalement pour l'instant. <a href="signaler.html">En créer un</a>.</div>`;
+      }
+      data.forEach(sg => {
+        html += `<div class="sig" id="sig-${sg.id}">${vue(sg)}</div>`;
+      });
+      contenu.innerHTML = html;
+    }
+
+    function vue(sg){
+      const lieu = (echapper(sg.commune)||'') + (sg.quartier?' — '+echapper(sg.quartier):'');
+      const geo = (sg.lat!=null) ? '📍 géolocalisé' : '⚠️ sans point sur la carte';
+      return `
+        <h3>${echapper(sg.type)||'Signalement'}</h3>
+        <div class="meta">${lieu} · ${echapper(sg.horaire)||''} · Intensité ${echapper(sg.intensite)||''} · ${echapper(sg.recurrence)||''}</div>
+        ${sg.adresse_source?`<div class="meta">Source : ${echapper(sg.adresse_source)}</div>`:''}
+        ${sg.adresse_plaignant?`<div class="meta">Plaignant : ${echapper(sg.adresse_plaignant)}</div>`:''}
+        ${sg.description?`<div style="margin-top:0.3rem">${echapper(sg.description)}</div>`:''}
+        <div class="meta" style="margin-top:0.3rem">${geo} · ${new Date(sg.cree_le).toLocaleDateString('fr-FR')}</div>
+        <div class="actions">
+          <button class="mini vert" onclick="editer('${sg.id}')">✏️ Modifier</button>
+          <button class="mini rouge" onclick="supprimer('${sg.id}')">🗑️ Supprimer</button>
+        </div>`;
+    }
+
+    const CACHE = {};
+    async function editer(id){
+      const { data } = await sb.from("signalements").select("*").eq("id", id).single();
+      CACHE[id] = data;
+      const box = document.getElementById("sig-"+id);
+      box.innerHTML = `
+        <div class="edit-grid">
+          <div><label>Type</label><select id="e-type-${id}">${opts(TYPES, data.type)}</select></div>
+          <div><label>Commune</label><select id="e-commune-${id}">${optsCommune(data.commune)}</select></div>
+          <div><label>Quartier / localité</label><input id="e-quartier-${id}" value="${attr(data.quartier)}"></div>
+          <div><label>Horaire</label><select id="e-horaire-${id}">${opts(HORAIRES, data.horaire)}</select></div>
+          <div><label>Intensité</label><select id="e-intensite-${id}">${opts(INTENSITES, data.intensite)}</select></div>
+          <div><label>Récurrence</label><select id="e-recurrence-${id}">${opts(RECURRENCES, data.recurrence)}</select></div>
+          <div class="pleine"><label>Adresse de la source</label><input id="e-source-${id}" value="${attr(data.adresse_source)}"></div>
+          <div class="pleine"><label>Votre adresse (plaignant)</label><input id="e-plaignant-${id}" value="${attr(data.adresse_plaignant)}"></div>
+          <div class="pleine"><label>Description</label><textarea id="e-desc-${id}" rows="2">${echapper(data.description)}</textarea></div>
+        </div>
+        <div id="emsg-${id}" class="message"></div>
+        <div class="actions">
+          <button class="mini vert" onclick="enregistrer('${id}')">💾 Enregistrer</button>
+          <button class="mini clair" onclick="annuler('${id}')">Annuler</button>
+        </div>`;
+    }
+    function annuler(id){ document.getElementById("sig-"+id).innerHTML = vue(CACHE[id]); }
+
+    async function enregistrer(id){
+      const maj = {
+        type: val("e-type-"+id), commune: val("e-commune-"+id), quartier: val("e-quartier-"+id),
+        horaire: val("e-horaire-"+id), intensite: val("e-intensite-"+id), recurrence: val("e-recurrence-"+id),
+        adresse_source: val("e-source-"+id), adresse_plaignant: val("e-plaignant-"+id),
+        description: val("e-desc-"+id),
+      };
+      const { error } = await sb.from("signalements").update(maj).eq("id", id);
+      const m = document.getElementById("emsg-"+id);
+      if (error){ m.className="message err"; m.textContent="Erreur : "+error.message; return; }
+      const { data } = await sb.from("signalements").select("*").eq("id", id).single();
+      document.getElementById("sig-"+id).innerHTML = vue(data);
+    }
+
+    async function supprimer(id){
+      if (!confirm("Supprimer définitivement ce signalement ?")) return;
+      const { error } = await sb.from("signalements").delete().eq("id", id);
+      if (error){ alert("Erreur : "+error.message); return; }
+      const el = document.getElementById("sig-"+id); if (el) el.remove();
+    }
+
+    function val(id){ return (document.getElementById(id).value||"").trim(); }
+    function attr(s){ return String(s==null?"":s).replace(/"/g,"&quot;"); }
+  </script>
+</body>
+</html>

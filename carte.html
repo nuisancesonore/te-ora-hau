@@ -52,8 +52,10 @@
         L.circleMarker([s.lat, s.lng], {
           radius:9, color:"#fff", weight:2, fillColor:couleur(s.intensite), fillOpacity:0.9,
         }).addTo(map).bindPopup(
-          `<strong>${echapper(s.type)}</strong><br>${echapper(s.commune)||''} · ${echapper(s.horaire)||''}<br>`+
+          `<strong>${echapper(s.type)}</strong><br>`+
+          `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}<br>`+
           `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
+          (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+
           (s.description?`<br><em>${echapper(s.description)}</em>`:"")
         );
       });

@@ -1,10 +1,10 @@
 /* ============================================================
-   Configuration Supabase — À REMPLIR (voir SETUP.md)
-   1. Créez un projet gratuit sur https://supabase.com
-   2. Project Settings → API : copiez l'URL et la clé "anon public"
-   3. Collez-les ci-dessous, puis exécutez supabase-setup.sql
+   Configuration Supabase — projet "te-ora-hau"
+   La clé "publishable" est publique par conception : la sécurité
+   repose sur les règles RLS (voir supabase-setup.sql).
+   Ne jamais mettre ici une clé "secret" / "service_role".
    ============================================================ */
 window.TOH_CONFIG = {
-  SUPABASE_URL: "https://VOTRE-PROJET.supabase.co",
-  SUPABASE_ANON_KEY: "VOTRE_CLE_ANON_PUBLIC",
+  SUPABASE_URL: "https://alaesbkvfprgpngrowbt.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_R0hXlownDkPs0aCMvGMNaw_qU5gGkcB",
 };

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Le bruit & la loi · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .prose { max-width: 760px; }
+    .prose p { margin-bottom: 1rem; }
+    .prose h3 { color: var(--bleu-fonce); margin: 1.6rem 0 0.6rem; }
+    .encart {
+      background: #fff4ec; border-left: 4px solid var(--corail);
+      padding: 1rem 1.2rem; border-radius: 10px; margin: 1.2rem 0;
+    }
+    .liste-claire { list-style: none; }
+    .liste-claire li { padding: 0.35rem 0 0.35rem 1.6rem; position: relative; }
+    .liste-claire li::before { content: "▸"; position: absolute; left: 0; color: var(--corail); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <h2 class="section-titre">Le bruit & la réglementation</h2>
+
+    <div class="prose">
+      <p>Au-delà d'une certaine intensité et <strong>quelle que soit son origine</strong>, le bruit est interdit de jour comme de nuit.</p>
+
+      <div class="encart">
+        <strong>⏰ Après 22 heures</strong>, le bruit excessif constitue un <strong>délit pénal qualifié de tapage nocturne</strong>.
+      </div>
+
+      <p>Sont concernés notamment&nbsp;:</p>
+      <ul class="liste-claire">
+        <li>les bruits provenant d'habitations voisines&nbsp;;</li>
+        <li>les voitures équipées de matériel sono de forte puissance&nbsp;;</li>
+        <li>les individus porteurs de diffuseurs sonores ou autres instruments, utilisés de façon gênante par leur proximité, leur intensité et leur durée.</li>
+      </ul>
+
+      <p>Le bruit a des <strong>niveaux de pression acoustique qu'il convient de respecter</strong>. Excepté le <strong>14 juillet</strong> et le <strong>1ᵉʳ de l'An</strong>, aucune autorité n'a le pouvoir d'autoriser des manifestations bruyantes.</p>
+
+      <h3>Pourquoi agir&nbsp;?</h3>
+      <p>Le bruit excessif&nbsp;:</p>
+      <ul class="liste-claire">
+        <li>est générateur de troubles de voisinage&nbsp;;</li>
+        <li>est nocif pour la santé&nbsp;;</li>
+        <li>peut détruire de façon irrémédiable l'appareil auditif&nbsp;;</li>
+        <li>peut rendre dépressif, agressif, parfois violent, celui qui le subit.</li>
+      </ul>
+      <p><strong>Il faut dénoncer les excès de bruit. Il y va du bien-être de tous.</strong> Unissons-nous et luttons ensemble contre ce fléau.</p>
+
+      <h2 class="section-titre" style="margin-top:2.5rem">Un fléau de la vie moderne</h2>
+      <p>Sous-produit de la civilisation technologique et urbaine, le bruit est l'un des fléaux les plus perturbants de la vie moderne. Il peut provoquer des lésions spécifiques de l'oreille interne et modifier son fonctionnement.</p>
+      <p>Il provoque aussi des dommages plus généraux et tout aussi dangereux&nbsp;: atteintes du système nerveux, modification du comportement et du niveau de vigilance, altération des fonctions sensorielles et motrices. Le bruit porte atteinte à notre santé et gâche nos journées comme nos nuits.</p>
+
+      <div class="encart">
+        Seule une <strong>prise de conscience collective</strong> et une ferme volonté de changer les mentalités modifieront le climat actuel de dégradation de notre qualité de vie. Au-delà de votre cas personnel, adhérez et militez à notre cause&nbsp;: <strong>nous avons besoin de vous tous.</strong>
+      </div>
+
+      <p style="text-align:center;margin-top:1.5rem">
+        <a href="inscription.html" class="btn btn-primaire">Adhérer à l'association</a>
+      </p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>initPage("bruit");</script>
+</body>
+</html>

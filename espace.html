@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon espace · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .layout { display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; align-items:start; }
+    @media (max-width:760px){ .layout{ grid-template-columns:1fr; } }
+    .carte-membre {
+      background: linear-gradient(135deg, var(--bleu-fonce), var(--bleu-lagon));
+      color:#fff; border-radius:18px; padding:1.6rem; box-shadow:var(--ombre);
+    }
+    .carte-membre .ligne { display:flex; justify-content:space-between; align-items:center; }
+    .carte-membre h3 { font-size:1.3rem; }
+    .carte-membre .label { font-size:0.72rem; opacity:0.8; text-transform:uppercase; letter-spacing:1px; }
+    .carte-membre .val { font-size:1rem; font-weight:600; margin-bottom:0.6rem; }
+    .badge { display:inline-block; padding:0.25rem 0.7rem; border-radius:20px; font-size:0.8rem; font-weight:700; }
+    .badge.ok { background:#1d6b3f; }
+    .badge.ko { background:#b2381f; }
+    #qr { background:#fff; padding:8px; border-radius:10px; width:fit-content; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <div id="footer-mount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (async function() {
+      await initPage("espace");
+      const contenu = document.getElementById("contenu");
+      const profil = await monProfil();
+      if (!profil) {
+        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
+          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
+          <p style="margin:0.6rem 0 1.2rem;color:var(--gris)">Connectez-vous pour accéder à votre espace.</p>
+          <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
+        return;
+      }
+      const aJour = profil.cotisation_payee &&
+        (!profil.cotisation_echeance || new Date(profil.cotisation_echeance) >= new Date());
+
+      contenu.innerHTML = `
+        <h2 class="section-titre">Mon espace adhérent</h2>
+        <div class="layout">
+          <div>
+            <div class="carte-membre">
+              <div class="ligne">
+                <div><div class="label">Membre</div><h3>${echapper(profil.nom)}</h3></div>
+                <span class="badge ${aJour?'ok':'ko'}">${aJour?'À jour':'Cotisation à régler'}</span>
+              </div>
+              <div style="display:flex;gap:1.4rem;margin:1.2rem 0 0.4rem;flex-wrap:wrap;align-items:flex-end">
+                <div>
+                  <div class="label">Commune</div><div class="val">${echapper(profil.commune)||'—'}</div>
+                  <div class="label">Échéance</div><div class="val">${profil.cotisation_echeance? new Date(profil.cotisation_echeance).toLocaleDateString('fr-FR'):'—'}</div>
+                  <div class="label">Carte n°</div><div class="val" style="font-size:0.8rem">${profil.id.slice(0,8).toUpperCase()}</div>
+                </div>
+                <div id="qr"></div>
+              </div>
+            </div>
+            <div class="carte" style="margin-top:1.2rem;border-top-color:var(--corail)">
+              <h3>Cotisation</h3>
+              <p style="color:var(--gris)">Le paiement en ligne sera activé prochainement. En attendant, réglez auprès du bureau ; votre statut sera mis à jour.</p>
+              <button class="btn btn-clair" disabled style="margin-top:0.5rem;opacity:0.6">Payer en ligne (bientôt)</button>
+            </div>
+          </div>
+
+          <div class="form-wrap" style="max-width:100%;margin:0">
+            <h2 style="color:var(--bleu-fonce)">Mon profil</h2>
+            <p class="intro">Ces informations aident l'association à regrouper les adhérents touchés par les mêmes nuisances.</p>
+            <div id="msg" class="message"></div>
+            <form id="form-profil">
+              <div class="champ"><label>Nom et prénom</label><input id="nom" value="${echapper(profil.nom)}" required></div>
+              <div class="champ"><label>Commune</label><select id="commune"></select></div>
+              <div class="champ"><label>Type de nuisance subie</label>
+                <input id="type_nuisance" value="${echapper(profil.type_nuisance)}" placeholder="Ex. sono de bar, voisinage, chantier…"></div>
+              <div class="champ" style="display:flex;align-items:center;gap:0.5rem">
+                <input type="checkbox" id="annuaire" style="width:auto" ${profil.annuaire_optin?'checked':''}>
+                <label for="annuaire" style="margin:0">Apparaître dans l'annuaire des membres (même commune)</label>
+              </div>
+              <button type="submit" class="btn btn-primaire btn-bloc">Enregistrer</button>
+            </form>
+          </div>
+        </div>`;
+
+      // QR code de la carte
+      new QRCode(document.getElementById("qr"), {
+        text: "TOH-MEMBRE:" + profil.id, width: 96, height: 96,
+        colorDark: "#064a54", colorLight: "#ffffff",
+      });
+
+      // Sélecteur commune
+      const sel = document.getElementById("commune");
+      sel.innerHTML = COMMUNES_PF.map(c => `<option ${c===profil.commune?'selected':''}>${c}</option>`).join("");
+
+      const msg = document.getElementById("msg");
+      document.getElementById("form-profil").addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const maj = {
+          nom: document.getElementById("nom").value.trim(),
+          commune: sel.value,
+          type_nuisance: document.getElementById("type_nuisance").value.trim(),
+          annuaire_optin: document.getElementById("annuaire").checked,
+        };
+        const { error } = await sb.from("profils").update(maj).eq("id", profil.id);
+        msg.className = "message " + (error ? "err" : "ok");
+        msg.textContent = error ? "Erreur : " + error.message : "Profil enregistré ✔";
+      });
+    })();
+  </script>
+</body>
+</html>

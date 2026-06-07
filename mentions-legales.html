@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mentions légales · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .prose { max-width: 820px; }
+    .prose p { margin-bottom: 1rem; }
+    .prose h3 { color: var(--bleu-fonce); margin: 1.6rem 0 0.5rem; }
+    .prose ul { margin: 0 0 1rem 1.4rem; }
+    .prose li { margin-bottom: 0.3rem; }
+    .encart { background:#fff; border-left:4px solid var(--bleu-lagon); padding:1rem 1.2rem; border-radius:10px; margin:1.2rem 0; box-shadow:var(--ombre); }
+    table.ck { width:100%; border-collapse:collapse; background:#fff; box-shadow:var(--ombre); border-radius:10px; overflow:hidden; margin:1rem 0; }
+    table.ck th, table.ck td { padding:0.6rem 0.8rem; border-bottom:1px solid #eee; text-align:left; font-size:0.88rem; vertical-align:top; }
+    table.ck th { background:var(--bleu-fonce); color:#fff; }
+    table.ck tr:last-child td { border-bottom:none; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <h2 class="section-titre">Mentions légales</h2>
+    <div class="prose">
+
+      <h3>Informations légales</h3>
+      <p>L'accès au site Te Ora Hau est libre et gratuit, à l'exception de la zone réservée aux adhérents.</p>
+      <p>Te Ora Hau est une association à but non lucratif régie par la loi de 1901&nbsp;:
+        <strong>ASSOCIATION TE ORA HAU — VIVRE EN PAIX — LUTTE CONTRE LES NUISANCES SONORES</strong>,
+        association agréée de protection de l'environnement, reconnue d'intérêt général —
+        <strong>N° TAHITI 532291.001</strong>.</p>
+      <p>Le site de Te Ora Hau est un site indépendant, émanation de l'association éponyme. Il n'est lié à aucune entreprise commerciale, aucun parti politique, ni aucune organisation à caractère écologique.</p>
+      <p>Personne ne peut se prévaloir du site ou de l'association pour demander une contribution en espèces ou en nature. Tout versement de cotisation se fait dans le cadre exclusif de l'association&nbsp;:</p>
+      <ul>
+        <li>en espèces (contre reçu), auprès d'un membre du bureau&nbsp;;</li>
+        <li>par chèque libellé au nom de l'association&nbsp;;</li>
+        <li>par virement électronique sur le compte de l'association.</li>
+      </ul>
+      <p>Le site et l'association Te Ora Hau ne sauraient être tenus responsables de l'utilisation des informations présentées ni de leurs éventuelles conséquences.</p>
+      <p>Le site ne commercialise aucun espace publicitaire&nbsp;; les liens éventuels y figurent à titre gracieux. Le site est la propriété pleine, entière et exclusive de l'association éponyme.</p>
+      <p>Un fonctionnement optimal nécessite que JavaScript soit activé dans votre navigateur.</p>
+      <div class="encart">
+        <strong>Directrice de la publication :</strong> Maea Linda TEMATUA.<br>
+        Pour joindre les responsables de l'association, utilisez la page <a href="contact.html">Contact</a>.
+      </div>
+
+      <h3>Protection des données</h3>
+      <p>Le site ne communique aucune donnée nominative concernant ses adhérents à des tiers.</p>
+      <p>Te Ora Hau travaille en partenariat avec l'association métropolitaine <strong>A.Ab.V.</strong> (Association Anti-Bruit de Voisinage), qui poursuit les mêmes buts dans le même esprit, chaque entité conservant sa totale indépendance.</p>
+
+      <h3>Informatique &amp; libertés (RGPD)</h3>
+      <p>Conformément à la réglementation applicable en matière de protection des données, vous disposez à tout moment d'un droit d'accès, de rectification, d'opposition et d'effacement des données vous concernant.</p>
+      <p>Vous pouvez exiger que soient rectifiées, complétées, clarifiées ou effacées les informations inexactes, incomplètes ou périmées vous concernant.</p>
+      <p>En tant qu'adhérent, vous pouvez à tout moment consulter et modifier en ligne votre fiche depuis votre <a href="espace.html">espace adhérent</a> (nom, commune, type de nuisance, visibilité dans l'annuaire). Pour l'effacement complet de votre compte, contactez le bureau via la page <a href="contact.html">Contact</a>.</p>
+
+      <h3>Données &amp; stockage technique</h3>
+      <p>Ce site fonctionne avec le service <strong>Supabase</strong> (base de données et authentification). Les données saisies (compte, profil adhérent, messages du forum, signalements de nuisances, journal de bruit) y sont conservées de façon sécurisée et accessibles uniquement selon des règles strictes&nbsp;: chaque membre n'accède qu'à ses propres données, le journal de bruit est strictement privé, et la liste des adhérents n'est consultable que par le bureau.</p>
+      <p>Le site ne dépose <strong>aucun cookie publicitaire</strong> ni traceur tiers à des fins de profilage. Seuls sont utilisés les éléments techniques strictement nécessaires&nbsp;:</p>
+      <table class="ck">
+        <tr><th>Élément</th><th>Rôle</th><th>Conservation</th></tr>
+        <tr>
+          <td><code>sb-…-auth-token</code> (stockage local)</td>
+          <td>Maintient votre session une fois connecté (authentification Supabase). Indispensable pour accéder à l'espace adhérent, au forum et aux outils.</td>
+          <td>Jusqu'à déconnexion ou expiration de la session.</td>
+        </tr>
+        <tr>
+          <td>Cartographie (OpenStreetMap)</td>
+          <td>La carte des nuisances charge les fonds de carte depuis OpenStreetMap.</td>
+          <td>Cache du navigateur.</td>
+        </tr>
+        <tr>
+          <td>Vidéo (YouTube)</td>
+          <td>Les vidéos explicatives ne se chargent que si vous cliquez sur « Lire »&nbsp;; YouTube peut alors déposer ses propres cookies.</td>
+          <td>Gérée par YouTube.</td>
+        </tr>
+      </table>
+      <p>Si votre navigateur est paramétré pour refuser tout stockage local, la connexion à l'espace adhérent ne pourra pas être maintenue.</p>
+
+      <h3>Hébergement</h3>
+      <p>Les pages du site (contenu public) sont hébergées en tant que site statique. La base de données et l'authentification sont assurées par le service Supabase. Le site est développé et maintenu bénévolement par les membres de l'association.</p>
+
+      <p style="color:var(--gris);font-size:0.85rem;margin-top:2rem">Dernière mise à jour&nbsp;: <span id="maj"></span>.</p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    initPage("");
+    document.getElementById("maj").textContent = new Date().toLocaleDateString("fr-FR", { year:"numeric", month:"long" });
+  </script>
+</body>
+</html>

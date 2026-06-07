@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adhérer · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <div class="form-wrap">
+      <h2>Devenir membre</h2>
+      <p class="intro">Créez votre compte pour rejoindre la lutte contre les nuisances sonores.</p>
+      <div id="msg" class="message"></div>
+      <form id="form-inscription">
+        <div class="champ">
+          <label for="nom">Nom et prénom</label>
+          <input type="text" id="nom" required placeholder="Ex. Heimata TEROOATEA">
+        </div>
+        <div class="champ">
+          <label for="commune">Commune</label>
+          <select id="commune" required></select>
+        </div>
+        <div class="champ">
+          <label for="email">Adresse e-mail</label>
+          <input type="email" id="email" required placeholder="vous@exemple.pf">
+        </div>
+        <div class="champ">
+          <label for="mdp">Mot de passe</label>
+          <input type="password" id="mdp" required minlength="6" placeholder="6 caractères minimum">
+        </div>
+        <div class="champ">
+          <label for="mdp2">Confirmer le mot de passe</label>
+          <input type="password" id="mdp2" required minlength="6">
+        </div>
+        <button type="submit" class="btn btn-primaire btn-bloc">Créer mon compte</button>
+      </form>
+      <p class="form-foot">Déjà membre ? <a href="connexion.html">Se connecter</a></p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    initPage("inscription");
+    document.getElementById("commune").innerHTML =
+      '<option value="">— Choisir —</option>' +
+      COMMUNES_PF.map(c => `<option>${c}</option>`).join("");
+
+    const msg = document.getElementById("msg");
+    document.getElementById("form-inscription").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      if (!TOH_PRET) { montrer("err", "Supabase n'est pas configuré (voir SETUP.md)."); return; }
+      const nom = document.getElementById("nom").value.trim();
+      const commune = document.getElementById("commune").value;
+      const email = document.getElementById("email").value.trim();
+      const mdp = document.getElementById("mdp").value;
+      const mdp2 = document.getElementById("mdp2").value;
+      if (mdp !== mdp2) { montrer("err", "Les mots de passe ne correspondent pas."); return; }
+      montrer("ok", "Création du compte…");
+      const res = await inscrire(nom, email, mdp, commune);
+      montrer(res.ok ? "ok" : "err", res.msg);
+      if (res.ok) setTimeout(() => location.href = res.session ? "espace.html" : "connexion.html", 1500);
+    });
+    function montrer(type, texte) { msg.className = "message " + type; msg.textContent = texte; }
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+# Fichiers système
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+
+# Sorties temporaires du serveur local
+*.log
+
+# Fichier source non utilisé par le site (original non rogné de la bannière)
+images/image bandeau.png

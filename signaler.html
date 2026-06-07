@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signaler une nuisance · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>#map{ height:320px; border-radius:12px; box-shadow:var(--ombre); margin-bottom:0.4rem; }
+    .aide{ font-size:0.82rem; color:var(--gris); margin-bottom:1rem; }</style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <div id="footer-mount"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (async function(){
+      await initPage("signaler");
+      const contenu = document.getElementById("contenu");
+      const profil = await monProfil();
+      if (!profil){
+        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
+          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
+          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Connectez-vous pour signaler une nuisance sonore.</p>
+          <a href="connexion.html" class="btn btn-primaire">Se connecter</a>
+          <a href="inscription.html" class="btn btn-clair">Adhérer</a></div>`;
+        return;
+      }
+
+      contenu.innerHTML = `
+        <h2 class="section-titre">Signaler une nuisance sonore</h2>
+        <p class="aide">Cliquez sur la carte pour situer la nuisance (ou utilisez votre position). Votre signalement alimente la <a href="carte.html">carte collective</a>.</p>
+        <div class="layout" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+          <div>
+            <div id="map"></div>
+            <button class="btn btn-clair" id="geo" style="width:100%">📍 Utiliser ma position actuelle</button>
+            <p class="aide" id="coord">Aucun point sélectionné.</p>
+          </div>
+          <div class="form-wrap" style="max-width:100%;margin:0">
+            <div id="msg" class="message"></div>
+            <form id="form-sig">
+              <div class="champ"><label>Type de nuisance</label>
+                <select id="type" required>
+                  <option value="">— Choisir —</option>
+                  <option>Voisinage (habitation)</option>
+                  <option>Sono de voiture</option>
+                  <option>Bar / restaurant / discothèque</option>
+                  <option>Chantier / travaux</option>
+                  <option>Deux-roues / moteur</option>
+                  <option>Animaux</option>
+                  <option>Manifestation / fête</option>
+                  <option>Autre</option>
+                </select></div>
+              <div class="champ"><label>Commune</label><select id="commune" required></select></div>
+              <div class="champ"><label>Horaire</label>
+                <select id="horaire"><option>Jour</option><option>Soir</option><option>Nuit (après 22h)</option></select></div>
+              <div class="champ"><label>Intensité ressentie</label>
+                <select id="intensite"><option>Faible</option><option>Moyenne</option><option selected>Forte</option><option>Insupportable</option></select></div>
+              <div class="champ"><label>Récurrence</label>
+                <select id="recurrence"><option>Ponctuel</option><option selected>Régulier</option><option>Permanent</option></select></div>
+              <div class="champ"><label>Description</label>
+                <textarea id="description" rows="3" placeholder="Décrivez la situation…"></textarea></div>
+              <button type="submit" class="btn btn-primaire btn-bloc">Envoyer le signalement</button>
+            </form>
+          </div>
+        </div>`;
+
+      document.getElementById("commune").innerHTML =
+        `<option ${profil.commune?'':'selected'} value="">— Choisir —</option>` +
+        COMMUNES_PF.map(c => `<option ${c===profil.commune?'selected':''}>${c}</option>`).join("");
+
+      // Carte centrée sur Tahiti
+      const map = L.map("map").setView([-17.62, -149.46], 11);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { attribution:"© OpenStreetMap", maxZoom:19 }).addTo(map);
+      let marqueur = null, pt = null;
+      function poser(lat, lng){
+        pt = { lat, lng };
+        if (marqueur) marqueur.setLatLng([lat,lng]); else marqueur = L.marker([lat,lng]).addTo(map);
+        document.getElementById("coord").textContent = `Point sélectionné : ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      }
+      map.on("click", e => poser(e.latlng.lat, e.latlng.lng));
+      document.getElementById("geo").addEventListener("click", () => {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(p => {
+          poser(p.coords.latitude, p.coords.longitude);
+          map.setView([p.coords.latitude, p.coords.longitude], 15);
+        }, () => alert("Géolocalisation indisponible. Cliquez sur la carte."));
+      });
+
+      const msg = document.getElementById("msg");
+      document.getElementById("form-sig").addEventListener("submit", async function(e){
+        e.preventDefault();
+        const s = await sessionActive();
+        const row = {
+          auteur: s.user.id,
+          type: document.getElementById("type").value,
+          commune: document.getElementById("commune").value,
+          horaire: document.getElementById("horaire").value,
+          intensite: document.getElementById("intensite").value,
+          recurrence: document.getElementById("recurrence").value,
+          description: document.getElementById("description").value.trim(),
+          lat: pt?pt.lat:null, lng: pt?pt.lng:null,
+        };
+        const { error } = await sb.from("signalements").insert(row);
+        if (error){ msg.className="message err"; msg.textContent="Erreur : "+error.message; return; }
+        msg.className="message ok";
+        msg.textContent="Merci ! Votre signalement a été enregistré.";
+        setTimeout(()=>location.href="carte.html", 1200);
+      });
+    })();
+  </script>
+</body>
+</html>

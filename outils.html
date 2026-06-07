@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outils · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .onglets{ display:flex; gap:0.5rem; margin-bottom:1.4rem; flex-wrap:wrap; }
+    .onglets button{ padding:0.55rem 1.1rem; border:none; border-radius:10px; cursor:pointer; font-weight:600; background:#fff; box-shadow:var(--ombre); }
+    .onglets button.actif{ background:var(--bleu-fonce); color:#fff; }
+    .panneau{ display:none; } .panneau.actif{ display:block; }
+    pre.lettre{ background:#fff; border-radius:12px; padding:1.5rem; box-shadow:var(--ombre); white-space:pre-wrap; font-family:Georgia,serif; line-height:1.6; }
+    table.jb{ width:100%; border-collapse:collapse; background:#fff; box-shadow:var(--ombre); border-radius:10px; overflow:hidden; margin-top:1rem; }
+    table.jb th,table.jb td{ padding:0.55rem 0.7rem; border-bottom:1px solid #eee; font-size:0.88rem; text-align:left; }
+    table.jb th{ background:var(--bleu-fonce); color:#fff; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <div id="footer-mount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let PROFIL = null;
+    (async function(){
+      await initPage("outils");
+      const contenu = document.getElementById("contenu");
+      PROFIL = await monProfil();
+      if (!PROFIL){
+        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
+          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
+          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Connectez-vous pour utiliser les outils membres.</p>
+          <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
+        return;
+      }
+
+      contenu.innerHTML = `
+        <h2 class="section-titre">Outils pour les membres</h2>
+        <div class="onglets">
+          <button class="actif" data-p="courrier">✉️ Générateur de courrier</button>
+          <button data-p="journal">📒 Journal de bruit</button>
+        </div>
+
+        <section class="panneau actif" id="p-courrier">
+          <div class="form-wrap" style="max-width:100%;margin:0 0 1.4rem">
+            <div class="champ"><label>Type de courrier</label>
+              <select id="c-type">
+                <option value="amiable">Lettre amiable au voisin</option>
+                <option value="miseendemeure">Mise en demeure</option>
+                <option value="mairie">Signalement à la mairie</option>
+              </select></div>
+            <div class="champ"><label>Destinataire (nom / adresse)</label>
+              <input id="c-dest" placeholder="Ex. M. X, 12 rue … "></div>
+            <div class="champ"><label>Nature du bruit</label>
+              <input id="c-bruit" placeholder="Ex. musique forte, aboiements, sono…"></div>
+            <div class="champ"><label>Horaires concernés</label>
+              <input id="c-horaire" placeholder="Ex. tous les soirs après 22h"></div>
+            <button class="btn btn-primaire" onclick="genererCourrier()">Générer le courrier</button>
+            <button class="btn btn-clair" onclick="telechargerLettre()">Télécharger (.txt)</button>
+          </div>
+          <pre class="lettre" id="apercu">Le courrier généré s'affichera ici.</pre>
+        </section>
+
+        <section class="panneau" id="p-journal">
+          <div class="form-wrap" style="max-width:100%;margin:0 0 1rem">
+            <p class="intro">Consignez chaque épisode de bruit : ce journal constitue une preuve précieuse pour vos démarches.</p>
+            <div id="jmsg" class="message"></div>
+            <form id="form-jb" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.7rem;align-items:end">
+              <div class="champ" style="margin:0"><label>Date</label><input type="date" id="j-date" required></div>
+              <div class="champ" style="margin:0"><label>Heure</label><input type="time" id="j-heure"></div>
+              <div class="champ" style="margin:0"><label>Durée (min)</label><input type="number" id="j-duree" min="0"></div>
+              <div class="champ" style="margin:0"><label>Intensité</label>
+                <select id="j-intensite"><option>Faible</option><option>Moyenne</option><option selected>Forte</option><option>Insupportable</option></select></div>
+              <div class="champ" style="margin:0;grid-column:1/-1"><label>Note</label><input id="j-note" placeholder="Ex. musique, fête voisin…"></div>
+              <button class="btn btn-vert" type="submit" style="grid-column:1/-1">Ajouter l'épisode</button>
+            </form>
+          </div>
+          <button class="btn btn-clair" onclick="exportJournal()">Exporter le journal (CSV)</button>
+          <div id="liste-jb"></div>
+        </section>`;
+
+      // Onglets
+      document.querySelectorAll(".onglets button").forEach(b => b.addEventListener("click", () => {
+        document.querySelectorAll(".onglets button").forEach(x=>x.classList.remove("actif"));
+        document.querySelectorAll(".panneau").forEach(x=>x.classList.remove("actif"));
+        b.classList.add("actif");
+        document.getElementById("p-"+b.dataset.p).classList.add("actif");
+      }));
+
+      document.getElementById("j-date").value = new Date().toISOString().slice(0,10);
+      document.getElementById("form-jb").addEventListener("submit", ajouterEpisode);
+      await chargerJournal();
+    })();
+
+    /* ----- Générateur de courrier ----- */
+    function genererCourrier(){
+      const type = document.getElementById("c-type").value;
+      const dest = document.getElementById("c-dest").value || "[Destinataire]";
+      const bruit = document.getElementById("c-bruit").value || "[nature du bruit]";
+      const horaire = document.getElementById("c-horaire").value || "[horaires]";
+      const date = new Date().toLocaleDateString("fr-FR", { day:"numeric", month:"long", year:"numeric" });
+      const exp = PROFIL.nom + (PROFIL.commune?`\n${PROFIL.commune}, Polynésie française`:"");
+      let corps;
+      if (type==="amiable"){
+        corps = `Objet : Trouble de voisinage lié au bruit\n\nMadame, Monsieur,\n\n`+
+          `Je me permets de vous écrire au sujet de nuisances sonores (${bruit}) survenant ${horaire}, qui perturbent ma tranquillité.\n\n`+
+          `Je ne doute pas qu'il s'agisse d'une gêne involontaire et vous serais reconnaissant(e) de bien vouloir y remédier afin que chacun puisse vivre en paix.\n\n`+
+          `Je reste à votre disposition pour en échanger. Vous remerciant par avance,`;
+      } else if (type==="miseendemeure"){
+        corps = `Objet : Mise en demeure de cesser les nuisances sonores\n\nMadame, Monsieur,\n\n`+
+          `Malgré mes démarches amiables, les nuisances sonores (${bruit}) se poursuivent ${horaire}.\n\n`+
+          `Ces troubles excèdent les inconvénients normaux de voisinage. Après 22 heures, ils sont susceptibles de constituer un tapage nocturne, sanctionné par la loi.\n\n`+
+          `Par la présente, je vous mets en demeure de faire cesser ces nuisances sous huitaine. À défaut, je me réserve le droit de saisir les autorités compétentes et d'engager toute action utile.`;
+      } else {
+        corps = `Objet : Signalement de nuisances sonores\n\nMadame le Maire, Monsieur le Maire,\n\n`+
+          `Je souhaite signaler des nuisances sonores (${bruit}) survenant ${horaire} dans ma commune.\n\n`+
+          `Ces troubles répétés portent atteinte à la tranquillité publique. Je vous remercie de bien vouloir diligenter les contrôles nécessaires et faire appliquer la réglementation en vigueur sur le bruit.\n\n`+
+          `Vous remerciant de l'attention portée à ma demande,`;
+      }
+      const lettre = `${exp}\n\nÀ ${dest}\n\nLe ${date}\n\n${corps}\n\nVeuillez agréer, Madame, Monsieur, l'expression de mes salutations distinguées.\n\n${PROFIL.nom}`;
+      document.getElementById("apercu").textContent = lettre;
+    }
+    function telechargerLettre(){
+      const t = document.getElementById("apercu").textContent;
+      if (!t || t.startsWith("Le courrier généré")) { genererCourrier(); }
+      const blob = new Blob([document.getElementById("apercu").textContent], { type:"text/plain;charset=utf-8" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+      a.download = "courrier-bruit.txt"; a.click();
+    }
+
+    /* ----- Journal de bruit (Supabase) ----- */
+    async function ajouterEpisode(e){
+      e.preventDefault();
+      const s = await sessionActive();
+      const row = {
+        auteur: s.user.id,
+        date_episode: document.getElementById("j-date").value,
+        heure: document.getElementById("j-heure").value,
+        duree_min: parseInt(document.getElementById("j-duree").value)||null,
+        intensite: document.getElementById("j-intensite").value,
+        note: document.getElementById("j-note").value.trim(),
+      };
+      const { error } = await sb.from("journal_bruit").insert(row);
+      const m = document.getElementById("jmsg");
+      m.className = "message " + (error?"err":"ok");
+      m.textContent = error ? "Erreur : "+error.message : "Épisode ajouté ✔";
+      document.getElementById("j-note").value = "";
+      await chargerJournal();
+    }
+    let JB = [];
+    async function chargerJournal(){
+      const { data } = await sb.from("journal_bruit").select("*").order("date_episode",{ascending:false});
+      JB = data || [];
+      const lignes = JB.map(j => `<tr>
+        <td>${j.date_episode||''}</td><td>${j.heure||''}</td><td>${j.duree_min!=null?j.duree_min+' min':''}</td>
+        <td>${echapper(j.intensite)||''}</td><td>${echapper(j.note)||''}</td></tr>`).join("");
+      document.getElementById("liste-jb").innerHTML = JB.length ? `
+        <table class="jb"><thead><tr><th>Date</th><th>Heure</th><th>Durée</th><th>Intensité</th><th>Note</th></tr></thead>
+        <tbody>${lignes}</tbody></table>` : "<p style='color:var(--gris);margin-top:1rem'>Aucun épisode enregistré.</p>";
+    }
+    function exportJournal(){
+      const en = ["Date","Heure","Duree_min","Intensite","Note"];
+      const l = JB.map(j => [j.date_episode,j.heure,j.duree_min,j.intensite,j.note]
+        .map(v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`).join(","));
+      const blob = new Blob([en.join(",")+"\n"+l.join("\n")], { type:"text/csv;charset=utf-8" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+      a.download = "journal-de-bruit.csv"; a.click();
+    }
+  </script>
+</body>
+</html>

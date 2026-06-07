@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <div class="form-wrap">
+      <h2>Connexion membre</h2>
+      <p class="intro">Accédez à votre espace, au forum et aux outils.</p>
+      <div id="msg" class="message"></div>
+      <form id="form-connexion">
+        <div class="champ">
+          <label for="email">Adresse e-mail</label>
+          <input type="email" id="email" required placeholder="vous@exemple.pf">
+        </div>
+        <div class="champ">
+          <label for="mdp">Mot de passe</label>
+          <input type="password" id="mdp" required>
+        </div>
+        <button type="submit" class="btn btn-primaire btn-bloc">Se connecter</button>
+      </form>
+      <p class="form-foot">
+        <a href="mot-de-passe.html">Mot de passe oublié ?</a><br>
+        Pas encore membre ? <a href="inscription.html">Adhérer</a>
+      </p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    initPage("connexion");
+    const msg = document.getElementById("msg");
+    document.getElementById("form-connexion").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      if (!TOH_PRET) { montrer("err", "Supabase n'est pas configuré (voir SETUP.md)."); return; }
+      const email = document.getElementById("email").value.trim();
+      const mdp = document.getElementById("mdp").value;
+      montrer("ok", "Connexion…");
+      const res = await connecter(email, mdp);
+      montrer(res.ok ? "ok" : "err", res.msg);
+      if (res.ok) setTimeout(() => location.href = "espace.html", 700);
+    });
+    function montrer(type, texte) { msg.className = "message " + type; msg.textContent = texte; }
+  </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.6rem; }
+    .stat { background:var(--blanc); border-radius:var(--radius); padding:1.1rem; box-shadow:var(--ombre); text-align:center; border-top:4px solid var(--vert-paix); }
+    .stat .n { font-size:2rem; font-weight:800; color:var(--bleu-fonce); }
+    .stat .l { font-size:0.82rem; color:var(--gris); }
+    .barre { display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:1rem; align-items:center; }
+    .barre input, .barre select { padding:0.5rem 0.7rem; border:1.5px solid #d6d6cf; border-radius:8px; }
+    table.adh { width:100%; border-collapse:collapse; background:var(--blanc); box-shadow:var(--ombre); border-radius:10px; overflow:hidden; }
+    table.adh th, table.adh td { padding:0.65rem 0.8rem; text-align:left; border-bottom:1px solid #eee; font-size:0.9rem; }
+    table.adh th { background:var(--bleu-fonce); color:#fff; }
+    .pill { padding:0.15rem 0.6rem; border-radius:12px; font-size:0.78rem; font-weight:700; }
+    .pill.ok{ background:#e3f5ea; color:#1d6b3f; } .pill.ko{ background:#fce6e1; color:#b2381f; }
+    .mini { padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:7px; border:none; cursor:pointer; }
+    .mini.vert{ background:var(--vert-paix); color:#fff; } .mini.clair{ background:#eee; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <div id="footer-mount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let ADH = [];
+    (async function() {
+      await initPage("admin");
+      const contenu = document.getElementById("contenu");
+      const profil = await monProfil();
+      if (!profil || profil.role !== "bureau") {
+        contenu.innerHTML = `<div class="verrou"><div class="ico">⛔</div>
+          <h2 style="color:var(--bleu-fonce)">Accès réservé au bureau</h2>
+          <p style="color:var(--gris);margin-top:0.6rem">Cette page est réservée aux administrateurs de l'association.</p></div>`;
+        return;
+      }
+
+      const { data, error } = await sb.from("profils").select("*").order("cree_le", { ascending:false });
+      if (error) { contenu.innerHTML = `<p style="color:#b2381f">Erreur : ${error.message}</p>`; return; }
+      ADH = data || [];
+
+      const total = ADH.length;
+      const aJour = ADH.filter(estAJour).length;
+      const enRetard = total - aJour;
+      const communes = new Set(ADH.map(a => a.commune).filter(Boolean)).size;
+
+      contenu.innerHTML = `
+        <h2 class="section-titre">Tableau de bord du bureau</h2>
+        <div class="stats">
+          <div class="stat"><div class="n">${total}</div><div class="l">Adhérents</div></div>
+          <div class="stat"><div class="n">${aJour}</div><div class="l">À jour de cotisation</div></div>
+          <div class="stat" style="border-top-color:var(--corail)"><div class="n">${enRetard}</div><div class="l">À relancer</div></div>
+          <div class="stat" style="border-top-color:var(--bleu-lagon)"><div class="n">${communes}</div><div class="l">Communes</div></div>
+        </div>
+        <div class="barre">
+          <input id="q" placeholder="Rechercher un nom / e-mail…" style="flex:1;min-width:180px">
+          <select id="filtre">
+            <option value="">Tous</option>
+            <option value="ok">À jour</option>
+            <option value="ko">En retard</option>
+          </select>
+          <button class="btn btn-clair" onclick="exportCSV()">Exporter CSV</button>
+        </div>
+        <div id="tableau"></div>`;
+
+      document.getElementById("q").addEventListener("input", dessiner);
+      document.getElementById("filtre").addEventListener("change", dessiner);
+      dessiner();
+    })();
+
+    function estAJour(a){
+      return a.cotisation_payee && (!a.cotisation_echeance || new Date(a.cotisation_echeance) >= new Date());
+    }
+    function dessiner(){
+      const q = (document.getElementById("q").value||"").toLowerCase();
+      const f = document.getElementById("filtre").value;
+      const lignes = ADH.filter(a => {
+        const m = (a.nom+" "+(a.email||"")).toLowerCase().includes(q);
+        const fo = f===""||(f==="ok"&&estAJour(a))||(f==="ko"&&!estAJour(a));
+        return m && fo;
+      }).map(a => `
+        <tr>
+          <td>${echapper(a.nom)||'—'}${a.role==='bureau'?' <span class="pill ok">bureau</span>':''}</td>
+          <td>${echapper(a.email)||'—'}</td>
+          <td>${echapper(a.commune)||'—'}</td>
+          <td>${estAJour(a)?'<span class="pill ok">À jour</span>':'<span class="pill ko">En retard</span>'}</td>
+          <td>
+            <button class="mini vert" onclick="marquerPaye('${a.id}')">Marquer payé +1 an</button>
+            ${!estAJour(a)?`<button class="mini clair" onclick="relancer('${encodeURIComponent(a.email||'')}')">Relancer</button>`:''}
+          </td>
+        </tr>`).join("");
+      document.getElementById("tableau").innerHTML = `
+        <table class="adh"><thead><tr><th>Nom</th><th>E-mail</th><th>Commune</th><th>Cotisation</th><th>Actions</th></tr></thead>
+        <tbody>${lignes||'<tr><td colspan="5" style="text-align:center;color:var(--gris)">Aucun adhérent</td></tr>'}</tbody></table>`;
+    }
+    async function marquerPaye(id){
+      const ech = new Date(); ech.setFullYear(ech.getFullYear()+1);
+      const echeance = ech.toISOString().slice(0,10);
+      const { error } = await sb.from("profils").update({ cotisation_payee:true, cotisation_echeance:echeance }).eq("id", id);
+      if (error) return alert("Erreur : "+error.message);
+      const a = ADH.find(x=>x.id===id); a.cotisation_payee=true; a.cotisation_echeance=echeance;
+      dessiner();
+    }
+    function relancer(email){
+      const e = decodeURIComponent(email);
+      location.href = `mailto:${e}?subject=${encodeURIComponent("Te Ora Hau — renouvellement de votre cotisation")}`+
+        `&body=${encodeURIComponent("Ia ora na,\n\nVotre cotisation à l'association Te Ora Hau arrive à échéance. Merci de penser à la renouveler pour continuer à soutenir notre action contre les nuisances sonores.\n\nMauruuru,\nLe bureau de Te Ora Hau")}`;
+    }
+    function exportCSV(){
+      const en = ["Nom","Email","Commune","Type nuisance","Cotisation payee","Echeance","Role"];
+      const lignes = ADH.map(a => [a.nom,a.email,a.commune,a.type_nuisance,a.cotisation_payee,a.cotisation_echeance,a.role]
+        .map(v => `"${String(v==null?'':v).replace(/"/g,'""')}"`).join(","));
+      const csv = en.join(",")+"\n"+lignes.join("\n");
+      const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "adherents-te-ora-hau.csv"; a.click();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carte des nuisances · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>#map{ height:480px; border-radius:12px; box-shadow:var(--ombre); }
+    .legende{ display:flex; gap:1rem; flex-wrap:wrap; margin:1rem 0; font-size:0.85rem; color:var(--gris); }
+    .legende span{ display:inline-flex; align-items:center; gap:0.35rem; }
+    .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; }</style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main>
+    <h2 class="section-titre">Carte des nuisances signalées</h2>
+    <p style="color:var(--gris);margin-bottom:1rem">Chaque point correspond à un signalement de membre. <a href="signaler.html">Signaler une nuisance →</a></p>
+    <div id="etat" style="margin-bottom:1rem"></div>
+    <div id="map"></div>
+    <div class="legende">
+      <span><span class="dot" style="background:#e8b84b"></span> Faible</span>
+      <span><span class="dot" style="background:#ff7a59"></span> Moyenne / Forte</span>
+      <span><span class="dot" style="background:#b2381f"></span> Insupportable</span>
+    </div>
+  </main>
+  <div id="footer-mount"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (async function(){
+      await initPage("carte");
+      const map = L.map("map").setView([-17.62, -149.46], 11);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { attribution:"© OpenStreetMap", maxZoom:19 }).addTo(map);
+
+      const etat = document.getElementById("etat");
+      const profil = await monProfil();
+      if (!profil){
+        etat.innerHTML = `<div class="message err" style="display:block">Connectez-vous pour voir les signalements des membres. <a href="connexion.html">Se connecter</a></div>`;
+        return;
+      }
+      const { data, error } = await sb.from("signalements").select("*").not("lat","is",null);
+      if (error){ etat.innerHTML = `<div class="message err" style="display:block">Erreur : ${error.message}</div>`; return; }
+      if (!data.length){ etat.innerHTML = `<div class="message ok" style="display:block">Aucun signalement géolocalisé pour le moment. Soyez le premier : <a href="signaler.html">signaler</a>.</div>`; }
+
+      const couleur = i => i==="Insupportable" ? "#b2381f" : i==="Faible" ? "#e8b84b" : "#ff7a59";
+      data.forEach(s => {
+        L.circleMarker([s.lat, s.lng], {
+          radius:9, color:"#fff", weight:2, fillColor:couleur(s.intensite), fillOpacity:0.9,
+        }).addTo(map).bindPopup(
+          `<strong>${echapper(s.type)}</strong><br>${echapper(s.commune)||''} · ${echapper(s.horaire)||''}<br>`+
+          `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
+          (s.description?`<br><em>${echapper(s.description)}</em>`:"")
+        );
+      });
+    })();
+  </script>
+</body>
+</html>

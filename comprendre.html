@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comprendre le son · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .prose { max-width: 800px; }
+    .prose p { margin-bottom: 1rem; }
+    .prose h3 { color: var(--bleu-fonce); margin: 1.4rem 0 0.5rem; }
+    .encart {
+      background: #fff4ec; border-left: 4px solid var(--corail);
+      padding: 1rem 1.2rem; border-radius: 10px; margin: 1.2rem 0;
+    }
+    .tableau { width: 100%; border-collapse: collapse; margin: 1rem 0; background: var(--blanc); box-shadow: var(--ombre); border-radius: 10px; overflow: hidden; }
+    .tableau th, .tableau td { padding: 0.7rem 1rem; text-align: left; border-bottom: 1px solid #eee; }
+    .tableau th { background: var(--bleu-fonce); color: var(--blanc); font-weight: 600; }
+    .tableau tr:last-child td { border-bottom: none; }
+    .etapes { counter-reset: e; list-style: none; }
+    .etapes li { position: relative; padding: 0.6rem 0 0.6rem 2.6rem; counter-increment: e; }
+    .etapes li::before {
+      content: counter(e); position: absolute; left: 0; top: 0.5rem;
+      width: 1.8rem; height: 1.8rem; background: var(--vert-paix); color: #fff;
+      border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.9rem;
+    }
+    .video {
+      position: relative; width: 100%; padding-top: 56.25%;
+      border-radius: 12px; overflow: hidden; box-shadow: var(--ombre); margin: 1rem 0 1.4rem;
+    }
+    .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .video-play {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      border: 0; cursor: pointer; padding: 0;
+      background-size: cover; background-position: center;
+      display: grid; place-items: center;
+    }
+    .video-play::before { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.25); transition: background 0.2s; }
+    .video-play:hover::before { background: rgba(0,0,0,0.1); }
+    .yt-btn {
+      position: relative; z-index: 1;
+      width: 76px; height: 54px; border-radius: 12px;
+      background: #ff0000; color: #fff; font-size: 1.6rem;
+      display: grid; place-items: center; padding-left: 4px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .video-play:hover .yt-btn { background: #cc0000; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <h2 class="section-titre">Comment percevons-nous le son&nbsp;?</h2>
+
+    <div class="prose">
+      <p>L'oreille est un outil de perception précis et fiable, constamment en alerte&nbsp;: elle ne se ferme jamais. Cette courte vidéo explique le trajet du son, de l'oreille externe jusqu'au cerveau.</p>
+
+      <div class="video" id="video-oreille" data-id="acsLaE0IJ50">
+        <button class="video-play" type="button" aria-label="Lire la vidéo"
+          style="background-image:url('https://i.ytimg.com/vi/acsLaE0IJ50/hqdefault.jpg')">
+          <span class="yt-btn">▶</span>
+        </button>
+      </div>
+
+      <div class="encart">
+        ⚠️ Les cellules auditives ciliées sont <strong>très fragiles</strong>. Une fois détruites, elles ne se reconstituent jamais&nbsp;: le handicap est alors <strong>irréversible</strong>.
+      </div>
+
+      <h2 class="section-titre" style="margin-top:2.5rem">L'oreille, de la naissance à la sénescence</h2>
+
+      <h3>Avant la naissance</h3>
+      <p>Le fœtus est sensible au bruit&nbsp;: il entend distinctement dès le <strong>sixième mois</strong> et souffre au-delà de <strong>80&nbsp;dB</strong>. On a constaté, dans les zones bruyantes, une réduction du poids des nouveau-nés et davantage de naissances prématurées. Les femmes enceintes doivent éviter les ambiances tonitruantes et les bruits réguliers d'intensité élevée.</p>
+
+      <h3>L'enfance</h3>
+      <p>Les enfants sont très sensibles au bruit&nbsp;: entre <strong>75 et 80&nbsp;dB(A)</strong> de façon forte et prolongée, ils deviennent agressifs, agités, irritables et fatigués. D'où l'importance de traiter acoustiquement cantines, salles de classe et préaux.</p>
+
+      <h3>L'âge adulte et la sénescence</h3>
+      <p>Dès <strong>vingt ans</strong>, l'audition commence à vieillir. Vers <strong>cinquante ans</strong> apparaît la <em>presbyacousie</em> — équivalent acoustique de la presbytie optique. Ce phénomène naturel touche chacun de manière inégale, à des âges plus ou moins précoces.</p>
+
+      <h2 class="section-titre" style="margin-top:2.5rem">Quelques notions sur le bruit</h2>
+      <p>Pour bien combattre un ennemi, il faut d'abord le connaître. À propos du bruit, beaucoup d'idées fausses circulent&nbsp;: qu'il « monte », qu'un rideau d'arbres l'atténue, que les doubles vitrages sont toujours efficaces, ou qu'on finit par s'y habituer.</p>
+      <p>Un bruit (ou un son) est une <strong>vibration de l'air</strong> caractérisée par trois éléments&nbsp;: sa <strong>fréquence</strong>, son <strong>niveau sonore</strong> et sa <strong>durée</strong>.</p>
+
+      <h3>1. La fréquence — aigu ou grave (en hertz)</h3>
+      <p>L'oreille humaine perçoit les sons entre 20&nbsp;Hz (très grave) et 20&nbsp;000&nbsp;Hz (très aigu).</p>
+      <table class="tableau">
+        <tr><th>Plage</th><th>Fréquences</th></tr>
+        <tr><td>Basses fréquences</td><td>16 à 200 Hz</td></tr>
+        <tr><td>Fréquences médium</td><td>201 à 2 000 Hz</td></tr>
+        <tr><td>Fréquences aiguës</td><td>2 001 à 20 000 Hz</td></tr>
+      </table>
+
+      <h3>2. Le niveau sonore — l'intensité (en décibels)</h3>
+      <p>Le seuil d'audibilité est fixé à <strong>0&nbsp;dB</strong> et le seuil de la douleur à <strong>100&nbsp;dB</strong> (la vraie douleur étant ressentie vers 120-130&nbsp;dB). L'intensité décroît avec l'éloignement, en fonction du <strong>carré de la distance</strong> — donc très vite&nbsp;:</p>
+      <table class="tableau">
+        <tr><th>Distance</th><th>Niveau</th></tr>
+        <tr><td>1 mètre</td><td>100 dB(A)</td></tr>
+        <tr><td>2 mètres</td><td>94 dB(A)</td></tr>
+        <tr><td>4 mètres</td><td>88 dB(A)</td></tr>
+      </table>
+      <div class="encart">
+        <strong>Une échelle logarithmique.</strong> Doubler une source sonore n'ajoute que <strong>3&nbsp;dB</strong>&nbsp;: deux bruits de 35&nbsp;dB donnent 38&nbsp;dB (et non 70). Conséquence&nbsp;: pour réduire de 10&nbsp;dB le bruit d'une rue, il faut diviser son trafic par dix. Abaisser de 3&nbsp;dB (diviser le bruit par deux) est à peine perceptible à l'oreille.
+      </div>
+
+      <h3>3. La durée</h3>
+      <p>La durée est déterminante pour la perception et la gêne. L'intensité pouvant fluctuer dans le temps, une seule mesure ne suffit pas&nbsp;: on relève une série de mesures pour connaître le niveau maximum et le niveau moyen, exprimé en <strong>LEQ</strong> (<em>Level equivalent</em>). Le LEQ caractérise la « dose » de bruit reçue pendant une période donnée et mesure la gêne provoquée.</p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    initPage("comprendre");
+    (function(){
+      const box = document.getElementById("video-oreille");
+      if (!box) return;
+      box.querySelector(".video-play").addEventListener("click", function(){
+        const id = box.dataset.id;
+        box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id +
+          '?autoplay=1&rel=0" title="Comment percevons-nous le son ?" ' +
+          'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" ' +
+          'allowfullscreen></iframe>';
+      });
+    })();
+  </script>
+</body>
+</html>

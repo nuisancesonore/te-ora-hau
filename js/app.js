@@ -92,7 +92,7 @@ async function rendreNav(pageActive) {
 
   let menuLiens = liens.map(l => {
     const classes = [l.id === pageActive ? "actif" : "", l.id === "cotiser" ? "lien-cotiser" : ""].filter(Boolean).join(" ");
-    return `<a href="${l.href}" class="${classes}">${l.id === "cotiser" ? "💳 " : ""}${l.label}</a>`;
+    return `<a href="${l.href}" class="${classes}">${l.label}</a>`;
   }).join("");
 
   let droite;
@@ -100,7 +100,7 @@ async function rendreNav(pageActive) {
     if (profil.role === "bureau") {
       menuLiens += `<a href="admin.html" class="${pageActive === "admin" ? "actif" : ""}">Admin</a>`;
     }
-    droite = `<a href="espace.html" class="${pageActive === "espace" ? "actif" : ""}">🌺 Mon espace</a>
+    droite = `<a href="espace.html" class="${pageActive === "espace" ? "actif" : ""}">Mon espace</a>
               <a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`;
   } else {
     droite = `<a href="connexion.html" class="${pageActive === "connexion" ? "actif" : ""}">Connexion</a>

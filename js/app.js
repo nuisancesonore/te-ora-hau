@@ -126,6 +126,12 @@ async function rendreNav(pageActive) {
     </header>`;
 
   if (!TOH_PRET) afficherBanniereConfig();
+
+  // Ombre renforcée quand le menu est collé en haut (effet au défilement)
+  const headerEl = document.querySelector("header.site");
+  const onScroll = () => { if (headerEl) headerEl.classList.toggle("collee", window.scrollY > 20); };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
 }
 
 function afficherBanniereConfig() {

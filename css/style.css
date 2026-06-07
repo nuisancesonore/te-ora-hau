@@ -27,6 +27,11 @@ a:hover { text-decoration: underline; }
 img { max-width: 100%; display: block; }
 
 /* ---------- En-tête / Navigation ---------- */
+/* #nav-mount "disparaît" en tant que boîte : la bannière et le menu se
+   comportent comme des enfants directs du <body>, ce qui permet au menu
+   de rester collé en haut pendant tout le défilement. */
+#nav-mount { display: contents; }
+
 header.site {
   background: linear-gradient(135deg, var(--bleu-fonce), var(--bleu-lagon));
   color: var(--blanc);
@@ -34,7 +39,10 @@ header.site {
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: box-shadow 0.2s, padding 0.2s;
 }
+/* Ombre plus marquée quand le menu est "collé" en haut */
+header.site.collee { box-shadow: 0 6px 20px rgba(6, 74, 84, 0.28); }
 
 .nav-inner {
   max-width: 1100px;

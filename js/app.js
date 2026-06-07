@@ -80,32 +80,42 @@ function traduireErreur(m) {
 /* ---------- Navigation dynamique ---------- */
 async function rendreNav(pageActive) {
   const profil = await monProfil();
-  const liens = [
-    { href: "index.html", label: "Accueil", id: "accueil" },
-    { href: "association.html", label: "L'association", id: "association" },
-    { href: "carte.html", label: "Carte des nuisances", id: "carte" },
-    { href: "comprendre.html", label: "Comprendre le son", id: "comprendre" },
-    { href: "le-bruit.html", label: "Le bruit & la loi", id: "bruit" },
-    { href: "forum.html", label: "Forum", id: "forum" },
-    { href: "cotiser.html", label: "Cotiser", id: "cotiser" },
-  ];
+  const lien = (href, label, id) =>
+    `<a href="${href}" class="${id === pageActive ? "actif" : ""}">${label}</a>`;
 
-  let menuLiens = liens.map(l => {
-    const classes = [l.id === pageActive ? "actif" : "", l.id === "cotiser" ? "lien-cotiser" : ""].filter(Boolean).join(" ");
-    return `<a href="${l.href}" class="${classes}">${l.label}</a>`;
-  }).join("");
+  // Déroulant "Comprendre" : Le son & l'audition / Bruit & santé
+  const dropdown = `
+    <div class="menu-drop">
+      <a href="comprendre.html" class="drop-trigger ${pageActive === "comprendre" ? "actif" : ""}">Comprendre <span class="caret">▾</span></a>
+      <div class="drop-menu">
+        <a href="comprendre.html#audition">Le son &amp; l'audition</a>
+        <a href="comprendre.html#sante">Bruit &amp; santé</a>
+      </div>
+    </div>`;
 
-  let droite;
+  // Liens dépendant de la connexion
+  let adhererOuEspace, finAuth, adminLien = "";
   if (profil) {
-    if (profil.role === "bureau") {
-      menuLiens += `<a href="admin.html" class="${pageActive === "admin" ? "actif" : ""}">Admin</a>`;
-    }
-    droite = `<a href="espace.html" class="${pageActive === "espace" ? "actif" : ""}">Mon espace</a>
-              <a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`;
+    adhererOuEspace = lien("espace.html", "Mon espace", "espace");
+    finAuth = `<a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`;
+    if (profil.role === "bureau") adminLien = lien("admin.html", "Admin", "admin");
   } else {
-    droite = `<a href="connexion.html" class="${pageActive === "connexion" ? "actif" : ""}">Connexion</a>
-              <a href="inscription.html" class="bouton">Adhérer</a>`;
+    adhererOuEspace = `<a href="inscription.html" class="bouton ${pageActive === "inscription" ? "actif" : ""}">Adhérer</a>`;
+    finAuth = lien("connexion.html", "Connexion", "connexion");
   }
+
+  const menuHTML = [
+    lien("index.html", "Accueil", "accueil"),
+    lien("association.html", "Qui sommes-nous ?", "association"),
+    lien("carte.html", "Carte des nuisances", "carte"),
+    dropdown,
+    lien("le-bruit.html", "Les textes de lois", "bruit"),
+    lien("forum.html", "Forum", "forum"),
+    adhererOuEspace,
+    `<a href="cotiser.html" class="lien-cotiser ${pageActive === "cotiser" ? "actif" : ""}">Cotiser</a>`,
+    adminLien,
+    finAuth,
+  ].join("");
 
   const mount = document.getElementById("nav-mount");
   mount.innerHTML = `
@@ -128,9 +138,24 @@ async function rendreNav(pageActive) {
             <span class="sous">Vivre en paix · Lutte contre le bruit</span>
           </span>
         </a>
-        <nav class="menu">${menuLiens}${droite}</nav>
+        <button class="hamburger" id="hamburger" aria-label="Ouvrir le menu" aria-expanded="false">☰</button>
+        <nav class="menu" id="menu-principal">${menuHTML}</nav>
       </div>
     </header>`);
+
+  // Hamburger : ouvre/ferme le menu sur mobile
+  const burger = document.getElementById("hamburger");
+  const menuEl = document.getElementById("menu-principal");
+  if (burger && menuEl) {
+    burger.addEventListener("click", () => {
+      const ouvert = menuEl.classList.toggle("ouvert");
+      burger.setAttribute("aria-expanded", ouvert ? "true" : "false");
+    });
+    menuEl.querySelectorAll("a").forEach(a => a.addEventListener("click", () => {
+      menuEl.classList.remove("ouvert");
+      burger.setAttribute("aria-expanded", "false");
+    }));
+  }
 
   if (!TOH_PRET) afficherBanniereConfig();
 

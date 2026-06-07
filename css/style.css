@@ -98,6 +98,53 @@ nav.menu a.lien-cotiser {
 nav.menu a.lien-cotiser:hover { background: #256f47; }
 nav.menu a.lien-cotiser.actif { background: #256f47; }
 
+/* ---------- Bouton hamburger (mobile) ---------- */
+.hamburger {
+  display: none;
+  background: rgba(255,255,255,0.15);
+  color: #fff; border: none; cursor: pointer;
+  font-size: 1.4rem; line-height: 1;
+  padding: 0.35rem 0.7rem; border-radius: 8px;
+}
+.hamburger:hover { background: rgba(255,255,255,0.28); }
+
+/* ---------- Menu déroulant "Comprendre" ---------- */
+.menu-drop { position: relative; }
+.menu-drop .drop-trigger { display: inline-flex; align-items: center; gap: 0.25rem; }
+.menu-drop .caret { font-size: 0.7rem; }
+.drop-menu {
+  position: absolute; top: 100%; left: 0; min-width: 210px;
+  background: var(--bleu-fonce); border-radius: 10px;
+  box-shadow: var(--ombre); padding: 0.4rem; margin-top: 0.2rem;
+  display: none; z-index: 200;
+}
+.menu-drop:hover .drop-menu,
+.menu-drop:focus-within .drop-menu { display: block; }
+.drop-menu a { display: block; color: #fff; padding: 0.5rem 0.7rem; border-radius: 7px; font-size: 0.9rem; }
+.drop-menu a:hover { background: rgba(255,255,255,0.15); text-decoration: none; }
+
+/* ---------- Mobile : menu repliable (hamburger) ---------- */
+@media (max-width: 860px) {
+  .hamburger { display: inline-block; }
+  nav.menu {
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    margin-top: 0.6rem;
+    gap: 0.15rem;
+  }
+  nav.menu.ouvert { display: flex; }
+  nav.menu a { padding: 0.7rem 0.9rem; }
+  .menu-drop { width: 100%; }
+  .drop-menu {
+    position: static; display: block; min-width: 0;
+    background: rgba(0,0,0,0.18); box-shadow: none;
+    padding: 0.2rem 0 0.2rem 0.9rem; margin-top: 0.1rem;
+  }
+  .menu-drop .caret { display: none; }
+}
+
 .user-chip {
   font-size: 0.85rem; opacity: 0.95;
   display: inline-flex; align-items: center; gap: 0.4rem;

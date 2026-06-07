@@ -31,10 +31,12 @@ header.site {
   background: linear-gradient(135deg, var(--bleu-fonce), var(--bleu-lagon));
   color: var(--blanc);
   box-shadow: var(--ombre);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 100;
-  transition: box-shadow 0.2s, padding 0.2s;
+  transition: box-shadow 0.2s;
 }
 /* Ombre plus marquée quand le menu est "collé" en haut */
 header.site.collee { box-shadow: 0 6px 20px rgba(6, 74, 84, 0.28); }
@@ -170,6 +172,12 @@ nav.menu a.lien-cotiser.actif { background: #256f47; }
   background: #d3122a;
   text-align: center;
   line-height: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  will-change: opacity;
 }
 .banniere img {
   width: 100%;

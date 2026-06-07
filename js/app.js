@@ -159,11 +159,39 @@ async function rendreNav(pageActive) {
 
   if (!TOH_PRET) afficherBanniereConfig();
 
-  // Ombre renforcée quand le menu est collé en haut (effet au défilement)
-  const headerEl = document.querySelector("header.site");
-  const onScroll = () => { if (headerEl) headerEl.classList.toggle("collee", window.scrollY > 20); };
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
+  // Effet fluide au défilement : la bannière reste fixe et devient
+  // translucide pendant que le menu remonte se coller en haut.
+  const headerEl = document.getElementById("toh-header");
+  const banniereEl = document.querySelector(".banniere");
+  let _banH = 0, _menuH = 0;
+
+  function ajusterDefilement() {
+    _banH = banniereEl ? banniereEl.offsetHeight : 0;
+    _menuH = headerEl ? headerEl.offsetHeight : 0;
+    document.body.style.paddingTop = (_banH + _menuH) + "px";
+    appliquerScroll();
+  }
+
+  function appliquerScroll() {
+    const sc = window.scrollY || window.pageYOffset || 0;
+    if (headerEl) {
+      headerEl.style.top = Math.max(_banH - sc, 0) + "px";
+      headerEl.classList.toggle("collee", sc > Math.max(_banH - _menuH, 0));
+    }
+    if (banniereEl) {
+      const op = _banH ? Math.max(1 - sc / _banH, 0) : 1;
+      banniereEl.style.opacity = op;
+      banniereEl.style.pointerEvents = op > 0.6 ? "auto" : "none";
+    }
+  }
+
+  window.addEventListener("scroll", appliquerScroll, { passive: true });
+  window.addEventListener("resize", ajusterDefilement);
+  if (banniereEl) {
+    const img = banniereEl.querySelector("img");
+    if (img && !img.complete) img.addEventListener("load", ajusterDefilement);
+  }
+  ajusterDefilement();
 }
 
 function afficherBanniereConfig() {

@@ -27,6 +27,10 @@ while ($listener.IsListening) {
       $bytes = [System.IO.File]::ReadAllBytes($path)
       $ext = [System.IO.Path]::GetExtension($path).ToLower()
       if ($types.ContainsKey($ext)) { $ctx.Response.ContentType = $types[$ext] }
+      # Empeche la mise en cache : les modifications s'affichent toujours
+      $ctx.Response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
+      $ctx.Response.Headers.Add("Pragma", "no-cache")
+      $ctx.Response.Headers.Add("Expires", "0")
       $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
     } else {
       $ctx.Response.StatusCode = 404

@@ -6,8 +6,11 @@
   <title>Signaler une nuisance · Te Ora Hau</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <style>#map{ height:320px; border-radius:12px; box-shadow:var(--ombre); margin-bottom:0.4rem; }
-    .aide{ font-size:0.82rem; color:var(--gris); margin-bottom:1rem; }</style>
+  <style>#map{ height:340px; border-radius:12px; box-shadow:var(--ombre); margin-bottom:0.4rem; cursor:crosshair; }
+    .aide{ font-size:0.82rem; color:var(--gris); margin-bottom:1rem; }
+    .rech-box{ display:flex; gap:0.4rem; margin-bottom:0.5rem; }
+    .rech-box input{ flex:1; padding:0.55rem 0.7rem; border:1.5px solid #d6d6cf; border-radius:9px; font-size:0.95rem; }
+    @media(max-width:760px){ .layout{ grid-template-columns:1fr !important; } }</style>
 </head>
 <body>
   <div id="nav-mount"></div>
@@ -34,12 +37,16 @@
 
       contenu.innerHTML = `
         <h2 class="section-titre">Signaler une nuisance sonore</h2>
-        <p class="aide">Cliquez sur la carte pour situer la nuisance (ou utilisez votre position). Votre signalement alimente la <a href="carte.html">carte collective</a>.</p>
+        <p class="aide"><strong>Placez un point précis</strong> — la commune seule ne suffit pas (trop vaste). 3 façons&nbsp;: <strong>① recherchez une adresse</strong>, <strong>② cliquez directement sur la carte</strong>, ou <strong>③ utilisez votre position</strong> (idéal sur mobile). Votre signalement alimente la <a href="carte.html">carte collective</a>.</p>
         <div class="layout" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
           <div>
+            <div class="rech-box">
+              <input id="recherche" placeholder="Rechercher une adresse, un quartier, un lieu…">
+              <button class="btn btn-clair" id="btn-rech" type="button" style="padding:0.55rem 0.9rem">🔍 Chercher</button>
+            </div>
             <div id="map"></div>
-            <button class="btn btn-clair" id="geo" style="width:100%">📍 Utiliser ma position actuelle</button>
-            <p class="aide" id="coord">Aucun point sélectionné.</p>
+            <button class="btn btn-clair" id="geo" style="width:100%;margin-top:0.4rem">📍 Utiliser ma position actuelle (GPS)</button>
+            <p class="aide" id="coord" style="font-weight:600">⚠️ Aucun point placé — recherchez, cliquez sur la carte, ou utilisez le GPS.</p>
           </div>
           <div class="form-wrap" style="max-width:100%;margin:0">
             <div id="msg" class="message"></div>
@@ -82,20 +89,50 @@
       function poser(lat, lng){
         pt = { lat, lng };
         if (marqueur) marqueur.setLatLng([lat,lng]); else marqueur = L.marker([lat,lng]).addTo(map);
-        document.getElementById("coord").textContent = `Point sélectionné : ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        const c = document.getElementById("coord");
+        c.textContent = `✅ Point placé (${lat.toFixed(5)}, ${lng.toFixed(5)}). Vous pouvez l'ajuster en recliquant.`;
+        c.style.color = "var(--vert-paix)";
       }
       map.on("click", e => poser(e.latlng.lat, e.latlng.lng));
       document.getElementById("geo").addEventListener("click", () => {
-        if (!navigator.geolocation) return;
+        if (!navigator.geolocation){ alert("Géolocalisation non disponible sur cet appareil. Cliquez sur la carte."); return; }
         navigator.geolocation.getCurrentPosition(p => {
           poser(p.coords.latitude, p.coords.longitude);
-          map.setView([p.coords.latitude, p.coords.longitude], 15);
-        }, () => alert("Géolocalisation indisponible. Cliquez sur la carte."));
+          map.setView([p.coords.latitude, p.coords.longitude], 16);
+        }, () => alert("Géolocalisation refusée ou indisponible. Recherchez une adresse ou cliquez sur la carte."));
+      });
+
+      // Recherche d'adresse / de lieu (géocodage OpenStreetMap)
+      async function rechercher(){
+        const q = document.getElementById("recherche").value.trim();
+        if (!q) return;
+        try {
+          const r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pf&q=" + encodeURIComponent(q));
+          const d = await r.json();
+          if (d && d.length){
+            const lat = parseFloat(d[0].lat), lng = parseFloat(d[0].lon);
+            poser(lat, lng); map.setView([lat, lng], 16);
+          } else {
+            alert("Lieu introuvable en Polynésie. Essayez un nom plus connu (quartier, rue, point de repère) ou cliquez directement sur la carte.");
+          }
+        } catch(_) {
+          alert("Recherche momentanément indisponible. Cliquez directement sur la carte.");
+        }
+      }
+      document.getElementById("btn-rech").addEventListener("click", rechercher);
+      document.getElementById("recherche").addEventListener("keydown", e => {
+        if (e.key === "Enter"){ e.preventDefault(); rechercher(); }
       });
 
       const msg = document.getElementById("msg");
       document.getElementById("form-sig").addEventListener("submit", async function(e){
         e.preventDefault();
+        if (!pt){
+          msg.className = "message err";
+          msg.textContent = "Veuillez d'abord placer un point précis sur la carte (recherche d'adresse, clic, ou position GPS) — sinon le signalement n'apparaîtra pas sur la carte.";
+          document.getElementById("map").scrollIntoView({ behavior:"smooth", block:"center" });
+          return;
+        }
         const s = await sessionActive();
         const row = {
           auteur: s.user.id,

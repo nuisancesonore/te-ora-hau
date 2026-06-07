@@ -159,14 +159,15 @@ async function rendreNav(pageActive) {
 
   if (!TOH_PRET) afficherBanniereConfig();
 
-  // Effet fluide au défilement : la bannière reste fixe et devient
-  // translucide pendant que le menu remonte se coller en haut.
+  // Effet fluide au défilement : le menu remonte et "avale" la bannière
+  // par le haut ; sous la barre, le contenu reste propre (pas d'image).
   const headerEl = document.getElementById("toh-header");
   const banniereEl = document.querySelector(".banniere");
+  const banImg = banniereEl ? banniereEl.querySelector("img") : null;
   let _banH = 0, _menuH = 0;
 
   function ajusterDefilement() {
-    _banH = banniereEl ? banniereEl.offsetHeight : 0;
+    _banH = banImg ? banImg.offsetHeight : (banniereEl ? banniereEl.offsetHeight : 0);
     _menuH = headerEl ? headerEl.offsetHeight : 0;
     document.body.style.paddingTop = (_banH + _menuH) + "px";
     appliquerScroll();
@@ -174,23 +175,20 @@ async function rendreNav(pageActive) {
 
   function appliquerScroll() {
     const sc = window.scrollY || window.pageYOffset || 0;
-    if (headerEl) {
-      headerEl.style.top = Math.max(_banH - sc, 0) + "px";
-      headerEl.classList.toggle("collee", sc > Math.max(_banH - _menuH, 0));
-    }
+    const visible = Math.max(_banH - sc, 0);   // hauteur de bannière encore visible
     if (banniereEl) {
-      const op = _banH ? Math.max(1 - sc / _banH, 0) : 1;
-      banniereEl.style.opacity = op;
-      banniereEl.style.pointerEvents = op > 0.6 ? "auto" : "none";
+      banniereEl.style.height = visible + "px";
+      banniereEl.style.opacity = _banH ? Math.max(visible / _banH, 0) : 1;
+    }
+    if (headerEl) {
+      headerEl.style.top = visible + "px";       // le menu reste collé sous la bannière
+      headerEl.classList.toggle("collee", visible < 2);
     }
   }
 
   window.addEventListener("scroll", appliquerScroll, { passive: true });
   window.addEventListener("resize", ajusterDefilement);
-  if (banniereEl) {
-    const img = banniereEl.querySelector("img");
-    if (img && !img.complete) img.addEventListener("load", ajusterDefilement);
-  }
+  if (banImg && !banImg.complete) banImg.addEventListener("load", ajusterDefilement);
   ajusterDefilement();
 }
 

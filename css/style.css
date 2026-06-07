@@ -177,7 +177,8 @@ nav.menu a.lien-cotiser.actif { background: #256f47; }
   left: 0;
   right: 0;
   z-index: 90;
-  will-change: opacity;
+  overflow: hidden;
+  will-change: height, opacity;
 }
 .banniere img {
   width: 100%;

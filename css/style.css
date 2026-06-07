@@ -88,6 +88,12 @@ nav.menu a.bouton {
   font-weight: 600;
 }
 nav.menu a.bouton:hover { background: #ff5e38; }
+nav.menu a.lien-cotiser {
+  background: var(--vert-paix);
+  font-weight: 600;
+}
+nav.menu a.lien-cotiser:hover { background: #256f47; }
+nav.menu a.lien-cotiser.actif { background: #256f47; }
 
 .user-chip {
   font-size: 0.85rem; opacity: 0.95;

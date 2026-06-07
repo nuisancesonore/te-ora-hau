@@ -90,9 +90,10 @@ async function rendreNav(pageActive) {
     { href: "forum.html", label: "Forum", id: "forum" },
   ];
 
-  let menuLiens = liens.map(l =>
-    `<a href="${l.href}" class="${l.id === pageActive ? "actif" : ""}">${l.label}</a>`
-  ).join("");
+  let menuLiens = liens.map(l => {
+    const classes = [l.id === pageActive ? "actif" : "", l.id === "cotiser" ? "lien-cotiser" : ""].filter(Boolean).join(" ");
+    return `<a href="${l.href}" class="${classes}">${l.id === "cotiser" ? "💳 " : ""}${l.label}</a>`;
+  }).join("");
 
   let droite;
   if (profil) {

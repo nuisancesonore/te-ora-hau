@@ -236,6 +236,16 @@ main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.2rem; }
 .btn-primaire { background: var(--corail); color: var(--blanc); }
 .btn-clair { background: var(--blanc); color: var(--bleu-fonce); }
 .btn-vert { background: var(--vert-paix); color: var(--blanc); }
+
+/* Boutons "clairs" placés dans une carte (fond blanc) : on les rend bien
+   visibles, en vert plein avec texte blanc, comme le bouton "Signaler". */
+.carte .btn-clair,
+.verrou .btn-clair {
+  background: var(--vert-paix);
+  color: var(--blanc);
+}
+.carte .btn-clair:hover,
+.verrou .btn-clair:hover { background: #256f47; }
 .btn-bloc { display: block; width: 100%; }
 
 /* ---------- Formulaires ---------- */

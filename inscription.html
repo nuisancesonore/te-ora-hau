@@ -52,6 +52,7 @@
         <div class="champ">
           <label for="commune">Commune</label>
           <select id="commune" required></select>
+          <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem">
         </div>
         <div class="champ pleine">
           <label for="email">Adresse e-mail</label>
@@ -88,6 +89,7 @@
   <script>
     initPage("inscription");
     document.getElementById("commune").innerHTML = optionsCommunes("");
+    const valCommune = brancherCommuneAutre(document.getElementById("commune"), document.getElementById("commune_autre"));
 
     const msg = document.getElementById("msg");
     document.getElementById("form-inscription").addEventListener("submit", async function(e) {
@@ -97,7 +99,7 @@
       const nom = document.getElementById("nom").value.trim();
       const naissance = document.getElementById("naissance").value || null;
       const adresse = document.getElementById("adresse").value.trim();
-      const commune = document.getElementById("commune").value;
+      const commune = valCommune();
       const email = document.getElementById("email").value.trim();
       const mdp = document.getElementById("mdp").value;
       const mdp2 = document.getElementById("mdp2").value;

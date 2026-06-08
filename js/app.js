@@ -271,26 +271,20 @@ const COMMUNES_DETAIL = {
   "Hitiaa O Te Ra": ["Hitiaa","Mahaena","Papenoo","Tiarei"],
 };
 
-// Construit un <select> de communes développées en localités (groupées).
-// La valeur stockée est "Commune — Localité" (ou la commune si pas de localité).
+// Liste simple des communes, triées par ordre alphabétique ("Autre" en dernier).
 function optionsCommunes(selected) {
-  let html = '<option value="">— Choisir —</option>';
-  COMMUNES_PF.forEach(c => {
-    const sous = COMMUNES_DETAIL[c] || [];
-    if (sous.length) {
-      html += `<optgroup label="${c}">`;
-      sous.forEach(q => {
-        const v = c + " — " + q;
-        const sel = (v === selected || q === selected) ? " selected" : "";
-        html += `<option value="${v}"${sel}>${q}</option>`;
-      });
-      html += `</optgroup>`;
-    } else {
-      const sel = (c === selected) ? " selected" : "";
-      html += `<option value="${c}"${sel}>${c}</option>`;
-    }
-  });
-  return html;
+  const liste = COMMUNES_PF.filter(c => c !== "Autre").sort((a, b) => a.localeCompare(b, "fr"));
+  liste.push("Autre");
+  return '<option value="">— Choisir —</option>' +
+    liste.map(c => `<option${c === selected ? " selected" : ""}>${c}</option>`).join("");
+}
+
+// Affiche un champ "préciser" quand la commune choisie est "Autre".
+// Retourne valeurCommune() : le texte saisi si "Autre", sinon la commune.
+function brancherCommuneAutre(select, input) {
+  const maj = () => { if (input) input.style.display = (select.value === "Autre") ? "" : "none"; };
+  select.addEventListener("change", maj); maj();
+  return () => (select.value === "Autre") ? ((input && input.value.trim()) || "Autre") : select.value;
 }
 
 // Géocodage inverse : coordonnées -> commune + quartier + adresse (OpenStreetMap)

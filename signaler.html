@@ -63,7 +63,8 @@
                   <option>Manifestation / fête</option>
                   <option>Autre</option>
                 </select></div>
-              <div class="champ"><label>Commune</label><select id="commune" required></select></div>
+              <div class="champ"><label>Commune</label><select id="commune" required></select>
+                <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem"></div>
               <div class="champ"><label>Quartier / localité précise</label>
                 <input id="quartier" list="liste-quartiers" placeholder="Ex. Taravao, Afaahiti, Puurai…" autocomplete="off">
                 <datalist id="liste-quartiers"></datalist></div>
@@ -94,9 +95,8 @@
         </div>`;
 
       const selCommune = document.getElementById("commune");
-      selCommune.innerHTML =
-        `<option ${profil.commune?'':'selected'} value="">— Choisir —</option>` +
-        COMMUNES_PF.map(c => `<option ${c===profil.commune?'selected':''}>${c}</option>`).join("");
+      selCommune.innerHTML = optionsCommunes(profil.commune);
+      const valCommune = brancherCommuneAutre(selCommune, document.getElementById("commune_autre"));
 
       // Suggestions de quartier selon la commune choisie
       function majQuartiers(){
@@ -180,7 +180,7 @@
         const row = {
           auteur: s.user.id,
           type: document.getElementById("type").value,
-          commune: document.getElementById("commune").value,
+          commune: valCommune(),
           quartier: document.getElementById("quartier").value.trim(),
           adresse_source: document.getElementById("adresse_source").value.trim(),
           adresse_plaignant: document.getElementById("adresse_plaignant").value.trim(),

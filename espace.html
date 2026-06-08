@@ -82,7 +82,8 @@
             <div id="msg" class="message"></div>
             <form id="form-profil">
               <div class="champ"><label>Nom et prénom</label><input id="nom" value="${echapper(profil.nom)}" required></div>
-              <div class="champ"><label>Commune</label><select id="commune"></select></div>
+              <div class="champ"><label>Commune</label><select id="commune"></select>
+                <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem"></div>
               <div class="champ"><label>Type de nuisance subie</label>
                 <input id="type_nuisance" value="${echapper(profil.type_nuisance)}" placeholder="Ex. sono de bar, voisinage, chantier…"></div>
               <div class="champ" style="display:flex;align-items:center;gap:0.5rem">
@@ -103,13 +104,14 @@
       // Sélecteur commune
       const sel = document.getElementById("commune");
       sel.innerHTML = optionsCommunes(profil.commune);
+      const valCommune = brancherCommuneAutre(sel, document.getElementById("commune_autre"));
 
       const msg = document.getElementById("msg");
       document.getElementById("form-profil").addEventListener("submit", async function(e) {
         e.preventDefault();
         const maj = {
           nom: document.getElementById("nom").value.trim(),
-          commune: sel.value,
+          commune: valCommune(),
           type_nuisance: document.getElementById("type_nuisance").value.trim(),
           annuaire_optin: document.getElementById("annuaire").checked,
         };

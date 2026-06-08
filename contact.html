@@ -26,6 +26,7 @@
         <div class="champ">
           <label for="commune">Commune</label>
           <select id="commune" required></select>
+          <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem">
         </div>
         <div class="champ">
           <label for="email">E-mail</label>
@@ -51,6 +52,7 @@
   <script>
     initPage("contact");
     document.getElementById("commune").innerHTML = optionsCommunes("");
+    brancherCommuneAutre(document.getElementById("commune"), document.getElementById("commune_autre"));
     const msg = document.getElementById("msg");
     document.getElementById("form-contact").addEventListener("submit", function(e) {
       e.preventDefault();

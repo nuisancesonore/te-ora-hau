@@ -53,7 +53,7 @@
     })();
 
     function opts(liste, val){ return liste.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join(""); }
-    function optsCommune(val){ return `<option value="">— Choisir —</option>`+COMMUNES_PF.map(c=>`<option ${c===val?'selected':''}>${c}</option>`).join(""); }
+    function optsCommune(val){ return optionsCommunes(val); }
 
     async function charger(){
       const contenu = document.getElementById("contenu");

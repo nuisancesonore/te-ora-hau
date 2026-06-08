@@ -300,6 +300,34 @@ function brancherCommuneAutre(select, input) {
   return () => (select.value === "Autre") ? ((input && input.value.trim()) || "Autre") : select.value;
 }
 
+/* ---------- Listes de référence des signalements (source unique) ----------
+   Utilisées par signaler.html, mes-signalements.html et carte.html, pour
+   éviter toute divergence entre la création, l'édition et l'affichage. */
+const SIG_TYPES = [
+  "Voisinage (habitation)", "Sono de voiture", "Bar / restaurant / discothèque",
+  "Chantier / travaux", "Deux-roues / moteur", "Animaux", "Manifestation / fête", "Autre"
+];
+const SIG_HORAIRES = ["Jour", "Soir", "Nuit (après 22h)"];
+const SIG_INTENSITES = ["Faible", "Moyenne", "Forte", "Insupportable"];
+const SIG_RECURRENCES = ["Ponctuel", "Régulier", "Permanent"];
+const SIG_CONSTATS = ["Signalement seul", "Constat d'autorité", "Constat + plainte"];
+const MOIS_FR = ["janvier","février","mars","avril","mai","juin",
+  "juillet","août","septembre","octobre","novembre","décembre"];
+
+// Génère des <option> à partir d'une liste ; "selected" présélectionne une
+// valeur, "placeholder" ajoute une première option vide (ex. "— Choisir —").
+function optionsListe(liste, selected, placeholder) {
+  return (placeholder ? `<option value="">${placeholder}</option>` : "") +
+    liste.map(o => `<option${o === selected ? " selected" : ""}>${o}</option>`).join("");
+}
+
+// Formate une valeur "AAAA-MM" en "mois AAAA" (ex. 2026-06 -> "juin 2026").
+function moisAnnee(v) {
+  if (!v) return "";
+  const p = String(v).split("-");
+  return (MOIS_FR[parseInt(p[1]) - 1] || "") + " " + p[0];
+}
+
 // Géocodage inverse : coordonnées -> commune + quartier + adresse (OpenStreetMap)
 async function reverseGeocode(lat, lng) {
   try {

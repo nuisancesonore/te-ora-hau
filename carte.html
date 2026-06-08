@@ -83,8 +83,7 @@
       const bord = c => c==="Constat + plainte" ? {color:"#064a54", weight:4}
                        : c==="Constat d'autorité" ? {color:"#0a7d8c", weight:3}
                        : {color:"#ffffff", weight:2};
-      const MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-      const moisAn = v => { if(!v) return ""; const p=v.split("-"); return (MOIS[parseInt(p[1])-1]||"")+" "+p[0]; };
+      const moisAn = moisAnnee; // formateur "AAAA-MM" -> "mois AAAA" (js/app.js)
       geoloc.forEach(s => {
         const b = bord(s.constat);
         L.circleMarker([s.lat, s.lng], {

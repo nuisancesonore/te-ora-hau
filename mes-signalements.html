@@ -28,13 +28,11 @@
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
   <script>
-    const TYPES = ["Voisinage (habitation)","Sono de voiture","Bar / restaurant / discothèque","Chantier / travaux","Deux-roues / moteur","Animaux","Manifestation / fête","Autre"];
-    const HORAIRES = ["Jour","Soir","Nuit (après 22h)"];
-    const INTENSITES = ["Faible","Moyenne","Forte","Insupportable"];
-    const RECURRENCES = ["Ponctuel","Régulier","Permanent"];
-    const CONSTATS = ["Signalement seul","Constat d'autorité","Constat + plainte"];
-    const MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
-    const moisAn = v => { if(!v) return ""; const p=String(v).split("-"); return (MOIS[parseInt(p[1])-1]||"")+" "+p[0]; };
+    // Listes de référence partagées (définies dans js/app.js) — évite toute
+    // divergence avec le formulaire de création (signaler.html).
+    const TYPES = SIG_TYPES, HORAIRES = SIG_HORAIRES, INTENSITES = SIG_INTENSITES,
+          RECURRENCES = SIG_RECURRENCES, CONSTATS = SIG_CONSTATS;
+    const moisAn = moisAnnee;
     let UID = null;
 
     (async function(){

@@ -19,6 +19,9 @@
     .pill.ok{ background:#e3f5ea; color:#1d6b3f; } .pill.ko{ background:#fce6e1; color:#b2381f; }
     .mini { padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:7px; border:none; cursor:pointer; }
     .mini.vert{ background:var(--vert-paix); color:#fff; } .mini.clair{ background:#eee; }
+    .act { display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center; }
+    .act .ech { padding:0.25rem 0.4rem; border:1.5px solid #d6d6cf; border-radius:6px; font-size:0.8rem; }
+    .act label { font-size:0.78rem; color:var(--gris); display:inline-flex; align-items:center; gap:0.2rem; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -85,22 +88,41 @@
         const m = (a.nom+" "+(a.email||"")).toLowerCase().includes(q);
         const fo = f===""||(f==="ok"&&estAJour(a))||(f==="ko"&&!estAJour(a));
         return m && fo;
-      }).map(a => `
+      }).map(a => {
+        const echISO = (a.cotisation_echeance||"").slice(0,10);
+        const echFr = a.cotisation_echeance ? new Date(a.cotisation_echeance).toLocaleDateString("fr-FR") : "—";
+        return `
         <tr>
           <td>${echapper(a.nom)||'—'}${a.role==='bureau'?' <span class="pill ok">bureau</span>':''}</td>
           <td>${echapper(a.email)||'—'}</td>
           <td>${echapper(a.commune)||'—'}</td>
           <td>${estAJour(a)?'<span class="pill ok">À jour</span>':'<span class="pill ko">En retard</span>'}</td>
+          <td>${echFr}</td>
           <td>
-            <button class="mini vert" onclick="marquerPaye('${a.id}')">Marquer payé +1 an</button>
-            ${!estAJour(a)?`<button class="mini clair" onclick="relancer('${encodeURIComponent(a.email||'')}')">Relancer</button>`:''}
+            <div class="act">
+              <input type="date" class="ech" id="ech-${a.id}" value="${echISO}" title="Date d'échéance">
+              <label><input type="checkbox" id="pay-${a.id}" ${a.cotisation_payee?'checked':''}> payée</label>
+              <button class="mini vert" onclick="enregistrerCoti('${a.id}')">Enregistrer</button>
+              <button class="mini clair" onclick="payerUnAn('${a.id}')" title="Marque payé, échéance dans 1 an">+1 an</button>
+              ${!estAJour(a)?`<button class="mini clair" onclick="relancer('${encodeURIComponent(a.email||'')}')">Relancer</button>`:''}
+            </div>
           </td>
-        </tr>`).join("");
+        </tr>`; }).join("");
       document.getElementById("tableau").innerHTML = `
-        <table class="adh"><thead><tr><th>Nom</th><th>E-mail</th><th>Commune</th><th>Cotisation</th><th>Actions</th></tr></thead>
-        <tbody>${lignes||'<tr><td colspan="5" style="text-align:center;color:var(--gris)">Aucun adhérent</td></tr>'}</tbody></table>`;
+        <table class="adh"><thead><tr><th>Nom</th><th>E-mail</th><th>Commune</th><th>Cotisation</th><th>Échéance</th><th>Actions</th></tr></thead>
+        <tbody>${lignes||'<tr><td colspan="6" style="text-align:center;color:var(--gris)">Aucun adhérent</td></tr>'}</tbody></table>`;
     }
-    async function marquerPaye(id){
+    // Enregistre l'échéance saisie (date) et l'état "payée" pour un adhérent.
+    async function enregistrerCoti(id){
+      const echeance = (document.getElementById("ech-"+id).value || "") || null;
+      const paye = document.getElementById("pay-"+id).checked;
+      const { error } = await sb.from("profils").update({ cotisation_payee:paye, cotisation_echeance:echeance }).eq("id", id);
+      if (error) return alert("Erreur : "+error.message);
+      const a = ADH.find(x=>x.id===id); a.cotisation_payee=paye; a.cotisation_echeance=echeance;
+      dessiner();
+    }
+    // Raccourci : marque payé, échéance dans un an à compter d'aujourd'hui.
+    async function payerUnAn(id){
       const ech = new Date(); ech.setFullYear(ech.getFullYear()+1);
       const echeance = ech.toISOString().slice(0,10);
       const { error } = await sb.from("profils").update({ cotisation_payee:true, cotisation_echeance:echeance }).eq("id", id);

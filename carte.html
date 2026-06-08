@@ -9,7 +9,15 @@
   <style>#map{ height:480px; border-radius:12px; box-shadow:var(--ombre); }
     .legende{ display:flex; gap:1rem; flex-wrap:wrap; margin:1rem 0; font-size:0.85rem; color:var(--gris); }
     .legende span{ display:inline-flex; align-items:center; gap:0.35rem; }
-    .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; }</style>
+    .dot{ width:14px; height:14px; border-radius:50%; display:inline-block; }
+    .stats-wrap{ display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-top:0.8rem; }
+    @media(max-width:680px){ .stats-wrap{ grid-template-columns:1fr; } }
+    .stat-card{ background:#fff; border-radius:12px; box-shadow:var(--ombre); padding:1rem 1.2rem; }
+    .stat-card h3{ color:var(--bleu-fonce); font-size:1.05rem; margin-bottom:0.6rem; }
+    .stat-row{ display:flex; justify-content:space-between; gap:1rem; padding:0.35rem 0; border-bottom:1px solid #eee; font-size:0.92rem; }
+    .stat-row:last-child{ border-bottom:none; }
+    .stat-row .n{ font-weight:700; color:var(--corail); }
+    .stat-total{ color:var(--gris); font-size:0.85rem; margin:1.4rem 0 0.2rem; }</style>
 </head>
 <body>
   <div id="nav-mount"></div>
@@ -23,6 +31,8 @@
       <span><span class="dot" style="background:#ff7a59"></span> Moyenne / Forte</span>
       <span><span class="dot" style="background:#b2381f"></span> Insupportable</span>
     </div>
+
+    <div id="stats"></div>
   </main>
   <div id="footer-mount"></div>
 
@@ -43,12 +53,14 @@
         etat.innerHTML = `<div class="message err" style="display:block">Connectez-vous pour voir les signalements des membres. <a href="connexion.html">Se connecter</a></div>`;
         return;
       }
-      const { data, error } = await sb.from("signalements").select("*").not("lat","is",null);
+      const { data, error } = await sb.from("signalements").select("*");
       if (error){ etat.innerHTML = `<div class="message err" style="display:block">Erreur : ${error.message}</div>`; return; }
-      if (!data.length){ etat.innerHTML = `<div class="message ok" style="display:block">Aucun signalement géolocalisé pour le moment. Soyez le premier : <a href="signaler.html">signaler</a>.</div>`; }
+
+      const geoloc = data.filter(s => s.lat != null && s.lng != null);
+      if (!geoloc.length){ etat.innerHTML = `<div class="message ok" style="display:block">Aucun signalement géolocalisé pour le moment. Soyez le premier : <a href="signaler.html">signaler</a>.</div>`; }
 
       const couleur = i => i==="Insupportable" ? "#b2381f" : i==="Faible" ? "#e8b84b" : "#ff7a59";
-      data.forEach(s => {
+      geoloc.forEach(s => {
         L.circleMarker([s.lat, s.lng], {
           radius:9, color:"#fff", weight:2, fillColor:couleur(s.intensite), fillOpacity:0.9,
         }).addTo(map).bindPopup(
@@ -59,6 +71,27 @@
           (s.description?`<br><em>${echapper(s.description)}</em>`:"")
         );
       });
+
+      // ----- Statistiques -----
+      function compter(champ){
+        const m = {};
+        data.forEach(s => { const k = (s[champ]||"").trim() || "Non précisé"; m[k] = (m[k]||0)+1; });
+        return Object.entries(m).sort((a,b) => b[1]-a[1]);
+      }
+      function tableau(titre, lignes){
+        const total = lignes.reduce((t,[,n])=>t+n,0);
+        return `<div class="stat-card"><h3>${titre}</h3>` +
+          (lignes.length ? lignes.map(([k,n]) =>
+            `<div class="stat-row"><span>${echapper(k)}</span><span class="n">${n}</span></div>`).join("")
+            : `<div class="stat-row"><span style="color:var(--gris)">Aucune donnée</span></div>`) +
+          `</div>`;
+      }
+      document.getElementById("stats").innerHTML =
+        `<div class="stat-total"><strong>${data.length}</strong> signalement(s) au total · ${geoloc.length} géolocalisé(s).</div>
+         <div class="stats-wrap">
+           ${tableau("Signalements par commune", compter("commune"))}
+           ${tableau("Signalements par objet (type)", compter("type"))}
+         </div>`;
     })();
   </script>
 </body>

@@ -222,12 +222,14 @@ function rendreFooter() {
           <p><a href="signaler.html">Signaler une nuisance</a></p>
           <p><a href="outils.html">Courriers &amp; journal de bruit</a></p>
           <p><a href="carte.html">Carte des nuisances</a></p>
-          <p><a href="inscription.html">Devenir membre</a></p>
+          <p><a href="inscription.html">Adhérer</a></p>
         </div>
         <div>
           <h4>Contact</h4>
-          <p>📍 Papeete, Tahiti</p>
-          <p>✉️ contact@teorahau.net</p>
+          <p>BP 2524, 98713 Papeete — Tahiti</p>
+          <p><a href="mailto:contact@teorahau.net">contact@teorahau.net</a></p>
+          <p><a href="tel:+68987721687">87 72 16 87</a> · <a href="tel:+68989750415">89 75 04 15</a></p>
+          <p style="margin-top:0.5rem"><a href="contact.html"><strong>Nous contacter →</strong></a></p>
         </div>
       </div>
       <div class="foot-bas">

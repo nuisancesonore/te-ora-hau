@@ -13,6 +13,10 @@
     <div class="form-wrap">
       <h2>Nous contacter</h2>
       <p class="intro">Une question ? Écrivez-nous, nous vous répondrons rapidement.</p>
+      <p style="color:var(--gris);font-size:0.9rem;margin:-0.8rem 0 1.2rem">
+        Directement&nbsp;: <a href="mailto:contact@teorahau.net">contact@teorahau.net</a> ·
+        <a href="tel:+68987721687">87 72 16 87</a>
+      </p>
       <div id="msg" class="message"></div>
       <form id="form-contact">
         <div class="champ">
@@ -52,13 +56,22 @@
   <script>
     initPage("contact");
     document.getElementById("commune").innerHTML = optionsCommunes("");
-    brancherCommuneAutre(document.getElementById("commune"), document.getElementById("commune_autre"));
+    const valCommune = brancherCommuneAutre(document.getElementById("commune"), document.getElementById("commune_autre"));
     const msg = document.getElementById("msg");
+    const champ = id => (document.getElementById(id).value || "").trim();
     document.getElementById("form-contact").addEventListener("submit", function(e) {
       e.preventDefault();
+      const corps =
+        `Nom : ${champ("prenom")} ${champ("nom")}\n` +
+        `Commune : ${valCommune()}\n` +
+        `E-mail : ${champ("email")}\n\n` +
+        champ("message");
+      const lien = `mailto:contact@teorahau.net` +
+        `?subject=${encodeURIComponent("[Site] " + champ("sujet"))}` +
+        `&body=${encodeURIComponent(corps)}`;
+      window.location.href = lien;
       msg.className = "message ok";
-      msg.textContent = "Merci, votre message a bien été pris en compte. (Démo : aucun e-mail réel n'est envoyé.)";
-      e.target.reset();
+      msg.textContent = "Votre logiciel de messagerie va s'ouvrir avec le message pré-rempli. S'il ne s'ouvre pas, écrivez directement à contact@teorahau.net.";
     });
   </script>
 </body>

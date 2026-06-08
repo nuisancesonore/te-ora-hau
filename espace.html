@@ -20,6 +20,9 @@
     .badge.ok { background:#1d6b3f; }
     .badge.ko { background:#b2381f; }
     #qr { background:#fff; padding:8px; border-radius:10px; width:fit-content; }
+    .rappel-coti { border-radius:10px; padding:0.7rem 0.9rem; font-size:0.9rem; margin-bottom:0.8rem; }
+    .rappel-coti.r-urgent { background:#fce6e1; color:#b2381f; border:1px solid #f3c2b6; }
+    .rappel-coti.r-doux { background:#fff4e0; color:#8a5a00; border:1px solid #f0d9a8; }
   </style>
 </head>
 <body>
@@ -46,6 +49,18 @@
       const st = statutCotisation(profil);
       const aJour = st.aJour;
 
+      // Rappel de cotisation à la connexion : 2 mois avant, puis 1 mois avant.
+      let rappel = "";
+      const _j = st.joursRestants;
+      if (_j !== null) {
+        if (_j < 0)
+          rappel = `<div class="rappel-coti r-urgent">Votre cotisation est <strong>échue</strong> depuis le ${st.echeance}. Renouvelez-la pour continuer à soutenir l'association et bénéficier de son aide.</div>`;
+        else if (_j <= 30)
+          rappel = `<div class="rappel-coti r-urgent">Votre cotisation arrive à échéance <strong>dans ${_j} jour${_j>1?'s':''}</strong> (le ${st.echeance}). Pensez à la renouveler dès maintenant.</div>`;
+        else if (_j <= 60)
+          rappel = `<div class="rappel-coti r-doux">Votre cotisation arrive à échéance le <strong>${st.echeance}</strong> (dans ${_j} jours). Vous pouvez déjà la renouveler.</div>`;
+      }
+
       contenu.innerHTML = `
         <h2 class="section-titre">Mon espace adhérent</h2>
         <div class="layout">
@@ -58,7 +73,7 @@
               <div style="display:flex;gap:1.4rem;margin:1.2rem 0 0.4rem;flex-wrap:wrap;align-items:flex-end">
                 <div>
                   <div class="label">Commune</div><div class="val">${echapper(profil.commune)||'—'}</div>
-                  <div class="label">Échéance</div><div class="val">${st.echeance}</div>
+                  <div class="label">Période de cotisation</div><div class="val" style="font-size:0.85rem">${st.debutDate ? `du ${st.debut} au ${st.echeance}` : '—'}</div>
                   <div class="label">Carte n°</div><div class="val" style="font-size:0.8rem">${st.numero}</div>
                 </div>
                 <div id="qr"></div>
@@ -66,6 +81,7 @@
             </div>
             <div class="carte" style="margin-top:1.2rem;border-top-color:var(--corail)">
               <h3>Cotisation</h3>
+              ${rappel}
               <p style="color:var(--gris)">Réglez par virement, chèque ou espèces. Votre statut sera mis à jour par le bureau après réception.</p>
               <a href="cotiser.html" class="btn btn-primaire" style="margin-top:0.5rem">Comment payer ma cotisation →</a>
             </div>

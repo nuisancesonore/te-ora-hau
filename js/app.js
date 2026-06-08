@@ -61,11 +61,20 @@ async function monProfil() {
 
 // Statut de cotisation — source de vérité unique (utilisée par Mon espace et Cotiser)
 function statutCotisation(profil) {
-  const aJour = profil.cotisation_payee &&
-    (!profil.cotisation_echeance || new Date(profil.cotisation_echeance) >= new Date());
+  const ech = profil.cotisation_echeance ? new Date(profil.cotisation_echeance) : null;
+  const aJour = profil.cotisation_payee && (!ech || ech >= new Date());
+  // La cotisation est annuelle : la période débute un an avant l'échéance.
+  let debut = null;
+  if (ech) { debut = new Date(ech); debut.setFullYear(debut.getFullYear() - 1); }
+  const jours = ech ? Math.ceil((ech.getTime() - Date.now()) / 86400000) : null;
+  const fmt = d => d ? d.toLocaleDateString("fr-FR") : "—";
   return {
     aJour,
-    echeance: profil.cotisation_echeance ? new Date(profil.cotisation_echeance).toLocaleDateString("fr-FR") : "—",
+    echeance: fmt(ech),
+    debut: fmt(debut),
+    echeanceDate: ech,
+    debutDate: debut,
+    joursRestants: jours,           // négatif si la cotisation est échue
     numero: profil.id.slice(0, 8).toUpperCase(),
   };
 }

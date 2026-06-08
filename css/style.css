@@ -335,3 +335,9 @@ footer.site {
   .hero h1 { font-size: 2rem; }
   .nav-inner { justify-content: center; }
 }
+
+/* ---------- Impression : pas de menu/bannière/pied, ni décalage ---------- */
+@media print {
+  header.site, #toh-header, .banniere, #nav-mount, footer.site, #footer-mount { display: none !important; }
+  body { padding-top: 0 !important; background: #fff !important; }
+}

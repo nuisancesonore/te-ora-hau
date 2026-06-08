@@ -260,7 +260,20 @@ function maintenantTexte() {
   const d = new Date(); const p = n => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
-const COMMUNES_PF = ["Papeete","Faa'a","Punaauia","Paea","Papara","Teva I Uta","Taiarapu-Ouest","Taiarapu-Est","Pirae","Arue","Mahina","Hitiaa O Te Ra","Moorea-Maiao","Autre"];
+// Communes simples + districts (pour les communes qui en comptent plusieurs).
+const COMMUNES_PF = [
+  "Papeete", "Pirae", "Arue", "Mahina",
+  // Hitiaa O Te Ra
+  "Papenoo", "Tiarei", "Maha'ena", "Hitia'a",
+  // Taiarapu-Est
+  "Faaone", "Afaahiti", "Pueu", "Tautira",
+  // Taiarapu-Ouest
+  "Toahotu", "Vairao", "Teahupo'o",
+  // Teva I Uta
+  "Mataiea", "Papeari",
+  "Papara", "Paea", "Punaauia", "Faa'a",
+  "Moorea-Maiao", "Autre"
+];
 
 // Communes détaillées en localités (uniquement celles qui le nécessitent).
 // Les autres communes restent au nom de la commune ; l'adresse précise le lieu.

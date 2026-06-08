@@ -68,12 +68,20 @@
 
       const etat = document.getElementById("etat");
       const profil = await monProfil();
-      if (!profil){
-        etat.innerHTML = `<div class="message err" style="display:block">Connectez-vous pour voir les signalements des membres. <a href="connexion.html">Se connecter</a></div>`;
-        return;
+
+      // Carte publique : on lit la vue "signalements_publics" (sans données
+      // personnelles — l'adresse du plaignant n'y figure pas). Repli sur la
+      // table pour les membres connectés si la vue n'est pas encore déployée.
+      const COLS = "id,type,commune,quartier,intensite,horaire,recurrence,constat,debut,adresse_source,description,lat,lng";
+      let { data, error } = await sb.from("signalements_publics").select(COLS);
+      if (error && profil) ({ data, error } = await sb.from("signalements").select(COLS));
+      if (error){
+        etat.innerHTML = `<div class="message ${profil?'err':'ok'}" style="display:block">${
+          profil ? "Erreur : " + echapper(error.message)
+                 : "La carte publique sera bientôt disponible. En attendant, <a href=\"connexion.html\">connectez-vous</a> pour consulter les signalements."
+        }</div>`;
+        data = [];
       }
-      const { data, error } = await sb.from("signalements").select("*");
-      if (error){ etat.innerHTML = `<div class="message err" style="display:block">Erreur : ${error.message}</div>`; return; }
 
       const geoloc = data.filter(s => s.lat != null && s.lng != null);
       if (!geoloc.length){ etat.innerHTML = `<div class="message ok" style="display:block">Aucun signalement géolocalisé pour le moment. Soyez le premier : <a href="signaler.html">signaler</a>.</div>`; }

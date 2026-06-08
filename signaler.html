@@ -189,9 +189,19 @@
           ({ error } = await sb.from("signalements").insert(row));
         }
         if (error){ msg.className="message err"; msg.textContent="Erreur : "+error.message; return; }
+        // Mémorise le signalement pour pré-remplir un courrier (outils.html).
+        try { localStorage.setItem("TOH_signalement", JSON.stringify({
+          type: row.type, commune: row.commune, quartier: row.quartier,
+          adresse_source: row.adresse_source, horaire: row.horaire,
+          recurrence: row.recurrence, debut: row.debut, description: row.description
+        })); } catch(_){}
         msg.className="message ok";
-        msg.textContent="Merci ! Votre signalement a été enregistré.";
-        setTimeout(()=>location.href="carte.html", 1200);
+        msg.innerHTML = `Merci&nbsp;! Votre signalement a été enregistré. Prochaine étape&nbsp;?
+          <span style="display:inline-flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.7rem">
+            <a href="outils.html" class="btn btn-vert">Rédiger un courrier</a>
+            <a href="carte.html" class="btn btn-clair">Voir la carte</a>
+          </span>`;
+        msg.scrollIntoView({ behavior:"smooth", block:"center" });
       });
     })();
   </script>

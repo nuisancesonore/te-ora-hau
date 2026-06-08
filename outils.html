@@ -184,6 +184,25 @@
       dest.addEventListener("input", () => { dest.dataset.auto = ""; });
       document.getElementById("c-type").addEventListener("change", majTypeCourrier);
       majTypeCourrier();
+
+      // Pré-remplissage depuis un signalement récent (bouton « Rédiger un courrier »).
+      try {
+        const raw = localStorage.getItem("TOH_signalement");
+        if (raw) {
+          const s = JSON.parse(raw);
+          if (s.type) document.getElementById("c-bruit").value = s.type;
+          const src = s.adresse_source || s.quartier || "";
+          if (src) document.getElementById("c-source").value = src;
+          const horaire = [s.recurrence, s.horaire].filter(Boolean).join(", ");
+          if (horaire) document.getElementById("c-horaire").value = horaire;
+          if (s.debut) document.getElementById("c-depuis").value = s.debut;
+          if (s.description) document.getElementById("c-faits").value = s.description;
+          localStorage.removeItem("TOH_signalement");
+          const aide = document.getElementById("c-aide");
+          if (aide) aide.insertAdjacentHTML("afterend",
+            `<p id="c-prefill" style="font-size:0.82rem;color:var(--vert-paix);margin-top:0.2rem">Pré-rempli à partir de votre signalement — vérifiez et complétez.</p>`);
+        }
+      } catch (_) {}
     }
 
     function majTypeCourrier(){

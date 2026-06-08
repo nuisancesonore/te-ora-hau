@@ -107,13 +107,21 @@
       montrer("ok", "Création du compte…");
       const res = await inscrire(nom, email, mdp, commune);
       montrer(res.ok ? "ok" : "err", res.msg);
-      if (res.ok && res.session) {
-        // Enregistre les infos complémentaires (sans bloquer si une colonne manque)
-        try { await sb.from("profils").update({ type_adhesion: type, date_naissance: naissance, adresse: adresse }).eq("id", res.session.user.id); } catch (_) {}
-        montrer("ok", "Bienvenue ! Dernière étape : votre cotisation pour soutenir Te Ora Hau.");
-        setTimeout(() => location.href = "cotiser.html", 1500);
-      } else if (res.ok) {
-        setTimeout(() => location.href = "connexion.html", 1500);
+      if (res.ok) {
+        const complement = { type_adhesion: type, date_naissance: naissance, adresse: adresse };
+        // Mémorisé pour être appliqué à la 1re connexion (cas confirmation e-mail).
+        try { localStorage.setItem("TOH_profil_complement", JSON.stringify(complement)); } catch (_) {}
+        if (res.session) {
+          // Session immédiate : on enregistre tout de suite.
+          try { await sb.from("profils").update(complement).eq("id", res.session.user.id); } catch (_) {}
+          try { localStorage.removeItem("TOH_profil_complement"); } catch (_) {}
+          montrer("ok", "Bienvenue ! Dernière étape : votre cotisation pour soutenir Te Ora Hau.");
+          setTimeout(() => location.href = "cotiser.html", 1500);
+        } else {
+          // Confirmation d'e-mail requise : on garde le complément pour plus tard.
+          montrer("ok", "Compte créé ! Vérifiez votre boîte e-mail pour confirmer votre adresse, puis connectez-vous — vos informations seront complétées automatiquement.");
+          setTimeout(() => location.href = "connexion.html", 3500);
+        }
       }
     });
     function montrer(type, texte) { msg.className = "message " + type; msg.textContent = texte; }

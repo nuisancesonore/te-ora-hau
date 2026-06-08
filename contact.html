@@ -59,19 +59,29 @@
     const valCommune = brancherCommuneAutre(document.getElementById("commune"), document.getElementById("commune_autre"));
     const msg = document.getElementById("msg");
     const champ = id => (document.getElementById(id).value || "").trim();
-    document.getElementById("form-contact").addEventListener("submit", function(e) {
+    document.getElementById("form-contact").addEventListener("submit", async function(e) {
       e.preventDefault();
-      const corps =
-        `Nom : ${champ("prenom")} ${champ("nom")}\n` +
-        `Commune : ${valCommune()}\n` +
-        `E-mail : ${champ("email")}\n\n` +
-        champ("message");
-      const lien = `mailto:contact@teorahau.net` +
-        `?subject=${encodeURIComponent("[Site] " + champ("sujet"))}` +
-        `&body=${encodeURIComponent(corps)}`;
-      window.location.href = lien;
-      msg.className = "message ok";
-      msg.textContent = "Votre logiciel de messagerie va s'ouvrir avec le message pré-rempli. S'il ne s'ouvre pas, écrivez directement à contact@teorahau.net.";
+      const row = {
+        nom: champ("nom"), prenom: champ("prenom"), commune: valCommune(),
+        email: champ("email"), sujet: champ("sujet"), message: champ("message"),
+      };
+      let envoye = false;
+      try { const { error } = await sb.from("messages_contact").insert(row); envoye = !error; }
+      catch (_) { envoye = false; }
+
+      if (envoye) {
+        msg.className = "message ok";
+        msg.textContent = "Merci, votre message a bien été transmis au bureau. Nous vous répondrons rapidement.";
+        e.target.reset();
+        document.getElementById("commune").innerHTML = optionsCommunes("");
+      } else {
+        // Repli : ouverture du courriel pré-rempli (table non déployée / hors-ligne).
+        const corps = `Nom : ${row.prenom} ${row.nom}\nCommune : ${row.commune}\nE-mail : ${row.email}\n\n${row.message}`;
+        window.location.href = `mailto:contact@teorahau.net` +
+          `?subject=${encodeURIComponent("[Site] " + row.sujet)}&body=${encodeURIComponent(corps)}`;
+        msg.className = "message ok";
+        msg.textContent = "Votre logiciel de messagerie va s'ouvrir avec le message pré-rempli. S'il ne s'ouvre pas, écrivez à contact@teorahau.net.";
+      }
     });
   </script>
 </body>

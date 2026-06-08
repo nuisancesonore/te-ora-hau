@@ -22,6 +22,10 @@
     .act { display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center; }
     .act .ech { padding:0.25rem 0.4rem; border:1.5px solid #d6d6cf; border-radius:6px; font-size:0.8rem; }
     .act label { font-size:0.78rem; color:var(--gris); display:inline-flex; align-items:center; gap:0.2rem; cursor:pointer; }
+    .msg-c { background:#fff; border-radius:10px; box-shadow:var(--ombre); padding:0.9rem 1.1rem; margin-bottom:0.8rem; border-left:4px solid var(--corail); font-size:0.9rem; }
+    .msg-c.lu { border-left-color:#bbb; opacity:0.7; }
+    .msg-c .meta { font-size:0.8rem; color:var(--gris); margin-bottom:0.2rem; }
+    .msg-c a.mini { text-decoration:none; display:inline-block; }
   </style>
 </head>
 <body>
@@ -71,12 +75,40 @@
           </select>
           <button class="btn btn-clair" onclick="exportCSV()">Exporter CSV</button>
         </div>
-        <div id="tableau"></div>`;
+        <div id="tableau"></div>
+
+        <h2 class="section-titre" style="margin-top:2.5rem">Messages de contact</h2>
+        <div id="messages"><p style="color:var(--gris)">Chargement…</p></div>`;
 
       document.getElementById("q").addEventListener("input", dessiner);
       document.getElementById("filtre").addEventListener("change", dessiner);
       dessiner();
+      chargerMessages();
     })();
+
+    async function chargerMessages(){
+      const box = document.getElementById("messages");
+      const { data, error } = await sb.from("messages_contact").select("*").order("cree_le", { ascending:false });
+      if (error){ box.innerHTML = `<p style="color:var(--gris)">Messagerie de contact non activée (déployez <strong>migration-contact.sql</strong>).</p>`; return; }
+      if (!data || !data.length){ box.innerHTML = `<p style="color:var(--gris)">Aucun message pour le moment.</p>`; return; }
+      box.innerHTML = data.map(m => {
+        const mail = encodeURIComponent(m.email||"");
+        return `<div class="msg-c ${m.traite?'lu':''}">
+          <div class="meta"><strong>${echapper((m.prenom||'')+' '+(m.nom||''))}</strong> · ${echapper(m.commune)||'—'} · ${echapper(m.email)||''} · ${new Date(m.cree_le).toLocaleString('fr-FR')} ${m.traite?'<span class="pill ok">traité</span>':''}</div>
+          <div style="font-weight:600;margin:0.2rem 0">${echapper(m.sujet)||'(sans sujet)'}</div>
+          <div>${echapper(m.message)}</div>
+          <div style="margin-top:0.5rem;display:flex;gap:0.4rem;flex-wrap:wrap">
+            <a class="mini clair" href="mailto:${mail}?subject=${encodeURIComponent('Re: '+(m.sujet||''))}">Répondre</a>
+            ${!m.traite?`<button class="mini vert" onclick="marquerTraite('${m.id}')">Marquer traité</button>`:''}
+          </div>
+        </div>`;
+      }).join("");
+    }
+    async function marquerTraite(id){
+      const { error } = await sb.from("messages_contact").update({ traite:true }).eq("id", id);
+      if (error) return alert("Erreur : "+error.message);
+      chargerMessages();
+    }
 
     function estAJour(a){
       return a.cotisation_payee && (!a.cotisation_echeance || new Date(a.cotisation_echeance) >= new Date());

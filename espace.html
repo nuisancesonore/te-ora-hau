@@ -46,6 +46,25 @@
           <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
         return;
       }
+      // Applique les infos complémentaires mémorisées à l'inscription
+      // (cas où l'e-mail devait être confirmé avant la 1re connexion).
+      try {
+        const raw = localStorage.getItem("TOH_profil_complement");
+        if (raw) {
+          const comp = JSON.parse(raw);
+          const maj = {};
+          if (comp.type_adhesion && !profil.type_adhesion) maj.type_adhesion = comp.type_adhesion;
+          if (comp.date_naissance && !profil.date_naissance) maj.date_naissance = comp.date_naissance;
+          if (comp.adresse && !profil.adresse) maj.adresse = comp.adresse;
+          if (Object.keys(maj).length) {
+            let { error } = await sb.from("profils").update(maj).eq("id", profil.id);
+            if (error) { const m2 = Object.assign({}, maj); delete m2.date_naissance; delete m2.adresse; await sb.from("profils").update(m2).eq("id", profil.id); }
+            Object.assign(profil, maj);
+          }
+          localStorage.removeItem("TOH_profil_complement");
+        }
+      } catch (_) {}
+
       const st = statutCotisation(profil);
       const aJour = st.aJour;
 

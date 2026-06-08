@@ -18,14 +18,28 @@
         <div class="champ">
           <label for="type_adhesion">Je suis…</label>
           <select id="type_adhesion" required>
-            <option value="Adhérent individuel / foyer" selected>Adhérent individuel / foyer (3 000 XPF/an)</option>
-            <option value="Sympathisant / soutien">Sympathisant / soutien</option>
-            <option value="Assesseur">Assesseur (soutien &amp; suppléance)</option>
+            <option value="Adhérent" selected>Adhérent — je subis des nuisances et demande de l'aide</option>
+            <option value="Assesseur">Assesseur — je cotise et soutiens activement l'association</option>
+            <option value="Sympathisant">Sympathisant — je soutiens la cause</option>
           </select>
+          <p style="font-size:0.82rem;color:var(--gris);margin-top:0.45rem;line-height:1.5">
+            <strong>Adhérent</strong>&nbsp;: vous bénéficiez du soutien de l'association (cotisation 3 000 XPF/an par foyer).<br>
+            <strong>Assesseur</strong>&nbsp;: adhérent engagé, vous soutenez et pouvez suppléer l'association.<br>
+            <strong>Sympathisant</strong>&nbsp;: vous soutenez la cause sans subir de nuisance particulière.<br>
+            Les <strong>membres du bureau</strong> sont élus&nbsp;: ce statut est attribué par l'association.
+          </p>
         </div>
         <div class="champ">
           <label for="nom">Nom et prénom</label>
           <input type="text" id="nom" required placeholder="Ex. Heimata TEROOATEA">
+        </div>
+        <div class="champ">
+          <label for="naissance">Date de naissance</label>
+          <input type="date" id="naissance">
+        </div>
+        <div class="champ">
+          <label for="adresse">Adresse</label>
+          <input type="text" id="adresse" placeholder="Rue, quartier, lieu-dit…">
         </div>
         <div class="champ">
           <label for="commune">Commune</label>
@@ -74,6 +88,8 @@
       if (!TOH_PRET) { montrer("err", "Supabase n'est pas configuré (voir SETUP.md)."); return; }
       const type = document.getElementById("type_adhesion").value;
       const nom = document.getElementById("nom").value.trim();
+      const naissance = document.getElementById("naissance").value || null;
+      const adresse = document.getElementById("adresse").value.trim();
       const commune = document.getElementById("commune").value;
       const email = document.getElementById("email").value.trim();
       const mdp = document.getElementById("mdp").value;
@@ -83,8 +99,8 @@
       const res = await inscrire(nom, email, mdp, commune);
       montrer(res.ok ? "ok" : "err", res.msg);
       if (res.ok && res.session) {
-        // Enregistre le type d'adhésion (sans bloquer si la colonne n'existe pas encore)
-        try { await sb.from("profils").update({ type_adhesion: type }).eq("id", res.session.user.id); } catch (_) {}
+        // Enregistre les infos complémentaires (sans bloquer si une colonne manque)
+        try { await sb.from("profils").update({ type_adhesion: type, date_naissance: naissance, adresse: adresse }).eq("id", res.session.user.id); } catch (_) {}
         montrer("ok", "Bienvenue ! Dernière étape : votre cotisation pour soutenir Te Ora Hau.");
         setTimeout(() => location.href = "cotiser.html", 1500);
       } else if (res.ok) {

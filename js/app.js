@@ -94,14 +94,27 @@ async function rendreNav(pageActive) {
     </div>`;
 
   // Liens dépendant de la connexion
-  let adhererOuEspace, finAuth, adminLien = "";
+  let blocAuth;
   if (profil) {
-    adhererOuEspace = lien("espace.html", "Mon espace", "espace");
-    finAuth = `<a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`;
-    if (profil.role === "bureau") adminLien = lien("admin.html", "Admin", "admin");
+    // Membre connecté : Mon espace · Cotiser · (Admin) · Déconnexion
+    blocAuth = [
+      lien("espace.html", "Mon espace", "espace"),
+      `<a href="cotiser.html" class="lien-cotiser ${pageActive === "cotiser" ? "actif" : ""}">Cotiser</a>`,
+      (profil.role === "bureau" ? lien("admin.html", "Admin", "admin") : ""),
+      `<a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`,
+    ].join("");
   } else {
-    adhererOuEspace = `<a href="inscription.html" class="bouton ${pageActive === "inscription" ? "actif" : ""}">Adhérer</a>`;
-    finAuth = lien("connexion.html", "Connexion", "connexion");
+    // Visiteur : déroulant "Inscription" (Adhérer · Cotiser) puis Connexion
+    const inscriptionActif = (pageActive === "inscription" || pageActive === "cotiser") ? "actif" : "";
+    const dropInscription = `
+      <div class="menu-drop">
+        <a href="inscription.html" class="drop-trigger ${inscriptionActif}">Inscription <span class="caret">▾</span></a>
+        <div class="drop-menu">
+          <a href="inscription.html">Adhérer</a>
+          <a href="cotiser.html">Cotiser</a>
+        </div>
+      </div>`;
+    blocAuth = dropInscription + lien("connexion.html", "Connexion", "connexion");
   }
 
   const menuHTML = [
@@ -111,10 +124,7 @@ async function rendreNav(pageActive) {
     dropdown,
     lien("le-bruit.html", "Les textes de lois", "bruit"),
     lien("forum.html", "Forum", "forum"),
-    adhererOuEspace,
-    `<a href="cotiser.html" class="lien-cotiser ${pageActive === "cotiser" ? "actif" : ""}">Cotiser</a>`,
-    adminLien,
-    finAuth,
+    blocAuth,
   ].join("");
 
   const mount = document.getElementById("nav-mount");

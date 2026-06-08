@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attestation de constat de nuisance sonore · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .feuille {
+      background:#fff; max-width:780px; margin:0 auto; padding:2.2rem 2.4rem;
+      box-shadow:var(--ombre); border-radius:10px; color:#111;
+    }
+    .ent { display:flex; align-items:center; gap:1.2rem; border-bottom:2px solid #c0392b; padding-bottom:1rem; margin-bottom:1.4rem; }
+    .ent img { width:80px; height:auto; }
+    .ent .titre { text-align:center; flex:1; }
+    .ent .titre h1 { font-size:1.4rem; color:#111; margin-bottom:0.2rem; }
+    .ent .titre p { font-size:0.85rem; color:#444; line-height:1.4; }
+    .feuille p { margin-bottom:0.9rem; line-height:1.7; }
+    .ligne { border-bottom:1px solid #999; min-height:1.4rem; display:block; }
+    .champ-l { margin:0.2rem 0 0.9rem; }
+    .champ-l label { font-weight:700; font-size:0.9rem; display:block; }
+    .mention { background:#f7f4ec; border-left:4px solid #c0392b; padding:0.8rem 1rem; border-radius:8px; font-size:0.9rem; }
+    .sign { display:flex; justify-content:space-between; margin-top:1.6rem; gap:2rem; }
+    .sign > div { flex:1; }
+    .barre-actions { text-align:center; margin:0 0 1.4rem; }
+    @media print {
+      #nav-mount, #footer-mount, .barre-actions, .intro-ecran { display:none !important; }
+      body { background:#fff; }
+      main { padding:0; }
+      .feuille { box-shadow:none; max-width:100%; padding:0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <p class="intro-ecran" style="max-width:780px;margin:0 auto 1rem;color:var(--gris)">
+      Modèle à <strong>imprimer</strong> et à faire remplir par un témoin ayant personnellement constaté la nuisance. Il pourra être joint à un signalement, à un courrier ou à une plainte.
+    </p>
+    <div class="barre-actions">
+      <button class="btn btn-primaire" onclick="window.print()">🖨️ Imprimer l'attestation</button>
+    </div>
+
+    <div class="feuille">
+      <div class="ent">
+        <img src="images/logo%20TOH.PNG" alt="Logo Te Ora Hau">
+        <div class="titre">
+          <h1>Attestation de constat de nuisance sonore</h1>
+          <p><strong>Association Te Ora Hau</strong> — BP 2524, 98713 Papeete — contact@teorahau.net</p>
+        </div>
+        <div style="width:80px"></div>
+      </div>
+
+      <p>Je soussigné(e)&nbsp;:</p>
+      <div class="champ-l"><label>Nom et prénom</label><span class="ligne"></span></div>
+      <div class="champ-l"><label>Adresse</label><span class="ligne"></span></div>
+      <div class="champ-l"><label>Né(e) le / à</label><span class="ligne"></span></div>
+      <div class="champ-l"><label>Qualité (voisin, riverain, passant…)</label><span class="ligne"></span></div>
+
+      <p style="margin-top:1rem"><strong>atteste avoir personnellement constaté la nuisance sonore suivante&nbsp;:</strong></p>
+      <div class="champ-l"><label>Date(s) du constat</label><span class="ligne"></span></div>
+      <div class="champ-l"><label>Heure(s) — du … au …</label><span class="ligne"></span></div>
+      <div class="champ-l"><label>Lieu / adresse de la nuisance</label><span class="ligne"></span></div>
+      <div class="champ-l"><label>Origine / source du bruit</label><span class="ligne"></span></div>
+      <div class="champ-l"><label>Nature du bruit (musique, moteur, animaux, travaux…)</label><span class="ligne"></span></div>
+      <div class="champ-l"><label>Intensité ressentie · durée · fréquence</label><span class="ligne"></span></div>
+      <div class="champ-l"><label>Observations complémentaires</label>
+        <span class="ligne" style="min-height:3rem"></span></div>
+
+      <p class="mention">Je certifie sur l'honneur l'exactitude des faits décrits ci‑dessus. Je suis informé(e) qu'une attestation faisant état de faits matériellement inexacts m'expose à des sanctions pénales (art. 441‑7 du code pénal).</p>
+
+      <div class="sign">
+        <div><label style="font-weight:700;font-size:0.9rem">Fait à / le</label><span class="ligne"></span></div>
+        <div><label style="font-weight:700;font-size:0.9rem">Signature</label><span class="ligne" style="min-height:2.4rem"></span></div>
+      </div>
+
+      <p style="font-size:0.8rem;color:#555;margin-top:1.4rem">Joindre si possible une copie d'une pièce d'identité du témoin. Document indicatif — sans valeur officielle en lui‑même.</p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>initPage("");</script>
+</body>
+</html>

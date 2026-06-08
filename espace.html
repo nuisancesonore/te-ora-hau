@@ -82,8 +82,10 @@
             <div id="msg" class="message"></div>
             <form id="form-profil">
               <div class="champ"><label>Nom et prénom</label><input id="nom" value="${echapper(profil.nom)}" required></div>
+              <div class="champ"><label>Date de naissance</label><input type="date" id="date_naissance" value="${echapper(profil.date_naissance)}"></div>
               <div class="champ"><label>Commune</label><select id="commune"></select>
                 <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem"></div>
+              <div class="champ"><label>Adresse</label><input id="adresse" value="${echapper(profil.adresse)}" placeholder="Quartier, rue, lotissement…"></div>
               <div class="champ"><label>Type de nuisance subie</label>
                 <input id="type_nuisance" value="${echapper(profil.type_nuisance)}" placeholder="Ex. sono de bar, voisinage, chantier…"></div>
               <div class="champ" style="display:flex;align-items:center;gap:0.5rem">
@@ -114,10 +116,23 @@
           commune: valCommune(),
           type_nuisance: document.getElementById("type_nuisance").value.trim(),
           annuaire_optin: document.getElementById("annuaire").checked,
+          date_naissance: document.getElementById("date_naissance").value || null,
+          adresse: document.getElementById("adresse").value.trim(),
         };
-        const { error } = await sb.from("profils").update(maj).eq("id", profil.id);
+        let { error } = await sb.from("profils").update(maj).eq("id", profil.id);
+        let partiel = false;
+        // Filet de secours : si les colonnes date_naissance/adresse n'existent
+        // pas encore, on réessaie sans elles plutôt que d'échouer.
+        if (error && /column|schema cache|date_naissance|adresse/i.test(error.message||"")){
+          const maj2 = Object.assign({}, maj); delete maj2.date_naissance; delete maj2.adresse;
+          const retry = await sb.from("profils").update(maj2).eq("id", profil.id);
+          error = retry.error; partiel = !error;
+        }
         msg.className = "message " + (error ? "err" : "ok");
-        msg.textContent = error ? "Erreur : " + error.message : "Profil enregistré ✔";
+        msg.textContent = error ? "Erreur : " + error.message
+          : (partiel
+              ? "Profil enregistré ✔ (date de naissance et adresse seront prises en compte une fois la base mise à jour)"
+              : "Profil enregistré ✔");
       });
     })();
   </script>

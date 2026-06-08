@@ -121,7 +121,12 @@
           if (g.adresse) document.getElementById("adresse_source").value = g.adresse;
           if (g.quartier) document.getElementById("quartier").value = g.quartier;
           if (g.commune){
-            const match = COMMUNES_PF.find(x => x.toLowerCase() === g.commune.toLowerCase());
+            // Comparaison tolérante (apostrophes, accents, espaces) : Pape'ete = Papeete…
+            const norm = s => (s||"").toLowerCase().normalize("NFD")
+              .replace(/[̀-ͯ]/g,"").replace(/['ʻ’`\s\-]/g,"");
+            const gc = norm(g.commune);
+            const match = COMMUNES_PF.find(x => norm(x) === gc)
+              || COMMUNES_PF.find(x => norm(x).includes(gc) || gc.includes(norm(x)));
             if (match){ selCommune.value = match; majQuartiers(); }
           }
           c.textContent = `✅ Point placé — commune, quartier et adresse remplis automatiquement (modifiables).`;

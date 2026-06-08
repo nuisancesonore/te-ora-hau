@@ -87,9 +87,7 @@
   <script src="js/app.js"></script>
   <script>
     initPage("inscription");
-    document.getElementById("commune").innerHTML =
-      '<option value="">— Choisir —</option>' +
-      COMMUNES_PF.map(c => `<option>${c}</option>`).join("");
+    document.getElementById("commune").innerHTML = optionsCommunes("");
 
     const msg = document.getElementById("msg");
     document.getElementById("form-inscription").addEventListener("submit", async function(e) {

@@ -102,7 +102,7 @@
 
       // Sélecteur commune
       const sel = document.getElementById("commune");
-      sel.innerHTML = COMMUNES_PF.map(c => `<option ${c===profil.commune?'selected':''}>${c}</option>`).join("");
+      sel.innerHTML = optionsCommunes(profil.commune);
 
       const msg = document.getElementById("msg");
       document.getElementById("form-profil").addEventListener("submit", async function(e) {

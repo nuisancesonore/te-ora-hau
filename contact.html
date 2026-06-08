@@ -50,9 +50,7 @@
   <script src="js/app.js"></script>
   <script>
     initPage("contact");
-    document.getElementById("commune").innerHTML =
-      '<option value="">— Choisir —</option>' +
-      COMMUNES_PF.map(c => `<option>${c}</option>`).join("");
+    document.getElementById("commune").innerHTML = optionsCommunes("");
     const msg = document.getElementById("msg");
     document.getElementById("form-contact").addEventListener("submit", function(e) {
       e.preventDefault();

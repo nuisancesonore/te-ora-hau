@@ -280,6 +280,28 @@ const COMMUNES_DETAIL = {
   "Autre": [],
 };
 
+// Construit un <select> de communes développées en localités (groupées).
+// La valeur stockée est "Commune — Localité" (ou la commune si pas de localité).
+function optionsCommunes(selected) {
+  let html = '<option value="">— Choisir —</option>';
+  COMMUNES_PF.forEach(c => {
+    const sous = COMMUNES_DETAIL[c] || [];
+    if (sous.length) {
+      html += `<optgroup label="${c}">`;
+      sous.forEach(q => {
+        const v = c + " — " + q;
+        const sel = (v === selected || q === selected) ? " selected" : "";
+        html += `<option value="${v}"${sel}>${q}</option>`;
+      });
+      html += `</optgroup>`;
+    } else {
+      const sel = (c === selected) ? " selected" : "";
+      html += `<option value="${c}"${sel}>${c}</option>`;
+    }
+  });
+  return html;
+}
+
 // Géocodage inverse : coordonnées -> commune + quartier + adresse (OpenStreetMap)
 async function reverseGeocode(lat, lng) {
   try {

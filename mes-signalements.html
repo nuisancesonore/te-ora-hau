@@ -123,11 +123,23 @@
         adresse_source: val("e-source-"+id), adresse_plaignant: val("e-plaignant-"+id),
         description: val("e-desc-"+id),
       };
-      const { error } = await sb.from("signalements").update(maj).eq("id", id);
       const m = document.getElementById("emsg-"+id);
+      let { error } = await sb.from("signalements").update(maj).eq("id", id);
+      let partiel = false;
+      // Filet de secours : si les colonnes "constat"/"debut" n'existent pas
+      // encore dans la base, on réessaie sans elles plutôt que d'échouer.
+      if (error && /column|schema cache|constat|debut/i.test(error.message||"")){
+        const maj2 = Object.assign({}, maj); delete maj2.constat; delete maj2.debut;
+        const retry = await sb.from("signalements").update(maj2).eq("id", id);
+        error = retry.error; partiel = !error;
+      }
       if (error){ m.className="message err"; m.textContent="Erreur : "+error.message; return; }
+      m.className = "message ok";
+      m.textContent = partiel
+        ? "Enregistré ✔ (la « démarche » et le « début » seront pris en compte une fois la base mise à jour)"
+        : "Enregistré ✔";
       const { data } = await sb.from("signalements").select("*").eq("id", id).single();
-      document.getElementById("sig-"+id).innerHTML = vue(data);
+      setTimeout(() => { const b = document.getElementById("sig-"+id); if (b) b.innerHTML = vue(data); }, partiel ? 2200 : 600);
     }
 
     async function supprimer(id){

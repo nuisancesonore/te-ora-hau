@@ -262,22 +262,13 @@ function maintenantTexte() {
 }
 const COMMUNES_PF = ["Papeete","Faa'a","Punaauia","Paea","Papara","Teva I Uta","Taiarapu-Ouest","Taiarapu-Est","Pirae","Arue","Mahina","Hitiaa O Te Ra","Moorea-Maiao","Autre"];
 
-// Localités / communes associées par commune (pour préciser le lieu)
+// Communes détaillées en localités (uniquement celles qui le nécessitent).
+// Les autres communes restent au nom de la commune ; l'adresse précise le lieu.
 const COMMUNES_DETAIL = {
-  "Papeete": ["Tipaerui","Paofai","Mamao","Titioro","Patutoa","Fare Ute","Motu Uta","Mission","Sainte-Amélie"],
-  "Faa'a": ["Puurai","Pamatai","Heiri","Tavararo","Saint-Hilaire","Hotuarea","Oremu"],
-  "Punaauia": ["Outumaoro","Punavai","Taapuna","Taina","Tiapa","Atiue","Saint-Hilaire"],
-  "Paea": ["Paea centre","Te Oropaa"],
-  "Papara": ["Papara centre","Taharuu","Mataoa"],
   "Teva I Uta": ["Mataiea","Papeari"],
   "Taiarapu-Ouest": ["Teahupoo","Toahotu","Vairao"],
   "Taiarapu-Est": ["Taravao","Afaahiti","Faaone","Pueu","Tautira"],
-  "Pirae": ["Hamuta","Aorai","Pater","Tenaho","Orovini"],
-  "Arue": ["Erima","Ahonu","Auae","Hitimahana"],
-  "Mahina": ["Pointe Vénus","Tahara'a","Orofara","Ahonu"],
   "Hitiaa O Te Ra": ["Hitiaa","Mahaena","Papenoo","Tiarei"],
-  "Moorea-Maiao": ["Afareaitu","Haapiti","Paopao","Papetoai","Teavaro","Maiao"],
-  "Autre": [],
 };
 
 // Construit un <select> de communes développées en localités (groupées).

@@ -35,7 +35,7 @@ header.site {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 1100; /* au-dessus des cartes Leaflet (z-index jusqu'à ~1000) */
   transition: box-shadow 0.2s;
 }
 /* Ombre plus marquée quand le menu est "collé" en haut */
@@ -176,7 +176,7 @@ nav.menu a.lien-cotiser.actif { background: #256f47; }
   top: 0;
   left: 0;
   right: 0;
-  z-index: 90;
+  z-index: 1090; /* sous le menu (1100), au-dessus des cartes Leaflet */
   overflow: hidden;
   will-change: height, opacity;
 }

@@ -16,6 +16,12 @@
     .liste-claire { list-style: none; }
     .liste-claire li { padding: 0.35rem 0 0.35rem 1.6rem; position: relative; }
     .liste-claire li::before { content: "▸"; position: absolute; left: 0; color: var(--corail); font-weight: 700; }
+    .tableau { width: 100%; border-collapse: collapse; margin: 1rem 0; background: #fff; box-shadow: var(--ombre); border-radius: 10px; overflow: hidden; font-size: 0.92rem; }
+    .tableau th, .tableau td { padding: 0.55rem 0.8rem; text-align: left; border-bottom: 1px solid #eee; }
+    .tableau th { background: var(--bleu-fonce); color: #fff; }
+    .tableau td.c { text-align: center; font-weight: 700; color: var(--bleu-fonce); }
+    .tableau tr:last-child td { border-bottom: none; }
+    .doc-lien { display: inline-block; margin-top: 0.4rem; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -51,6 +57,36 @@
       <p><strong>Il faut dénoncer les excès de bruit. Il y va du bien-être de tous.</strong> Unissons-nous et luttons ensemble contre ce fléau.</p>
 
       <p style="color:var(--gris);font-size:0.9rem">Pour les effets du bruit sur la santé, voir <a href="comprendre.html#sante">Bruit &amp; santé</a>.</p>
+    </div>
+
+    <h2 class="section-titre" style="margin-top:2.5rem">Les textes officiels</h2>
+    <div class="prose">
+      <p>Ces règles découlent du <strong>Code de l'environnement de la Polynésie française</strong>. Deux textes encadrent en particulier le bruit de voisinage et celui des activités.</p>
+
+      <h3>1. Lutte contre le bruit (art. A. 4333‑3‑1 à A. 4333‑3‑6)</h3>
+      <ul class="liste-claire">
+        <li><strong>Exception culturelle</strong> : les manifestations et traditions populaires (Heiva, Fête de l'Autonomie, Hura Tapairu, festivals des Marquises, Tuamotu et Australes, Pina'ina'i, 'Ōrero des écoles…) bénéficient d'un régime particulier.</li>
+        <li><strong>Répétitions</strong> des groupes de danse et de chant : autorisées sous conditions — être inscrit à une manifestation culturelle, dans les <strong>4 mois</strong> précédant l'événement, et limiter l'impact sonore à la tranche <strong>17 h – 22 h</strong>.</li>
+        <li><strong>Activités bruyantes</strong> (entreprises, commerces, industries non classées) : elles ne peuvent, par leur durée, intensité ou répétition, <strong>porter atteinte à la tranquillité ou à la santé du voisinage</strong>.</li>
+        <li>Sur demande du service de l'environnement, l'exploitant doit fournir une <strong>étude d'impact acoustique</strong> et réaliser les <strong>travaux d'isolation</strong> nécessaires (jusqu'à un limiteur de pression). Tout manquement est <strong>sanctionné</strong>.</li>
+      </ul>
+      <a class="doc-lien" href="lois/code-environnement-lutte-contre-le-bruit.pdf" target="_blank" rel="noopener">📄 Lire le texte officiel (PDF)</a>
+
+      <h3>2. Émissions sonores des installations — les valeurs limites</h3>
+      <p>L'arrêté « Gestion des émissions sonores » interdit les bruits et vibrations anormaux nuisant au voisinage, et fixe des <strong>niveaux à ne pas dépasser en limite de propriété</strong> (en dB(A)), selon la zone&nbsp;:</p>
+      <table class="tableau">
+        <tr><th>Zone</th><th>Jour<br><span style="font-weight:400">7 h – 20 h</span></th><th>Nuit<br><span style="font-weight:400">20 h – 7 h, dim. &amp; fériés</span></th></tr>
+        <tr><td>Hôpitaux, repos, espaces naturels protégés</td><td class="c">45</td><td class="c">35</td></tr>
+        <tr><td>Résidentielle rurale / suburbaine, faible trafic</td><td class="c">50</td><td class="c">40</td></tr>
+        <tr><td>Résidentielle urbaine</td><td class="c">55</td><td class="c">45</td></tr>
+        <tr><td>Urbaine / suburbaine avec ateliers, affaires ou trafic</td><td class="c">60</td><td class="c">50</td></tr>
+        <tr><td>Commerciale, industrielle ou agricole (rurale)</td><td class="c">65</td><td class="c">55</td></tr>
+        <tr><td>Industrie lourde</td><td class="c">70</td><td class="c">60</td></tr>
+      </table>
+      <p>L'<strong>émergence</strong> tolérée chez les voisins (écart avec le bruit habituel) est de <strong>5 dB(A) le jour</strong> et <strong>3 dB(A) la nuit</strong> (et les dimanches et jours fériés). Les mesures suivent la norme <strong>NF S 31‑010</strong> et doivent être renouvelées au moins <strong>tous les 3 ans</strong> par une personne qualifiée.</p>
+      <a class="doc-lien" href="lois/code-environnement-emissions-sonores.pdf" target="_blank" rel="noopener">📄 Lire le texte officiel (PDF)</a>
+
+      <p style="color:var(--gris);font-size:0.85rem;margin-top:1.4rem">Résumé indicatif établi à partir du Code de l'environnement de la Polynésie française. En cas de doute, les textes officiels (PDF ci‑dessus) font foi.</p>
     </div>
   </main>
 

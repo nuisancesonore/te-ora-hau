@@ -29,6 +29,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <script>
     let PROFIL = null;
     (async function(){
@@ -104,6 +105,7 @@
               <label for="c-temoins" style="margin:0">Des témoins / voisins peuvent attester des faits</label></div>
 
             <button class="btn btn-primaire" onclick="genererCourrier()">Générer le courrier</button>
+            <button class="btn btn-vert" onclick="telechargerPDF()">Télécharger (PDF)</button>
             <button class="btn btn-clair" onclick="telechargerLettre()">Télécharger (.txt)</button>
             <button class="btn btn-clair" onclick="copierLettre(this)">Copier le texte</button>
           </div>
@@ -218,7 +220,7 @@
       const recommande = (type === "miseendemeure") ? "Lettre recommandée avec accusé de réception\n\n" : "";
       const nuit = /nuit|22|23|minuit|soir/i.test(horaire);
 
-      const faitsPhrase = `des nuisances sonores${bruit ? " (" + bruit + ")" : ""} provenant de ${source}, survenant ${horaire}${depuis ? `, depuis ${moisAnnee(depuis)}` : ""}`;
+      const faitsPhrase = `nuisances sonores${bruit ? " (" + bruit + ")" : ""} provenant de ${source}, survenant ${horaire}${depuis ? `, depuis ${moisAnnee(depuis)}` : ""}`;
       const blocFaits = faits ? `\n\nFaits constatés (dates et horaires) :\n${faits}` : "";
       const blocDem = demarches ? `\n\nDémarches déjà entreprises :\n${demarches}` : "";
       const tem = temoins ? " Plusieurs voisins, témoins de ces faits, peuvent en attester." : "";
@@ -229,14 +231,14 @@
       if (type === "amiable"){
         objet = "Trouble de voisinage lié à des nuisances sonores — démarche amiable";
         salut = "Madame, Monsieur,";
-        corps = `Je me permets de vous écrire au sujet de ${faitsPhrase}.\n\n`+
+        corps = `Je me permets de vous écrire au sujet des ${faitsPhrase}.\n\n`+
           `Ces bruits, par leur intensité, leur durée et leur répétition, perturbent ma tranquillité${nuit ? " et mon sommeil" : ""}. Je suis toutefois convaincu(e) qu'il s'agit d'une gêne involontaire.\n\n`+
           `Je vous remercie par avance de bien vouloir prendre les mesures nécessaires pour y remédier, afin que chacun puisse vivre en bon voisinage. Je reste à votre entière disposition pour en échanger et trouver ensemble une solution amiable.${tem}`;
         politesse = "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.";
       } else if (type === "miseendemeure"){
         objet = "Mise en demeure de faire cesser des nuisances sonores";
         salut = "Madame, Monsieur,";
-        corps = `Malgré mes démarches amiables restées sans effet, ${faitsPhrase} persistent.${blocFaits}${blocDem}\n\n`+
+        corps = `Malgré mes démarches amiables restées sans effet, ces ${faitsPhrase} persistent.${blocFaits}${blocDem}\n\n`+
           `Ces troubles excèdent les inconvénients normaux du voisinage et sont de nature à engager votre responsabilité au titre des troubles anormaux de voisinage. Lorsqu'ils surviennent la nuit, ils sont susceptibles de constituer un tapage nocturne, réprimé par l'article R. 623-2 du code pénal. Ils contreviennent en outre à la réglementation applicable en Polynésie française en matière de bruit (Code de l'environnement de la Polynésie française — lutte contre le bruit et gestion des émissions sonores).\n\n`+
           `Par la présente, je vous mets en demeure de faire cesser définitivement ces nuisances dans un délai de huit (8) jours à compter de la réception du présent courrier.\n\n`+
           `À défaut, je me réserve le droit de saisir les autorités compétentes (police municipale, gendarmerie, Procureur de la République) et d'engager toute action utile, y compris en réparation du préjudice subi.${tem}`;
@@ -245,7 +247,7 @@
       } else if (type === "mairie"){
         objet = "Demande d'intervention contre des nuisances sonores";
         salut = "Madame le Maire, Monsieur le Maire,";
-        corps = `En votre qualité d'autorité chargée du bon ordre et de la tranquillité publique dans la commune, je sollicite votre intervention au sujet de ${faitsPhrase}.${blocFaits}${blocDem}\n\n`+
+        corps = `En votre qualité d'autorité chargée du bon ordre et de la tranquillité publique dans la commune, je sollicite votre intervention au sujet des ${faitsPhrase}.${blocFaits}${blocDem}\n\n`+
           `Ces troubles répétés portent atteinte à la tranquillité publique. Je vous remercie de bien vouloir faire constater ces faits par la police municipale — habilitée à dresser procès-verbal des infractions aux arrêtés municipaux, notamment ceux interdisant les bruits gênants — et de faire appliquer la réglementation sur le bruit (Code de l'environnement de la Polynésie française).${tem}\n\n`+
           `Je me tiens à votre disposition pour tout complément d'information et pour témoigner des faits.`;
         politesse = "Je vous prie d'agréer, Madame le Maire, Monsieur le Maire, l'expression de ma haute considération.";
@@ -253,7 +255,7 @@
       } else if (type === "gendarmerie"){
         objet = "Signalement de nuisances sonores — demande de constatation";
         salut = "Madame, Monsieur,";
-        corps = `Je souhaite porter à votre connaissance ${faitsPhrase}.${blocFaits}${blocDem}\n\n`+
+        corps = `Je souhaite porter à votre connaissance des ${faitsPhrase}.${blocFaits}${blocDem}\n\n`+
           `Ces faits, en particulier lorsqu'ils surviennent après 22 heures, sont susceptibles de constituer un tapage nocturne réprimé par l'article R. 623-2 du code pénal. Je sollicite votre intervention afin de les faire constater.${tem}\n\n`+
           `Je me tiens à votre disposition pour vous communiquer tout élément complémentaire.`;
         politesse = "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.";
@@ -262,7 +264,7 @@
         objet = "Plainte pour nuisances sonores";
         salut = "Monsieur le Procureur de la République,";
         corps = `J'ai l'honneur de porter plainte contre la personne responsable des faits décrits ci-après (ou, si l'auteur est identifié : M./Mme …).\n\n`+
-          `Les faits : je subis ${faitsPhrase}.${blocFaits}${blocDem}\n\n`+
+          `Les faits : je subis des ${faitsPhrase}.${blocFaits}${blocDem}\n\n`+
           `Ces faits sont susceptibles de constituer un tapage nocturne réprimé par l'article R. 623-2 du code pénal, ainsi qu'une atteinte à la réglementation sur le bruit applicable en Polynésie française (Code de l'environnement de la Polynésie française).${tem}\n\n`+
           `Je vous prie de bien vouloir engager les poursuites que vous jugerez utiles. Je me réserve la possibilité de me constituer partie civile.`;
         politesse = "Je vous prie d'agréer, Monsieur le Procureur de la République, l'expression de ma haute considération.";
@@ -270,7 +272,7 @@
       } else { // bailleur
         objet = "Nuisances sonores causées par un occupant — demande d'action";
         salut = "Madame, Monsieur,";
-        corps = `Je me permets de vous solliciter en votre qualité de propriétaire, bailleur ou syndic, au sujet de ${faitsPhrase}, dont l'auteur occupe un logement relevant de votre gestion.${blocFaits}${blocDem}\n\n`+
+        corps = `Je me permets de vous solliciter en votre qualité de propriétaire, bailleur ou syndic, au sujet des ${faitsPhrase}, dont l'auteur occupe un logement relevant de votre gestion.${blocFaits}${blocDem}\n\n`+
           `Le contrat de bail comme le règlement de copropriété imposent à chaque occupant de ne pas troubler la tranquillité du voisinage. Je vous remercie de bien vouloir intervenir auprès de l'occupant concerné afin de faire cesser ces nuisances, et de me tenir informé(e) des suites données.${tem}`;
         politesse = "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.";
         pj = PJ;
@@ -283,12 +285,35 @@
       ap.scrollIntoView({ behavior:"smooth", block:"nearest" });
     }
 
-    function telechargerLettre(){
+    function lettreActuelle(){
       let t = document.getElementById("apercu").textContent;
       if (!t || t.startsWith("Le courrier généré")) { genererCourrier(); t = document.getElementById("apercu").textContent; }
-      const blob = new Blob([t], { type:"text/plain;charset=utf-8" });
+      return t;
+    }
+
+    function telechargerLettre(){
+      const blob = new Blob([lettreActuelle()], { type:"text/plain;charset=utf-8" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
       a.download = "courrier-nuisances.txt"; a.click();
+    }
+
+    function telechargerPDF(){
+      const t = lettreActuelle();
+      if (!window.html2pdf){ telechargerLettre(); return; }   // repli si la librairie n'a pas chargé
+      const page = document.createElement("div");
+      page.style.cssText = "position:fixed;left:-9999px;top:0;width:210mm;box-sizing:border-box;"+
+        "padding:22mm 20mm;background:#fff;color:#111;font-family:Georgia,'Times New Roman',serif;"+
+        "font-size:11.5pt;line-height:1.55;white-space:pre-wrap;word-wrap:break-word;";
+      page.textContent = t;
+      document.body.appendChild(page);
+      html2pdf().set({
+        margin: 0,
+        filename: "courrier-nuisances.pdf",
+        image: { type:"jpeg", quality:0.98 },
+        html2canvas: { scale:2, useCORS:true, backgroundColor:"#ffffff" },
+        jsPDF: { unit:"mm", format:"a4", orientation:"portrait" },
+        pagebreak: { mode:["css","legacy"] }
+      }).from(page).save().then(() => page.remove()).catch(() => page.remove());
     }
 
     function copierLettre(btn){

@@ -99,6 +99,7 @@ async function rendreNav(pageActive) {
     // Membre connecté : Mon espace · Cotiser · (Admin) · Déconnexion
     blocAuth = [
       lien("espace.html", "Mon espace", "espace"),
+      lien("annuaire.html", "Annuaire", "annuaire"),
       `<a href="cotiser.html" class="lien-cotiser ${pageActive === "cotiser" ? "actif" : ""}">Cotiser</a>`,
       (profil.role === "bureau" ? lien("admin.html", "Admin", "admin") : ""),
       `<a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`,

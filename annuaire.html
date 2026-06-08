@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Annuaire des adhérents · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .filtre-bar{ display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; margin:0.4rem 0 1.2rem; }
+    .filtre-bar label{ font-weight:600; color:var(--bleu-fonce); }
+    .filtre-bar select{ padding:0.5rem 0.7rem; border:1.5px solid #d6d6cf; border-radius:9px; font-size:0.95rem; min-width:220px; }
+    .commune-bloc{ margin-bottom:1.6rem; }
+    .commune-titre{ color:var(--bleu-fonce); font-size:1.15rem; margin:0 0 0.7rem; padding-bottom:0.35rem; border-bottom:2px solid #ece7da; display:flex; justify-content:space-between; align-items:baseline; gap:0.6rem; }
+    .commune-titre .cnt{ font-size:0.82rem; color:var(--gris); font-weight:500; }
+    .membres{ display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:0.8rem; }
+    .membre{ background:#fff; border-radius:12px; box-shadow:var(--ombre); padding:0.9rem 1.1rem; }
+    .membre .nom{ font-weight:700; color:var(--bleu-fonce); }
+    .membre .nuis{ font-size:0.86rem; color:var(--gris); margin-top:0.2rem; }
+    .membre .nuis strong{ color:var(--texte); font-weight:600; }
+    .invite{ background:#fff4ec; border-left:4px solid var(--corail); padding:0.9rem 1.2rem; border-radius:10px; margin-bottom:1.4rem; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <div id="footer-mount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (async function(){
+      await initPage("annuaire");
+      const contenu = document.getElementById("contenu");
+      const profil = await monProfil();
+      if (!profil){
+        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
+          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
+          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">L'annuaire des adhérents est réservé aux membres connectés.</p>
+          <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
+        return;
+      }
+
+      // Membres ayant accepté d'apparaître (règle RLS profils_select_annuaire).
+      const { data, error } = await sb.from("profils")
+        .select("id, nom, commune, type_nuisance")
+        .eq("annuaire_optin", true);
+
+      if (error){
+        contenu.innerHTML = `<h2 class="section-titre">Annuaire des adhérents</h2>
+          <div class="message err" style="display:block">Erreur : ${echapper(error.message)}</div>`;
+        return;
+      }
+
+      const membres = (data || []).filter(m => (m.nom||"").trim());
+      const jeFigure = membres.some(m => m.id === profil.id);
+
+      // Invitation à rejoindre l'annuaire si le membre n'a pas coché l'option.
+      const invite = jeFigure ? "" : `
+        <div class="invite">
+          Vous n'apparaissez pas encore dans l'annuaire. Pour aider d'autres adhérents
+          de votre commune à vous trouver, cochez <strong>« Apparaître dans l'annuaire des membres »</strong>
+          depuis <a href="espace.html">Mon espace</a>.
+        </div>`;
+
+      // Regroupement par commune.
+      const parCommune = {};
+      membres.forEach(m => {
+        const c = (m.commune||"").trim() || "Commune non précisée";
+        (parCommune[c] = parCommune[c] || []).push(m);
+      });
+      const communes = Object.keys(parCommune).sort((a,b)=>a.localeCompare(b,"fr"));
+
+      function carteMembre(m){
+        const nuis = (m.type_nuisance||"").trim();
+        return `<div class="membre">
+          <div class="nom">${echapper(m.nom)}</div>
+          ${nuis ? `<div class="nuis">Nuisance subie : <strong>${echapper(nuis)}</strong></div>` : ""}
+        </div>`;
+      }
+
+      function rendre(filtre){
+        const liste = filtre ? communes.filter(c => c === filtre) : communes;
+        if (!liste.length){
+          document.getElementById("annu-corps").innerHTML =
+            `<p style="color:var(--gris)">Aucun adhérent visible pour cette commune.</p>`;
+          return;
+        }
+        document.getElementById("annu-corps").innerHTML = liste.map(c => {
+          const ms = parCommune[c].slice().sort((a,b)=>(a.nom||"").localeCompare(b.nom||"","fr"));
+          return `<div class="commune-bloc">
+            <h3 class="commune-titre">${echapper(c)} <span class="cnt">${ms.length} adhérent${ms.length>1?"s":""}</span></h3>
+            <div class="membres">${ms.map(carteMembre).join("")}</div>
+          </div>`;
+        }).join("");
+      }
+
+      if (!membres.length){
+        contenu.innerHTML = `<h2 class="section-titre">Annuaire des adhérents</h2>
+          ${invite}
+          <p style="color:var(--gris)">Aucun adhérent n'est encore visible dans l'annuaire. Soyez le premier à vous y inscrire depuis <a href="espace.html">Mon espace</a>.</p>`;
+        return;
+      }
+
+      contenu.innerHTML = `
+        <h2 class="section-titre">Annuaire des adhérents</h2>
+        <p style="color:var(--gris);margin-bottom:1rem">
+          ${membres.length} adhérent${membres.length>1?"s ont":" a"} accepté d'apparaître ici pour faciliter
+          l'entraide entre voisins touchés par les mêmes nuisances. Par respect de la vie privée,
+          <strong>aucune coordonnée n'est affichée</strong> : pour échanger, passez par le
+          <a href="forum.html">forum</a> ou par le <a href="contact.html">bureau</a>.
+        </p>
+        ${invite}
+        <div class="filtre-bar">
+          <label for="sel-commune">Filtrer par commune&nbsp;:</label>
+          <select id="sel-commune">
+            <option value="">Toutes les communes</option>
+            ${communes.map(c => `<option>${echapper(c)}</option>`).join("")}
+          </select>
+        </div>
+        <div id="annu-corps"></div>`;
+
+      document.getElementById("sel-commune").addEventListener("change", e => rendre(e.target.value));
+      rendre("");
+    })();
+  </script>
+</body>
+</html>

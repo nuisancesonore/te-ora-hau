@@ -92,6 +92,14 @@
         Les cellules auditives ciliées sont <strong>très fragiles</strong>. Une fois détruites, elles ne se reconstituent jamais&nbsp;: le handicap est alors <strong>irréversible</strong>.
       </div>
 
+      <p>Cette vidéo montre en quoi la pollution sonore menace la santé publique.</p>
+      <div class="video" id="video-sante" data-id="o5-YXh37H4g">
+        <button class="video-play" type="button" aria-label="Lire la vidéo"
+          style="background-image:url('https://i.ytimg.com/vi/o5-YXh37H4g/hqdefault.jpg')">
+          <span class="yt-btn">▶</span>
+        </button>
+      </div>
+
       <h3>Un fléau de la vie moderne</h3>
       <p>Sous-produit de la civilisation technologique et urbaine, le bruit est l'un des fléaux les plus perturbants de la vie moderne. Il peut provoquer des lésions spécifiques de l'oreille interne et modifier son fonctionnement.</p>
       <p>Il provoque aussi des dommages plus généraux et tout aussi dangereux&nbsp;: atteintes du système nerveux, modification du comportement et du niveau de vigilance, altération des fonctions sensorielles et motrices. Le bruit porte atteinte à notre santé et gâche nos journées comme nos nuits.</p>
@@ -113,17 +121,17 @@
   <script src="js/app.js"></script>
   <script>
     initPage("comprendre");
-    (function(){
-      const box = document.getElementById("video-oreille");
-      if (!box) return;
-      box.querySelector(".video-play").addEventListener("click", function(){
+    document.querySelectorAll(".video[data-id]").forEach(function(box){
+      const btn = box.querySelector(".video-play");
+      if (!btn) return;
+      btn.addEventListener("click", function(){
         const id = box.dataset.id;
         box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id +
-          '?autoplay=1&rel=0" title="Le son et l\'audition" ' +
+          '?autoplay=1&rel=0" title="Vidéo Te Ora Hau" ' +
           'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" ' +
           'allowfullscreen></iframe>';
       });
-    })();
+    });
   </script>
 </body>
 </html>

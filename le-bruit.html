@@ -22,7 +22,14 @@
     .tableau td.c { text-align: center; font-weight: 700; color: var(--bleu-fonce); }
     .tableau tr:last-child td { border-bottom: none; }
     .doc-lien { display: inline-block; margin-top: 0.4rem; font-weight: 600; }
-  </style>
+    .acc { background:#fff; border-radius:10px; box-shadow:var(--ombre); margin-bottom:0.9rem; overflow:hidden; }
+    .acc > summary { cursor:pointer; padding:1rem 1.3rem; font-weight:700; color:var(--bleu-fonce); list-style:none; display:flex; justify-content:space-between; align-items:center; gap:1rem; font-size:1.05rem; }
+    .acc > summary::-webkit-details-marker { display:none; }
+    .acc > summary::after { content:"▸"; color:var(--corail); font-weight:700; transition:transform 0.15s; }
+    .acc[open] > summary::after { transform:rotate(90deg); }
+    .acc .corps { padding:0 1.3rem 1.3rem; }
+    .acc .corps.prose { max-width:none; }
+</style>
 </head>
 <body>
   <div id="nav-mount"></div>
@@ -59,8 +66,11 @@
       <p style="color:var(--gris);font-size:0.9rem">Pour les effets du bruit sur la santé, voir <a href="comprendre.html#sante">Bruit &amp; santé</a>.</p>
     </div>
 
-    <h2 class="section-titre" style="margin-top:2.5rem">Les textes officiels</h2>
-    <div class="prose">
+    <h2 class="section-titre" style="margin-top:2.5rem">Pour aller plus loin</h2>
+
+    <details class="acc">
+      <summary>📜 Les textes officiels</summary>
+      <div class="corps prose">
       <p>Ces règles découlent du <strong>Code de l'environnement de la Polynésie française</strong>. Deux textes encadrent en particulier le bruit de voisinage et celui des activités.</p>
 
       <h3>1. Lutte contre le bruit (art. A. 4333‑3‑1 à A. 4333‑3‑6)</h3>
@@ -102,16 +112,24 @@
       <a class="doc-lien" href="lois/arrete-taiarapu-ouest-2003-bruits-genants.pdf" target="_blank" rel="noopener">📄 Lire l'arrêté (PDF)</a>
 
       <p style="color:var(--gris);font-size:0.85rem;margin-top:1.4rem">Résumé indicatif établi à partir du Code de l'environnement de la Polynésie française et d'un arrêté municipal. En cas de doute, les textes officiels (PDF ci‑dessus) font foi.</p>
-    </div>
+      </div>
+    </details>
 
-    <h2 class="section-titre" style="margin-top:2.5rem">Modèles à imprimer</h2>
-    <div class="prose">
-      <p>Pour appuyer vos démarches, deux modèles prêts à l'emploi&nbsp;:</p>
-      <ul class="liste-claire">
-        <li><a href="attestation-nuisance.html"><strong>Attestation de constat de nuisance sonore</strong></a> — à faire remplir par un témoin.</li>
-        <li><a href="petition.html"><strong>Exemple de pétition</strong></a> — à adapter et faire signer par les riverains.</li>
-      </ul>
-    </div>
+    <details class="acc">
+      <summary>📝 Attestation de constat de nuisance sonore</summary>
+      <div class="corps prose">
+        <p>Modèle prêt à l'emploi, à <strong>faire remplir par un témoin</strong> ayant personnellement constaté la nuisance. Il pourra être joint à un signalement, à un courrier ou à une plainte.</p>
+        <a href="attestation-nuisance.html" class="btn btn-vert">Ouvrir l'attestation à imprimer</a>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary>✊ Exemple de pétition</summary>
+      <div class="corps prose">
+        <p>Modèle de pétition à <strong>adapter</strong> et à <strong>faire signer par les riverains</strong> concernés, puis à adresser à l'autorité compétente.</p>
+        <a href="petition.html" class="btn btn-vert">Ouvrir la pétition à imprimer</a>
+      </div>
+    </details>
   </main>
 
   <div id="footer-mount"></div>

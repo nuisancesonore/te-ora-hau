@@ -118,6 +118,14 @@
       <p>Sous-produit de la civilisation technologique et urbaine, le bruit est l'un des fléaux les plus perturbants de la vie moderne. Il peut provoquer des lésions spécifiques de l'oreille interne et modifier son fonctionnement.</p>
       <p>Il provoque aussi des dommages plus généraux et tout aussi dangereux&nbsp;: atteintes du système nerveux, modification du comportement et du niveau de vigilance, altération des fonctions sensorielles et motrices. Le bruit porte atteinte à notre santé et gâche nos journées comme nos nuits.</p>
 
+      <p>Le bruit, un risque souvent sous-estimé&nbsp;: comment s'en protéger&nbsp;?</p>
+      <div class="video" id="video-protection" data-id="8MJnzjvoy_w" data-start="80">
+        <button class="video-play" type="button" aria-label="Lire la vidéo"
+          style="background-image:url('https://i.ytimg.com/vi/8MJnzjvoy_w/hqdefault.jpg')">
+          <span class="yt-btn">▶</span>
+        </button>
+      </div>
+
       <h3>L'oreille, de la naissance à la sénescence</h3>
       <p>Le <strong>Professeur Schmerber</strong>, chef du service ORL du CHU de Grenoble, nous parle de la presbyacousie.</p>
       <div class="video" id="video-presbyacousie" data-id="9G5YSE3kE2k">
@@ -148,8 +156,9 @@
       if (!btn) return;
       btn.addEventListener("click", function(){
         const id = box.dataset.id;
+        const start = box.dataset.start ? "&start=" + box.dataset.start : "";
         box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id +
-          '?autoplay=1&rel=0" title="Vidéo Te Ora Hau" ' +
+          '?autoplay=1&rel=0' + start + '" title="Vidéo Te Ora Hau" ' +
           'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" ' +
           'allowfullscreen></iframe>';
       });

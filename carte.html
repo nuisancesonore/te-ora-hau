@@ -80,6 +80,8 @@
       const bord = c => c==="Constat + plainte" ? {color:"#064a54", weight:4}
                        : c==="Constat d'autorité" ? {color:"#0a7d8c", weight:3}
                        : {color:"#ffffff", weight:2};
+      const MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+      const moisAn = v => { if(!v) return ""; const p=v.split("-"); return (MOIS[parseInt(p[1])-1]||"")+" "+p[0]; };
       geoloc.forEach(s => {
         const b = bord(s.constat);
         L.circleMarker([s.lat, s.lng], {
@@ -88,6 +90,7 @@
           `<strong>${echapper(s.type)}</strong><br>`+
           `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}<br>`+
           `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
+          (s.debut?`<br>Depuis ${moisAn(s.debut)}`:"")+
           `<br><strong>${echapper(s.constat||"Signalement seul")}</strong>`+
           (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+
           (s.description?`<br><em>${echapper(s.description)}</em>`:"")

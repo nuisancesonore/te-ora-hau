@@ -77,6 +77,8 @@
                 <select id="intensite"><option>Faible</option><option>Moyenne</option><option selected>Forte</option><option>Insupportable</option></select></div>
               <div class="champ"><label>Récurrence</label>
                 <select id="recurrence"><option>Ponctuel</option><option selected>Régulier</option><option>Permanent</option></select></div>
+              <div class="champ"><label>Début des nuisances <span style="font-weight:400;color:var(--gris)">— mois et année</span></label>
+                <input type="month" id="debut"></div>
               <div class="champ"><label>Constat / démarche</label>
                 <select id="constat">
                   <option value="Signalement seul" selected>Signalement seul (sur la carte)</option>
@@ -186,12 +188,13 @@
           intensite: document.getElementById("intensite").value,
           recurrence: document.getElementById("recurrence").value,
           constat: document.getElementById("constat").value,
+          debut: document.getElementById("debut").value || null,
           description: document.getElementById("description").value.trim(),
           lat: pt?pt.lat:null, lng: pt?pt.lng:null,
         };
         let { error } = await sb.from("signalements").insert(row);
-        if (error && /constat/i.test(error.message)) {  // colonne pas encore ajoutée
-          delete row.constat;
+        if (error && /column|schema cache|constat|debut/i.test(error.message)) {  // colonnes pas encore ajoutées
+          delete row.constat; delete row.debut;
           ({ error } = await sb.from("signalements").insert(row));
         }
         if (error){ msg.className="message err"; msg.textContent="Erreur : "+error.message; return; }

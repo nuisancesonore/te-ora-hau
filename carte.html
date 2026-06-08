@@ -27,9 +27,16 @@
     <div id="etat" style="margin-bottom:1rem"></div>
     <div id="map"></div>
     <div class="legende">
+      <strong style="color:var(--bleu-fonce)">Intensité&nbsp;:</strong>
       <span><span class="dot" style="background:#e8b84b"></span> Faible</span>
       <span><span class="dot" style="background:#ff7a59"></span> Moyenne / Forte</span>
       <span><span class="dot" style="background:#b2381f"></span> Insupportable</span>
+    </div>
+    <div class="legende">
+      <strong style="color:var(--bleu-fonce)">Démarche (contour)&nbsp;:</strong>
+      <span><span class="dot" style="background:#bbb;border:2px solid #fff;box-shadow:0 0 0 1px #ccc"></span> Signalement seul</span>
+      <span><span class="dot" style="background:#bbb;border:3px solid #0a7d8c"></span> Constat d'autorité</span>
+      <span><span class="dot" style="background:#bbb;border:4px solid #064a54"></span> Constat + plainte</span>
     </div>
 
     <div id="stats"></div>
@@ -60,13 +67,19 @@
       if (!geoloc.length){ etat.innerHTML = `<div class="message ok" style="display:block">Aucun signalement géolocalisé pour le moment. Soyez le premier : <a href="signaler.html">signaler</a>.</div>`; }
 
       const couleur = i => i==="Insupportable" ? "#b2381f" : i==="Faible" ? "#e8b84b" : "#ff7a59";
+      // Le contour (bord) du point indique le niveau de démarche (constat).
+      const bord = c => c==="Constat + plainte" ? {color:"#064a54", weight:4}
+                       : c==="Constat d'autorité" ? {color:"#0a7d8c", weight:3}
+                       : {color:"#ffffff", weight:2};
       geoloc.forEach(s => {
+        const b = bord(s.constat);
         L.circleMarker([s.lat, s.lng], {
-          radius:9, color:"#fff", weight:2, fillColor:couleur(s.intensite), fillOpacity:0.9,
+          radius:9, color:b.color, weight:b.weight, fillColor:couleur(s.intensite), fillOpacity:0.9,
         }).addTo(map).bindPopup(
           `<strong>${echapper(s.type)}</strong><br>`+
           `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}<br>`+
           `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
+          `<br><strong>${echapper(s.constat||"Signalement seul")}</strong>`+
           (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+
           (s.description?`<br><em>${echapper(s.description)}</em>`:"")
         );
@@ -91,6 +104,8 @@
          <div class="stats-wrap">
            ${tableau("Signalements par commune", compter("commune"))}
            ${tableau("Signalements par objet (type)", compter("type"))}
+           ${tableau("Signalements par démarche", compter("constat"))}
+           ${tableau("Signalements par intensité", compter("intensite"))}
          </div>`;
     })();
   </script>

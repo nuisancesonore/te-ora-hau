@@ -77,6 +77,13 @@
                 <select id="intensite"><option>Faible</option><option>Moyenne</option><option selected>Forte</option><option>Insupportable</option></select></div>
               <div class="champ"><label>Récurrence</label>
                 <select id="recurrence"><option>Ponctuel</option><option selected>Régulier</option><option>Permanent</option></select></div>
+              <div class="champ"><label>Constat / démarche</label>
+                <select id="constat">
+                  <option value="Signalement seul" selected>Signalement seul (sur la carte)</option>
+                  <option value="Constat d'autorité">Constat d'une autorité officielle (police municipale)</option>
+                  <option value="Constat + plainte">Constat d'autorité + plainte à la gendarmerie</option>
+                </select>
+                <p style="font-size:0.8rem;color:var(--gris);margin-top:0.3rem">Précisez si votre signalement est appuyé par un constat officiel et/ou une plainte — cela renforce le dossier.</p></div>
               <div class="champ"><label>Description</label>
                 <textarea id="description" rows="3" placeholder="Décrivez la situation…"></textarea></div>
               <button type="submit" class="btn btn-primaire btn-bloc">Envoyer le signalement</button>
@@ -173,10 +180,15 @@
           horaire: document.getElementById("horaire").value,
           intensite: document.getElementById("intensite").value,
           recurrence: document.getElementById("recurrence").value,
+          constat: document.getElementById("constat").value,
           description: document.getElementById("description").value.trim(),
           lat: pt?pt.lat:null, lng: pt?pt.lng:null,
         };
-        const { error } = await sb.from("signalements").insert(row);
+        let { error } = await sb.from("signalements").insert(row);
+        if (error && /constat/i.test(error.message)) {  // colonne pas encore ajoutée
+          delete row.constat;
+          ({ error } = await sb.from("signalements").insert(row));
+        }
         if (error){ msg.className="message err"; msg.textContent="Erreur : "+error.message; return; }
         msg.className="message ok";
         msg.textContent="Merci ! Votre signalement a été enregistré.";

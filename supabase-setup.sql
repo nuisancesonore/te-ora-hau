@@ -33,6 +33,7 @@ create table if not exists public.signalements (
   quartier text,                      -- localité précise (Taravao, Afaahiti…)
   adresse_source text,                -- adresse de la source (auto-remplie)
   adresse_plaignant text,             -- adresse de la personne qui subit
+  constat text,                       -- Signalement seul / Constat d'autorité / Constat + plainte
   lat double precision,
   lng double precision,
   cree_le timestamptz not null default now()
@@ -43,6 +44,7 @@ alter table public.profils add column if not exists type_adhesion text;
 alter table public.profils add column if not exists date_naissance date;
 alter table public.profils add column if not exists adresse text;
 alter table public.signalements add column if not exists quartier text;
+alter table public.signalements add column if not exists constat text;
 alter table public.signalements add column if not exists adresse_source text;
 alter table public.signalements add column if not exists adresse_plaignant text;
 

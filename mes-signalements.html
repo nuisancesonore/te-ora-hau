@@ -32,6 +32,7 @@
     const HORAIRES = ["Jour","Soir","Nuit (après 22h)"];
     const INTENSITES = ["Faible","Moyenne","Forte","Insupportable"];
     const RECURRENCES = ["Ponctuel","Régulier","Permanent"];
+    const CONSTATS = ["Signalement seul","Constat d'autorité","Constat + plainte"];
     let UID = null;
 
     (async function(){
@@ -74,6 +75,7 @@
       return `
         <h3>${echapper(sg.type)||'Signalement'}</h3>
         <div class="meta">${lieu} · ${echapper(sg.horaire)||''} · Intensité ${echapper(sg.intensite)||''} · ${echapper(sg.recurrence)||''}</div>
+        <div class="meta">Démarche : <strong>${echapper(sg.constat||'Signalement seul')}</strong></div>
         ${sg.adresse_source?`<div class="meta">Source : ${echapper(sg.adresse_source)}</div>`:''}
         ${sg.adresse_plaignant?`<div class="meta">Plaignant : ${echapper(sg.adresse_plaignant)}</div>`:''}
         ${sg.description?`<div style="margin-top:0.3rem">${echapper(sg.description)}</div>`:''}
@@ -97,6 +99,7 @@
           <div><label>Horaire</label><select id="e-horaire-${id}">${opts(HORAIRES, data.horaire)}</select></div>
           <div><label>Intensité</label><select id="e-intensite-${id}">${opts(INTENSITES, data.intensite)}</select></div>
           <div><label>Récurrence</label><select id="e-recurrence-${id}">${opts(RECURRENCES, data.recurrence)}</select></div>
+          <div class="pleine"><label>Constat / démarche</label><select id="e-constat-${id}">${opts(CONSTATS, data.constat||'Signalement seul')}</select></div>
           <div class="pleine"><label>Adresse de la source</label><input id="e-source-${id}" value="${attr(data.adresse_source)}"></div>
           <div class="pleine"><label>Votre adresse (plaignant)</label><input id="e-plaignant-${id}" value="${attr(data.adresse_plaignant)}"></div>
           <div class="pleine"><label>Description</label><textarea id="e-desc-${id}" rows="2">${echapper(data.description)}</textarea></div>
@@ -113,6 +116,7 @@
       const maj = {
         type: val("e-type-"+id), commune: val("e-commune-"+id), quartier: val("e-quartier-"+id),
         horaire: val("e-horaire-"+id), intensite: val("e-intensite-"+id), recurrence: val("e-recurrence-"+id),
+        constat: val("e-constat-"+id),
         adresse_source: val("e-source-"+id), adresse_plaignant: val("e-plaignant-"+id),
         description: val("e-desc-"+id),
       };

@@ -40,6 +40,11 @@
     .video-play:hover .yt-btn { background: #cc0000; }
     /* compense le menu collé en haut lors d'un saut vers une ancre */
     .ancre { scroll-margin-top: 90px; }
+    .details-bruit { margin: 0.4rem 0 1rem; }
+    .details-bruit > summary { cursor: pointer; font-weight: 600; color: var(--bleu-lagon); list-style: none; padding: 0.4rem 0; }
+    .details-bruit > summary::-webkit-details-marker { display: none; }
+    .details-bruit > summary::before { content: "▸ "; }
+    .details-bruit[open] > summary::before { content: "▾ "; }
   </style>
 </head>
 <body>
@@ -58,32 +63,41 @@
       </div>
 
       <h3>Quelques notions sur le bruit</h3>
-      <p>Pour bien combattre un ennemi, il faut d'abord le connaître. À propos du bruit, beaucoup d'idées fausses circulent&nbsp;: qu'il « monte », qu'un rideau d'arbres l'atténue, que les doubles vitrages sont toujours efficaces, ou qu'on finit par s'y habituer.</p>
-      <p>Un bruit (ou un son) est une <strong>vibration de l'air</strong> caractérisée par trois éléments&nbsp;: sa <strong>fréquence</strong>, son <strong>niveau sonore</strong> et sa <strong>durée</strong>.</p>
+      <p>Un bruit est une <strong>vibration de l'air</strong> définie par <strong>trois éléments</strong>&nbsp;:</p>
+      <ul style="margin:0 0 1rem 1.2rem">
+        <li><strong>La fréquence</strong> (grave ↔ aigu)&nbsp;: l'oreille perçoit de <strong>20 à 20 000&nbsp;Hz</strong>.</li>
+        <li><strong>Le niveau sonore</strong> (décibels)&nbsp;: 0&nbsp;dB = audibilité, ~120‑130&nbsp;dB = douleur. Il <strong>chute vite avec la distance</strong> et suit une <strong>échelle logarithmique</strong> (doubler la source n'ajoute que +3&nbsp;dB).</li>
+        <li><strong>La durée</strong>&nbsp;: déterminante pour la gêne, mesurée par le <strong>LEQ</strong> (la « dose » de bruit reçue).</li>
+      </ul>
 
-      <h3>1. La fréquence — aigu ou grave (en hertz)</h3>
-      <p>L'oreille humaine perçoit les sons entre 20&nbsp;Hz (très grave) et 20&nbsp;000&nbsp;Hz (très aigu).</p>
-      <table class="tableau">
-        <tr><th>Plage</th><th>Fréquences</th></tr>
-        <tr><td>Basses fréquences</td><td>16 à 200 Hz</td></tr>
-        <tr><td>Fréquences médium</td><td>201 à 2 000 Hz</td></tr>
-        <tr><td>Fréquences aiguës</td><td>2 001 à 20 000 Hz</td></tr>
-      </table>
+      <details class="details-bruit">
+        <summary>Voir le détail (idées reçues, tableaux fréquences &amp; décibels)</summary>
+        <p style="margin-top:0.8rem">Pour bien combattre un ennemi, il faut d'abord le connaître. À propos du bruit, beaucoup d'idées fausses circulent&nbsp;: qu'il « monte », qu'un rideau d'arbres l'atténue, que les doubles vitrages sont toujours efficaces, ou qu'on finit par s'y habituer.</p>
 
-      <h3>2. Le niveau sonore — l'intensité (en décibels)</h3>
-      <p>Le seuil d'audibilité est fixé à <strong>0&nbsp;dB</strong> et le seuil de la douleur à <strong>100&nbsp;dB</strong> (la vraie douleur étant ressentie vers 120-130&nbsp;dB). L'intensité décroît avec l'éloignement, en fonction du <strong>carré de la distance</strong> — donc très vite&nbsp;:</p>
-      <table class="tableau">
-        <tr><th>Distance</th><th>Niveau</th></tr>
-        <tr><td>1 mètre</td><td>100 dB(A)</td></tr>
-        <tr><td>2 mètres</td><td>94 dB(A)</td></tr>
-        <tr><td>4 mètres</td><td>88 dB(A)</td></tr>
-      </table>
-      <div class="encart">
-        <strong>Une échelle logarithmique.</strong> Doubler une source sonore n'ajoute que <strong>3&nbsp;dB</strong>&nbsp;: deux bruits de 35&nbsp;dB donnent 38&nbsp;dB (et non 70). Conséquence&nbsp;: pour réduire de 10&nbsp;dB le bruit d'une rue, il faut diviser son trafic par dix. Abaisser de 3&nbsp;dB (diviser le bruit par deux) est à peine perceptible à l'oreille.
-      </div>
+        <h3>1. La fréquence — aigu ou grave (en hertz)</h3>
+        <p>L'oreille humaine perçoit les sons entre 20&nbsp;Hz (très grave) et 20&nbsp;000&nbsp;Hz (très aigu).</p>
+        <table class="tableau">
+          <tr><th>Plage</th><th>Fréquences</th></tr>
+          <tr><td>Basses fréquences</td><td>16 à 200 Hz</td></tr>
+          <tr><td>Fréquences médium</td><td>201 à 2 000 Hz</td></tr>
+          <tr><td>Fréquences aiguës</td><td>2 001 à 20 000 Hz</td></tr>
+        </table>
 
-      <h3>3. La durée</h3>
-      <p>La durée est déterminante pour la perception et la gêne. L'intensité pouvant fluctuer dans le temps, une seule mesure ne suffit pas&nbsp;: on relève une série de mesures pour connaître le niveau maximum et le niveau moyen, exprimé en <strong>LEQ</strong> (<em>Level equivalent</em>). Le LEQ caractérise la « dose » de bruit reçue pendant une période donnée et mesure la gêne provoquée.</p>
+        <h3>2. Le niveau sonore — l'intensité (en décibels)</h3>
+        <p>Le seuil d'audibilité est fixé à <strong>0&nbsp;dB</strong> et le seuil de la douleur à <strong>100&nbsp;dB</strong> (la vraie douleur étant ressentie vers 120-130&nbsp;dB). L'intensité décroît avec l'éloignement, en fonction du <strong>carré de la distance</strong> — donc très vite&nbsp;:</p>
+        <table class="tableau">
+          <tr><th>Distance</th><th>Niveau</th></tr>
+          <tr><td>1 mètre</td><td>100 dB(A)</td></tr>
+          <tr><td>2 mètres</td><td>94 dB(A)</td></tr>
+          <tr><td>4 mètres</td><td>88 dB(A)</td></tr>
+        </table>
+        <div class="encart">
+          <strong>Une échelle logarithmique.</strong> Doubler une source sonore n'ajoute que <strong>3&nbsp;dB</strong>&nbsp;: deux bruits de 35&nbsp;dB donnent 38&nbsp;dB (et non 70). Conséquence&nbsp;: pour réduire de 10&nbsp;dB le bruit d'une rue, il faut diviser son trafic par dix. Abaisser de 3&nbsp;dB (diviser le bruit par deux) est à peine perceptible à l'oreille.
+        </div>
+
+        <h3>3. La durée</h3>
+        <p>La durée est déterminante pour la perception et la gêne. L'intensité pouvant fluctuer dans le temps, une seule mesure ne suffit pas&nbsp;: on relève une série de mesures pour connaître le niveau maximum et le niveau moyen, exprimé en <strong>LEQ</strong> (<em>Level equivalent</em>). Le LEQ caractérise la « dose » de bruit reçue pendant une période donnée et mesure la gêne provoquée.</p>
+      </details>
     </div>
 
     <h2 class="section-titre ancre" id="sante" style="margin-top:2.5rem">Bruit &amp; santé</h2>

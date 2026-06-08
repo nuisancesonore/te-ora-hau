@@ -41,6 +41,7 @@
     <div class="barre-actions">
       <a href="le-bruit.html" class="btn btn-clair" onclick="if(history.length>1){history.back();return false;}">← Retour</a>
       <button class="btn btn-primaire" onclick="window.print()">🖨️ Imprimer la pétition</button>
+      <button class="btn btn-vert" onclick="telechargerPDF()">⬇️ Télécharger (PDF)</button>
     </div>
 
     <div class="feuille">
@@ -85,6 +86,20 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
-  <script>initPage("");</script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+  <script>
+    initPage("");
+    function telechargerPDF(){
+      var el = document.querySelector(".feuille");
+      if (!window.html2pdf){ window.print(); return; }
+      html2pdf().set({
+        margin: 10,
+        filename: "petition-nuisances-sonores.pdf",
+        image: { type:"jpeg", quality:0.98 },
+        html2canvas: { scale:2, useCORS:true, backgroundColor:"#ffffff" },
+        jsPDF: { unit:"mm", format:"a4", orientation:"portrait" }
+      }).from(el).save();
+    }
+  </script>
 </body>
 </html>

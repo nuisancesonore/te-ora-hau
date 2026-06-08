@@ -14,10 +14,19 @@
     @media(max-width:680px){ .stats-wrap{ grid-template-columns:1fr; } }
     .stat-card{ background:#fff; border-radius:12px; box-shadow:var(--ombre); padding:1rem 1.2rem; }
     .stat-card h3{ color:var(--bleu-fonce); font-size:1.05rem; margin-bottom:0.6rem; }
-    .stat-row{ display:flex; justify-content:space-between; gap:1rem; padding:0.35rem 0; border-bottom:1px solid #eee; font-size:0.92rem; }
+    .stat-list{ max-height:230px; overflow-y:auto; padding-right:0.3rem; }
+    .stat-row{ display:flex; align-items:center; gap:0.7rem; padding:0.4rem 0; border-bottom:1px solid #f0f0ea; font-size:0.9rem; }
     .stat-row:last-child{ border-bottom:none; }
-    .stat-row .n{ font-weight:700; color:var(--corail); }
-    .stat-total{ color:var(--gris); font-size:0.85rem; margin:1.4rem 0 0.2rem; }</style>
+    .stat-row .lib{ flex:0 0 38%; }
+    .stat-row .bar{ flex:1; height:7px; background:#eee; border-radius:4px; overflow:hidden; }
+    .stat-row .bar>span{ display:block; height:100%; background:var(--corail); border-radius:4px; }
+    .stat-row .n{ flex:0 0 auto; font-weight:700; color:var(--bleu-fonce); min-width:64px; text-align:right; }
+    .stat-row .n small{ color:var(--gris); font-weight:500; }
+    .stat-total{ color:var(--gris); font-size:0.85rem; margin:1.4rem 0 0.2rem; }
+    .kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:0.9rem; margin:0.8rem 0 1.4rem; }
+    .kpi{ background:#fff; border-radius:12px; box-shadow:var(--ombre); padding:1rem; text-align:center; border-top:3px solid var(--corail); }
+    .kpi .n{ font-size:1.8rem; font-weight:800; color:var(--bleu-fonce); line-height:1.1; }
+    .kpi .l{ font-size:0.8rem; color:var(--gris); margin-top:0.3rem; }</style>
 </head>
 <body>
   <div id="nav-mount"></div>
@@ -86,26 +95,44 @@
       });
 
       // ----- Statistiques -----
+      const total = data.length;
       function compter(champ){
         const m = {};
         data.forEach(s => { const k = (s[champ]||"").trim() || "Non précisé"; m[k] = (m[k]||0)+1; });
         return Object.entries(m).sort((a,b) => b[1]-a[1]);
       }
-      function tableau(titre, lignes){
-        const total = lignes.reduce((t,[,n])=>t+n,0);
-        return `<div class="stat-card"><h3>${titre}</h3>` +
-          (lignes.length ? lignes.map(([k,n]) =>
-            `<div class="stat-row"><span>${echapper(k)}</span><span class="n">${n}</span></div>`).join("")
-            : `<div class="stat-row"><span style="color:var(--gris)">Aucune donnée</span></div>`) +
-          `</div>`;
+      function pct(n){ return total ? Math.round(n/total*100) : 0; }
+      function tableau(titre, lignes, scroll){
+        const max = lignes.length ? lignes[0][1] : 1;
+        const rows = lignes.length ? lignes.map(([k,n]) =>
+          `<div class="stat-row">
+             <span class="lib">${echapper(k)}</span>
+             <span class="bar"><span style="width:${Math.round(n/max*100)}%"></span></span>
+             <span class="n">${n} <small>(${pct(n)}%)</small></span>
+           </div>`).join("")
+          : `<div class="stat-row"><span class="lib" style="color:var(--gris)">Aucune donnée</span></div>`;
+        return `<div class="stat-card"><h3>${titre}</h3><div class="${scroll?'stat-list':''}">${rows}</div></div>`;
       }
+
+      // Chiffres clés
+      const parCommune = compter("commune");
+      const topCommune = parCommune[0] ? `${parCommune[0][0]} (${parCommune[0][1]})` : "—";
+      const fortes = data.filter(s => s.intensite==="Forte" || s.intensite==="Insupportable").length;
+      const avecConstat = data.filter(s => s.constat==="Constat d'autorité" || s.constat==="Constat + plainte").length;
+
       document.getElementById("stats").innerHTML =
-        `<div class="stat-total"><strong>${data.length}</strong> signalement(s) au total · ${geoloc.length} géolocalisé(s).</div>
+        `<div class="kpis">
+           <div class="kpi"><div class="n">${total}</div><div class="l">Signalements</div></div>
+           <div class="kpi"><div class="n">${pct(fortes)}%</div><div class="l">Forts ou insupportables</div></div>
+           <div class="kpi"><div class="n">${pct(avecConstat)}%</div><div class="l">Appuyés par un constat</div></div>
+           <div class="kpi"><div class="n" style="font-size:1.15rem">${topCommune}</div><div class="l">Commune la plus touchée</div></div>
+         </div>
+         <div class="stat-total">${geoloc.length} signalement(s) géolocalisé(s) sur ${total}.</div>
          <div class="stats-wrap">
-           ${tableau("Signalements par commune", compter("commune"))}
-           ${tableau("Signalements par objet (type)", compter("type"))}
-           ${tableau("Signalements par démarche", compter("constat"))}
-           ${tableau("Signalements par intensité", compter("intensite"))}
+           ${tableau("Par commune", parCommune, true)}
+           ${tableau("Par objet (type)", compter("type"), true)}
+           ${tableau("Par démarche", compter("constat"))}
+           ${tableau("Par intensité", compter("intensite"))}
          </div>`;
     })();
   </script>

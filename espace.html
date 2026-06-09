@@ -71,7 +71,7 @@
       // Rappel de cotisation à la connexion : 2 mois avant, puis 1 mois avant.
       let rappel = "";
       const _j = st.joursRestants;
-      if (!aJour && _j === null) {
+      if (profil.role !== "bureau" && !aJour && _j === null) {
         rappel = `<div class="rappel-coti r-urgent">Votre <strong>accès complet</strong> (carte détaillée, signaler, forum, annuaire, outils) se débloque dès que votre <strong>cotisation</strong> a été reçue et <strong>validée par le bureau</strong> de Te Ora Hau. Voir <a href="cotiser.html">comment cotiser</a>.</div>`;
       } else if (_j !== null) {
         if (_j < 0)
@@ -89,7 +89,7 @@
             <div class="carte-membre">
               <div class="ligne">
                 <div><div class="label">Membre</div><h3>${echapper(profil.nom)}</h3></div>
-                <span class="badge ${aJour?'ok':'ko'}">${aJour?'À jour':'Cotisation à régler'}</span>
+                <span class="badge ${(aJour||profil.role==='bureau')?'ok':'ko'}">${profil.role==='bureau'?'Bureau':(aJour?'À jour':'Cotisation à régler')}</span>
               </div>
               <div style="display:flex;gap:1.4rem;margin:1.2rem 0 0.4rem;flex-wrap:wrap;align-items:flex-end">
                 <div>

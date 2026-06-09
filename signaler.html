@@ -131,21 +131,31 @@
         }, () => alert("Géolocalisation refusée ou indisponible. Recherchez une adresse ou cliquez sur la carte."));
       });
 
-      // Recherche d'adresse / de lieu (géocodage OpenStreetMap)
+      // Recherche d'adresse / de lieu (géocodage OpenStreetMap), tolérante
+      // aux graphies tahitiennes (apostrophes ' ʻ ’ `).
+      async function chercherNominatim(url){
+        try { const r = await fetch(url); const d = await r.json();
+          if (d && d.length) return { lat: parseFloat(d[0].lat), lng: parseFloat(d[0].lon) };
+        } catch(_) {}
+        return null;
+      }
       async function rechercher(){
         const q = document.getElementById("recherche").value.trim();
         if (!q) return;
-        try {
-          const r = await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pf&q=" + encodeURIComponent(q));
-          const d = await r.json();
-          if (d && d.length){
-            const lat = parseFloat(d[0].lat), lng = parseFloat(d[0].lon);
-            poser(lat, lng); map.setView([lat, lng], 16);
-          } else {
-            alert("Lieu introuvable en Polynésie. Essayez un nom plus connu (quartier, rue, point de repère) ou cliquez directement sur la carte.");
-          }
-        } catch(_) {
-          alert("Recherche momentanément indisponible. Cliquez directement sur la carte.");
+        const sansApos = q.replace(/['ʻ’`]/g, "");      // PAPE'ETE -> PAPEETE
+        const essais = [...new Set([q, sansApos])];
+        let res = null;
+        // 1) En Polynésie, saisie puis variante sans apostrophe
+        for (const t of essais){
+          res = await chercherNominatim("https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=pf&q=" + encodeURIComponent(t));
+          if (res) break;
+        }
+        // 2) Dernier essai : recherche élargie « <lieu>, Polynésie française »
+        if (!res) res = await chercherNominatim("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(sansApos + ", Polynésie française"));
+        if (res){
+          poser(res.lat, res.lng); map.setView([res.lat, res.lng], 16);
+        } else {
+          alert("Lieu introuvable. Essayez un nom simple (ex. « Papeete », « Taravao »), sans apostrophe, ou cliquez directement sur la carte.");
         }
       }
       document.getElementById("btn-rech").addEventListener("click", rechercher);

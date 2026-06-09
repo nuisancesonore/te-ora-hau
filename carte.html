@@ -74,7 +74,9 @@
       // table pour les membres connectés si la vue n'est pas encore déployée.
       const COLS = "id,type,commune,quartier,intensite,horaire,recurrence,constat,debut,adresse_source,description,lat,lng";
       let { data, error } = await sb.from("signalements_publics").select(COLS);
-      if (error && profil) ({ data, error } = await sb.from("signalements").select(COLS));
+      // Repli pour les membres connectés si la vue publique n'est pas encore
+      // déployée : on relit la table avec "*" (tolère les colonnes manquantes).
+      if (error && profil) ({ data, error } = await sb.from("signalements").select("*"));
       if (error){
         etat.innerHTML = `<div class="message ${profil?'err':'ok'}" style="display:block">${
           profil ? "Erreur : " + echapper(error.message)

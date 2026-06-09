@@ -62,10 +62,6 @@
   <script>
     (async function(){
       await initPage("carte");
-      const map = L.map("map").setView([-17.62, -149.46], 11);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        { attribution:"© OpenStreetMap", maxZoom:19 }).addTo(map);
-
       const etat = document.getElementById("etat");
       const profil = await monProfil();
 
@@ -85,29 +81,44 @@
         data = [];
       }
 
-      const geoloc = data.filter(s => s.lat != null && s.lng != null);
-      if (!geoloc.length){ etat.innerHTML = `<div class="message ok" style="display:block">Aucun signalement géolocalisé pour le moment. Soyez le premier : <a href="signaler.html">signaler</a>.</div>`; }
-
-      const couleur = i => i==="Insupportable" ? "#b2381f" : i==="Faible" ? "#e8b84b" : "#ff7a59";
-      // Le contour (bord) du point indique le niveau de démarche (constat).
-      const bord = c => c==="Constat + plainte" ? {color:"#064a54", weight:4}
-                       : c==="Constat d'autorité" ? {color:"#0a7d8c", weight:3}
-                       : {color:"#ffffff", weight:2};
-      const moisAn = moisAnnee; // formateur "AAAA-MM" -> "mois AAAA" (js/app.js)
-      geoloc.forEach(s => {
-        const b = bord(s.constat);
-        L.circleMarker([s.lat, s.lng], {
-          radius:9, color:b.color, weight:b.weight, fillColor:couleur(s.intensite), fillOpacity:0.9,
-        }).addTo(map).bindPopup(
-          `<strong>${echapper(s.type)}</strong><br>`+
-          `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}<br>`+
-          `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
-          (s.debut?`<br>Depuis ${moisAn(s.debut)}`:"")+
-          `<br><strong>${echapper(s.constat||"Signalement seul")}</strong>`+
-          (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+
-          (s.description?`<br><em>${echapper(s.description)}</em>`:"")
-        );
-      });
+      const plein = aDroitAcces(profil);
+      if (plein) {
+        // Adhérent à jour : carte détaillée avec les points.
+        const map = L.map("map").setView([-17.62, -149.46], 11);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          { attribution:"© OpenStreetMap", maxZoom:19 }).addTo(map);
+        const geoloc = data.filter(s => s.lat != null && s.lng != null);
+        if (!geoloc.length){ etat.innerHTML = `<div class="message ok" style="display:block">Aucun signalement géolocalisé pour le moment. Soyez le premier : <a href="signaler.html">signaler</a>.</div>`; }
+        const couleur = i => i==="Insupportable" ? "#b2381f" : i==="Faible" ? "#e8b84b" : "#ff7a59";
+        // Le contour (bord) du point indique le niveau de démarche (constat).
+        const bord = c => c==="Constat + plainte" ? {color:"#064a54", weight:4}
+                         : c==="Constat d'autorité" ? {color:"#0a7d8c", weight:3}
+                         : {color:"#ffffff", weight:2};
+        const moisAn = moisAnnee; // formateur "AAAA-MM" -> "mois AAAA" (js/app.js)
+        geoloc.forEach(s => {
+          const b = bord(s.constat);
+          L.circleMarker([s.lat, s.lng], {
+            radius:9, color:b.color, weight:b.weight, fillColor:couleur(s.intensite), fillOpacity:0.9,
+          }).addTo(map).bindPopup(
+            `<strong>${echapper(s.type)}</strong><br>`+
+            `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}<br>`+
+            `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
+            (s.debut?`<br>Depuis ${moisAn(s.debut)}`:"")+
+            `<br><strong>${echapper(s.constat||"Signalement seul")}</strong>`+
+            (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+
+            (s.description?`<br><em>${echapper(s.description)}</em>`:"")
+          );
+        });
+      } else {
+        // Visiteur ou adhésion non validée : statistiques seules, carte masquée.
+        document.getElementById("map").style.display = "none";
+        document.querySelectorAll(".legende").forEach(el => el.style.display = "none");
+        etat.innerHTML = `<div class="message ok" style="display:block">${
+          profil
+            ? "Votre adhésion est <strong>en attente de validation</strong> par le bureau. Voici les statistiques publiques ; la carte détaillée des signalements sera accessible une fois votre cotisation validée. <a href=\"cotiser.html\">Régler ma cotisation</a>"
+            : "Voici les <strong>statistiques publiques</strong> des nuisances signalées. Pour accéder à la <strong>carte détaillée</strong> et signaler vous-même, <a href=\"connexion.html\">connectez-vous</a> et adhérez à Te Ora Hau."
+        }</div>`;
+      }
 
       // ----- Statistiques (filtrables par commune) -----
       const communesDispo = [...new Set(data.map(s => (s.commune||"").trim()).filter(Boolean))].sort();

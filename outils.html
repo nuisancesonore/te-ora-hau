@@ -36,13 +36,8 @@
       await initPage("outils");
       const contenu = document.getElementById("contenu");
       PROFIL = await monProfil();
-      if (!PROFIL){
-        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
-          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
-          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Connectez-vous pour utiliser les outils membres.</p>
-          <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
-        return;
-      }
+      const v = verrouAcces(PROFIL);
+      if (v){ contenu.innerHTML = v; return; }
 
       contenu.innerHTML = `
         <h2 class="section-titre">Outils pour les membres</h2>

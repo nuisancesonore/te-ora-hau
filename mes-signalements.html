@@ -39,13 +39,8 @@
       await initPage("mes-signalements");
       const contenu = document.getElementById("contenu");
       const profil = await monProfil();
-      if (!profil){
-        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
-          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
-          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Connectez-vous pour gérer vos signalements.</p>
-          <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
-        return;
-      }
+      const v = verrouAcces(profil);
+      if (v){ contenu.innerHTML = v; return; }
       const s = await sessionActive(); UID = s.user.id;
       await charger();
     })();

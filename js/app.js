@@ -79,6 +79,32 @@ function statutCotisation(profil) {
   };
 }
 
+// Accès complet au site = cotisation à jour (validée par le bureau),
+// ou être soi-même membre du bureau.
+function aDroitAcces(profil) {
+  return !!(profil && (profil.role === "bureau" || statutCotisation(profil).aJour));
+}
+
+// Verrou pour les pages réservées aux adhérents validés. Renvoie le HTML du
+// blocage à afficher, ou null si l'accès est accordé.
+function verrouAcces(profil) {
+  if (!profil) {
+    return `<div class="verrou"><div class="ico">🔒</div>
+      <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
+      <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Cette section est réservée aux adhérents. Connectez-vous, ou adhérez pour rejoindre Te Ora Hau.</p>
+      <a href="connexion.html" class="btn btn-primaire">Se connecter</a>
+      <a href="inscription.html" class="btn btn-clair">Adhérer</a></div>`;
+  }
+  if (profil.role !== "bureau" && !statutCotisation(profil).aJour) {
+    return `<div class="verrou"><div class="ico">⏳</div>
+      <h2 style="color:var(--bleu-fonce)">Adhésion en attente de validation</h2>
+      <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Votre compte est bien créé&nbsp;! L'accès complet se débloque dès que votre <strong>cotisation</strong> a été reçue et <strong>validée par le bureau</strong> de Te Ora Hau.</p>
+      <a href="cotiser.html" class="btn btn-primaire">Régler ma cotisation</a>
+      <a href="espace.html" class="btn btn-clair">Mon espace</a></div>`;
+  }
+  return null;
+}
+
 function traduireErreur(m) {
   if (/already registered/i.test(m)) return "Un compte existe déjà avec cet e-mail.";
   if (/Invalid login/i.test(m)) return "E-mail ou mot de passe incorrect.";

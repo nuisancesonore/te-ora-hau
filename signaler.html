@@ -26,14 +26,8 @@
       await initPage("signaler");
       const contenu = document.getElementById("contenu");
       const profil = await monProfil();
-      if (!profil){
-        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
-          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
-          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Connectez-vous pour signaler une nuisance sonore.</p>
-          <a href="connexion.html" class="btn btn-primaire">Se connecter</a>
-          <a href="inscription.html" class="btn btn-clair">Adhérer</a></div>`;
-        return;
-      }
+      const v = verrouAcces(profil);
+      if (v){ contenu.innerHTML = v; return; }
 
       contenu.innerHTML = `
         <h2 class="section-titre">Signaler une nuisance sonore</h2>

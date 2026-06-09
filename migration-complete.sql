@@ -47,6 +47,26 @@ drop policy if exists contact_update_bureau on public.messages_contact;
 create policy contact_update_bureau on public.messages_contact
   for update using (public.is_bureau()) with check (public.is_bureau());
 
+-- ---------- 5) Validation de cotisation réservée au bureau ----------
+-- Un adhérent ne peut pas se "valider" lui-même : seuls les membres du
+-- bureau peuvent modifier cotisation_payee, cotisation_echeance et role.
+create or replace function public.protege_cotisation()
+returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_bureau() then
+    new.cotisation_payee    := old.cotisation_payee;
+    new.cotisation_echeance := old.cotisation_echeance;
+    new.role                := old.role;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists trg_protege_cotisation on public.profils;
+create trigger trg_protege_cotisation
+  before update on public.profils
+  for each row execute function public.protege_cotisation();
+
 -- ============================================================
 -- TERMINÉ. Rechargez le site (Ctrl+F5) après exécution.
 -- ============================================================

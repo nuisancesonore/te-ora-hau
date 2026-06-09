@@ -33,13 +33,8 @@
       await initPage("annuaire");
       const contenu = document.getElementById("contenu");
       const profil = await monProfil();
-      if (!profil){
-        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
-          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
-          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">L'annuaire des adhérents est réservé aux membres connectés.</p>
-          <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
-        return;
-      }
+      const v = verrouAcces(profil);
+      if (v){ contenu.innerHTML = v; return; }
 
       // Membres ayant accepté d'apparaître (règle RLS profils_select_annuaire).
       const { data, error } = await sb.from("profils")

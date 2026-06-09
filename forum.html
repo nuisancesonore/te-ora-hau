@@ -21,17 +21,8 @@
       const contenu = document.getElementById("contenu");
       const profil = await monProfil();
 
-      if (!profil) {
-        contenu.innerHTML = `
-          <div class="verrou">
-            <div class="ico">🔒</div>
-            <h2 style="color:var(--bleu-fonce)">Espace réservé aux membres</h2>
-            <p style="margin:0.6rem 0 1.2rem;color:var(--gris)">Le forum est accessible uniquement aux membres connectés.</p>
-            <a href="connexion.html" class="btn btn-primaire">Se connecter</a>
-            <a href="inscription.html" class="btn btn-clair">Adhérer</a>
-          </div>`;
-        return;
-      }
+      const v = verrouAcces(profil);
+      if (v) { contenu.innerHTML = v; return; }
       await dessiner();
 
       async function dessiner() {

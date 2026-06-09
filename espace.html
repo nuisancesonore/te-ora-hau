@@ -71,7 +71,9 @@
       // Rappel de cotisation à la connexion : 2 mois avant, puis 1 mois avant.
       let rappel = "";
       const _j = st.joursRestants;
-      if (_j !== null) {
+      if (!aJour && _j === null) {
+        rappel = `<div class="rappel-coti r-urgent">Votre <strong>accès complet</strong> (carte détaillée, signaler, forum, annuaire, outils) se débloque dès que votre <strong>cotisation</strong> a été reçue et <strong>validée par le bureau</strong> de Te Ora Hau. Voir <a href="cotiser.html">comment cotiser</a>.</div>`;
+      } else if (_j !== null) {
         if (_j < 0)
           rappel = `<div class="rappel-coti r-urgent">Votre cotisation est <strong>échue</strong> depuis le ${st.echeance}. Renouvelez-la pour continuer à soutenir l'association et bénéficier de son aide.</div>`;
         else if (_j <= 30)

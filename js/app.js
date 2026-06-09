@@ -105,14 +105,23 @@ async function rendreNav(pageActive) {
   // Liens dépendant de la connexion
   let blocAuth;
   if (profil) {
-    // Membre connecté : Mon espace · Cotiser · (Admin) · Déconnexion
-    blocAuth = [
-      lien("espace.html", "Mon espace", "espace"),
-      lien("annuaire.html", "Annuaire", "annuaire"),
-      `<a href="cotiser.html" class="lien-cotiser ${pageActive === "cotiser" ? "actif" : ""}">Cotiser</a>`,
-      (profil.role === "bureau" ? lien("admin.html", "Admin", "admin") : ""),
-      `<a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`,
-    ].join("");
+    // Membre connecté : déroulant "Mon espace" (tableau de bord, signalements,
+    // annuaire, forum) · Cotiser · (Admin) · Déconnexion
+    const espaceActif = ["espace", "mes-signalements", "annuaire", "forum"].includes(pageActive) ? "actif" : "";
+    const dropEspace = `
+      <div class="menu-drop">
+        <a href="espace.html" class="drop-trigger ${espaceActif}">Mon espace <span class="caret">▾</span></a>
+        <div class="drop-menu">
+          <a href="espace.html">Tableau de bord</a>
+          <a href="mes-signalements.html">Mes signalements</a>
+          <a href="annuaire.html">Annuaire des adhérents</a>
+          <a href="forum.html">Forum</a>
+        </div>
+      </div>`;
+    blocAuth = dropEspace +
+      `<a href="cotiser.html" class="lien-cotiser ${pageActive === "cotiser" ? "actif" : ""}">Cotiser</a>` +
+      (profil.role === "bureau" ? lien("admin.html", "Admin", "admin") : "") +
+      `<a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`;
   } else {
     // Visiteur : déroulant "Inscription" (Adhérer · Cotiser) puis Connexion
     const inscriptionActif = (pageActive === "inscription" || pageActive === "cotiser") ? "actif" : "";
@@ -133,7 +142,6 @@ async function rendreNav(pageActive) {
     lien("carte.html", "Carte des nuisances", "carte"),
     dropdown,
     lien("le-bruit.html", "Les textes de lois", "bruit"),
-    lien("forum.html", "Forum", "forum"),
     blocAuth,
   ].join("");
 

@@ -67,6 +67,48 @@ create trigger trg_protege_cotisation
   before update on public.profils
   for each row execute function public.protege_cotisation();
 
+-- ---------- 6) Le bureau = liste blanche d'e-mails (membres actifs) ----------
+create table if not exists public.bureau_emails (email text primary key);
+insert into public.bureau_emails (email) values
+  ('contact@teorahau.net'),
+  ('lindamaeatematua@gmail.com'),
+  ('ariiteab@yahoo.fr'),
+  ('terupe@gmail.com'),
+  ('hinapumaire.mahuta@gmail.com'),
+  ('jbhauata3@gmail.com'),
+  ('charlotte.moritz@laposte.net')
+on conflict (email) do nothing;
+
+create or replace function public.is_bureau()
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (
+    select 1 from auth.users u
+    join public.bureau_emails b on lower(u.email) = lower(b.email)
+    where u.id = auth.uid()
+  );
+$$;
+
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profils (id, nom, email, commune, role)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'nom', ''),
+    new.email,
+    coalesce(new.raw_user_meta_data->>'commune', ''),
+    case when exists (select 1 from public.bureau_emails b where lower(b.email) = lower(new.email))
+         then 'bureau' else 'membre' end
+  );
+  return new;
+end;
+$$;
+
+update public.profils set role = 'bureau'
+  where lower(email) in (select lower(email) from public.bureau_emails);
+update public.profils set role = 'membre'
+  where lower(email) not in (select lower(email) from public.bureau_emails) and role = 'bureau';
+
 -- ============================================================
 -- TERMINÉ. Rechargez le site (Ctrl+F5) après exécution.
 -- ============================================================

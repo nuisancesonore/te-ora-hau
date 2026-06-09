@@ -72,7 +72,22 @@ create table if not exists public.forum_messages (
 );
 
 -- ============================================================
+-- Le bureau = liste blanche d'e-mails (membres actifs habilités à valider).
+-- ============================================================
+create table if not exists public.bureau_emails (email text primary key);
+insert into public.bureau_emails (email) values
+  ('contact@teorahau.net'),
+  ('lindamaeatematua@gmail.com'),
+  ('ariiteab@yahoo.fr'),
+  ('terupe@gmail.com'),
+  ('hinapumaire.mahuta@gmail.com'),
+  ('jbhauata3@gmail.com'),
+  ('charlotte.moritz@laposte.net')
+on conflict (email) do nothing;
+
+-- ============================================================
 -- Fonction d'aide : l'utilisateur courant est-il du bureau ?
+-- Vrai uniquement si son e-mail figure dans la liste blanche.
 -- SECURITY DEFINER pour éviter la récursion des politiques RLS.
 -- ============================================================
 create or replace function public.is_bureau()
@@ -81,8 +96,9 @@ language sql security definer stable
 set search_path = public
 as $$
   select exists (
-    select 1 from public.profils
-    where id = auth.uid() and role = 'bureau'
+    select 1 from auth.users u
+    join public.bureau_emails b on lower(u.email) = lower(b.email)
+    where u.id = auth.uid()
   );
 $$;
 
@@ -95,12 +111,14 @@ language plpgsql security definer
 set search_path = public
 as $$
 begin
-  insert into public.profils (id, nom, email, commune)
+  insert into public.profils (id, nom, email, commune, role)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'nom', ''),
     new.email,
-    coalesce(new.raw_user_meta_data->>'commune', '')
+    coalesce(new.raw_user_meta_data->>'commune', ''),
+    case when exists (select 1 from public.bureau_emails b where lower(b.email) = lower(new.email))
+         then 'bureau' else 'membre' end
   );
   return new;
 end;

@@ -94,15 +94,15 @@
       box.innerHTML = `
         <div class="edit-grid">
           <div><label>Type</label><select id="e-type-${id}">${opts(TYPES, data.type)}</select></div>
-          <div><label>Commune</label><select id="e-commune-${id}">${optsCommune(data.commune)}</select></div>
-          <div><label>Quartier / localité</label><input id="e-quartier-${id}" value="${attr(data.quartier)}"></div>
+          <div><label>Commune <span style="font-weight:400;color:var(--gris)">(du bruit)</span></label><select id="e-commune-${id}">${optsCommune(data.commune)}</select></div>
+          <div><label>Quartier / localité <span style="font-weight:400;color:var(--gris)">(du bruit)</span></label><input id="e-quartier-${id}" value="${attr(data.quartier)}"></div>
           <div><label>Horaire</label><select id="e-horaire-${id}">${opts(HORAIRES, data.horaire)}</select></div>
           <div><label>Intensité</label><select id="e-intensite-${id}">${opts(INTENSITES, data.intensite)}</select></div>
           <div><label>Récurrence</label><select id="e-recurrence-${id}">${opts(RECURRENCES, data.recurrence)}</select></div>
           <div><label>Constat / démarche</label><select id="e-constat-${id}">${opts(CONSTATS, data.constat||'Signalement seul')}</select></div>
           <div><label>Début des nuisances</label><input type="month" id="e-debut-${id}" value="${attr(data.debut)}"></div>
-          <div class="pleine"><label>Adresse de la source</label><input id="e-source-${id}" value="${attr(data.adresse_source)}"></div>
-          <div class="pleine"><label>Votre adresse (plaignant)</label><input id="e-plaignant-${id}" value="${attr(data.adresse_plaignant)}"></div>
+          <div class="pleine"><label>Adresse de la source du bruit</label><input id="e-source-${id}" value="${attr(data.adresse_source)}"></div>
+          <div class="pleine"><label>Votre adresse <span style="font-weight:400;color:var(--gris)">(vous qui subissez)</span></label><input id="e-plaignant-${id}" value="${attr(data.adresse_plaignant)}"></div>
           <div class="pleine"><label>Description</label><textarea id="e-desc-${id}" rows="2">${echapper(data.description)}</textarea></div>
         </div>
         <div id="emsg-${id}" class="message"></div>

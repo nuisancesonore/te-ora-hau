@@ -121,6 +121,7 @@ create table if not exists public.annonces (
   auteur_nom text,
   cree_le timestamptz not null default now()
 );
+alter table public.annonces add column if not exists date_evenement timestamptz;
 alter table public.annonces enable row level security;
 drop policy if exists annonces_select_auth on public.annonces;
 create policy annonces_select_auth on public.annonces

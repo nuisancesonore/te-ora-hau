@@ -31,6 +31,10 @@
     .annonce h4 { color:var(--bleu-fonce); font-size:1.08rem; margin:0 0 0.4rem; }
     .annonce .corps { white-space:pre-wrap; line-height:1.55; }
     .annonce .date { font-size:0.78rem; color:var(--gris); margin-top:0.6rem; }
+    .annonce .evt { color:var(--corail); font-weight:700; margin-bottom:0.3rem; }
+    @keyframes clignote-annonce { 0%,100% { box-shadow:var(--ombre); } 50% { box-shadow:0 0 0 3px rgba(255,122,89,0.55), var(--ombre); } }
+    .annonce.urgent { border-left-color:var(--corail); animation:clignote-annonce 1.2s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce){ .annonce.urgent { animation:none; box-shadow:0 0 0 3px rgba(255,122,89,0.5), var(--ombre); } }
   </style>
 </head>
 <body>
@@ -182,15 +186,28 @@
         const { data } = await sb.from("annonces").select("*").order("cree_le", { ascending:false });
         if (!data || !data.length) return;
         const voitTout = profil.role === "bureau";
-        const vis = data.filter(an => voitTout || an.cible==="tous" || (an.cible==="ajour"&&aJour) || (an.cible==="retard"&&!aJour));
+        const maintenant = new Date();
+        const vis = data.filter(an => {
+          const okCible = voitTout || an.cible==="tous" || (an.cible==="ajour"&&aJour) || (an.cible==="retard"&&!aJour);
+          if (!okCible) return false;
+          // Une annonce d'événement disparaît une fois la date/heure passée.
+          if (an.date_evenement && new Date(an.date_evenement) < maintenant) return false;
+          return true;
+        });
         if (!vis.length) return;
         document.getElementById("annonces").innerHTML =
           `<h3 style="color:var(--bleu-fonce);margin-bottom:0.7rem">Annonces de l'association</h3>` +
-          vis.slice(0,5).map(an => `<div class="annonce">
-            <h4>${echapper(an.titre)}</h4>
-            <div class="corps">${echapper(an.corps)}</div>
-            <div class="date">Publié le ${new Date(an.cree_le).toLocaleDateString('fr-FR')}</div>
-          </div>`).join("");
+          vis.slice(0,5).map(an => {
+            const evt = an.date_evenement ? new Date(an.date_evenement) : null;
+            const aVenir = evt && evt >= maintenant;
+            const evtTxt = evt ? `${evt.toLocaleDateString('fr-FR')} à ${evt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}` : null;
+            return `<div class="annonce ${aVenir?'urgent':''}">
+              <h4>${echapper(an.titre)}</h4>
+              ${evtTxt?`<div class="evt">Événement : ${evtTxt}</div>`:''}
+              <div class="corps">${echapper(an.corps)}</div>
+              <div class="date">Publié le ${new Date(an.cree_le).toLocaleDateString('fr-FR')}</div>
+            </div>`;
+          }).join("");
       })();
 
       const msg = document.getElementById("msg");

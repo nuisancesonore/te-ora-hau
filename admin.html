@@ -47,6 +47,8 @@
   <script>
     let ADH = [];
     let MOI = null;
+    let ANNONCES = [];
+    let EDIT_ID = null;
     (async function() {
       await initPage("admin");
       const contenu = document.getElementById("contenu");
@@ -174,8 +176,11 @@
             <p id="com-resume" style="font-size:0.85rem;color:var(--gris);margin-top:0.3rem"></p></div>
           <div class="champ"><label>Titre / objet</label><input id="com-titre" placeholder="Ex. Réunion publique le 12 juillet à 18h"></div>
           <div class="champ"><label>Message</label><textarea id="com-corps" rows="4" placeholder="Votre message aux membres…"></textarea></div>
+          <div class="champ"><label>Date et heure de l'événement <span style="font-weight:400;color:var(--gris)">— optionnel : l'annonce clignote jusque-là, puis disparaît automatiquement</span></label>
+            <input type="datetime-local" id="com-date"></div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-            <button class="btn btn-vert" onclick="publierAnnonce()">Publier l'annonce (sur le site)</button>
+            <button class="btn btn-vert" id="btn-publier" onclick="publierAnnonce()">Publier l'annonce (sur le site)</button>
+            <button class="btn btn-clair" id="btn-annuler-edit" onclick="annulerEdition()" style="display:none">Annuler la modification</button>
             <button class="btn btn-clair" onclick="envoyerEmailRapide()">E-mail (Cci)</button>
             <button class="btn btn-clair" onclick="copierEmails(this)">Copier les e-mails</button>
             <button class="btn btn-clair" onclick="envoyerSMSRapide()">SMS</button>
@@ -223,29 +228,76 @@
       } catch(e){ alert("L'envoi en masse n'est pas encore activé.\nIl faut déployer le backend Resend (voir COMMUNICATION.md).\nEn attendant, utilisez « E-mail (Cci) » ou « Copier les e-mails »."); }
       btn.textContent = t;
     }
+    function toLocalDatetime(iso){
+      const d = new Date(iso); if (isNaN(d)) return "";
+      const p = n => String(n).padStart(2,"0");
+      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+    }
+    function annulerEdition(){
+      EDIT_ID = null;
+      document.getElementById("com-titre").value = "";
+      document.getElementById("com-corps").value = "";
+      document.getElementById("com-date").value = "";
+      document.getElementById("btn-publier").textContent = "Publier l'annonce (sur le site)";
+      document.getElementById("btn-annuler-edit").style.display = "none";
+    }
+    function modifierAnnonce(id){
+      const an = ANNONCES.find(x => x.id === id); if (!an) return;
+      EDIT_ID = id;
+      document.getElementById("com-titre").value = an.titre || "";
+      document.getElementById("com-corps").value = an.corps || "";
+      document.getElementById("com-cible").value = an.cible || "tous"; majResume();
+      document.getElementById("com-date").value = an.date_evenement ? toLocalDatetime(an.date_evenement) : "";
+      document.getElementById("btn-publier").textContent = "Mettre à jour l'annonce";
+      document.getElementById("btn-annuler-edit").style.display = "";
+      document.getElementById("communication").scrollIntoView({ behavior:"smooth", block:"start" });
+    }
     async function publierAnnonce(){
       const titre = document.getElementById("com-titre").value.trim();
       const corps = document.getElementById("com-corps").value.trim();
       const cible = document.getElementById("com-cible").value;
+      const dv = document.getElementById("com-date").value;
+      const date_evenement = dv ? new Date(dv).toISOString() : null;
       if (!titre || !corps) return alert("Indiquez un titre et un message.");
-      const { error } = await sb.from("annonces").insert({ titre, corps, cible, auteur_nom: MOI ? MOI.nom : "" });
-      if (error) return alert("Erreur : "+error.message+"\n(Avez-vous déployé migration-communication.sql ?)");
-      document.getElementById("com-titre").value=""; document.getElementById("com-corps").value="";
-      alert("Annonce publiée ✔ Les membres ciblés la verront dans leur espace.");
+      const wasEdit = !!EDIT_ID;
+      const payload = { titre, corps, cible, date_evenement };
+      let res = EDIT_ID
+        ? await sb.from("annonces").update(payload).eq("id", EDIT_ID)
+        : await sb.from("annonces").insert(Object.assign({ auteur_nom: MOI ? MOI.nom : "" }, payload));
+      // Filet de secours si la colonne date_evenement n'est pas encore ajoutée.
+      if (res.error && /date_evenement|column|schema cache/i.test(res.error.message||"")){
+        const p2 = { titre, corps, cible };
+        res = EDIT_ID
+          ? await sb.from("annonces").update(p2).eq("id", EDIT_ID)
+          : await sb.from("annonces").insert(Object.assign({ auteur_nom: MOI ? MOI.nom : "" }, p2));
+      }
+      if (res.error) return alert("Erreur : "+res.error.message+"\n(Avez-vous déployé migration-communication.sql ?)");
+      annulerEdition();
+      alert(wasEdit ? "Annonce mise à jour ✔" : "Annonce publiée ✔ Les membres ciblés la verront dans leur espace.");
       chargerAnnonces();
     }
     async function chargerAnnonces(){
       const box = document.getElementById("annonces-liste");
       const { data, error } = await sb.from("annonces").select("*").order("cree_le", { ascending:false });
       if (error){ box.innerHTML = `<p style="color:var(--gris)">Annonces non activées (déployez <strong>migration-communication.sql</strong>).</p>`; return; }
+      ANNONCES = data || [];
       if (!data || !data.length){ box.innerHTML = `<p style="color:var(--gris)">Aucune annonce publiée.</p>`; return; }
       const lib = c => c==="ajour" ? "à jour" : c==="retard" ? "non à jour" : "tous";
-      box.innerHTML = data.map(an => `<div class="msg-c">
-        <div class="meta">${new Date(an.cree_le).toLocaleString('fr-FR')} · cible : <strong>${lib(an.cible)}</strong></div>
-        <div style="font-weight:600;margin:0.2rem 0">${echapper(an.titre)}</div>
-        <div style="white-space:pre-wrap">${echapper(an.corps)}</div>
-        <div style="margin-top:0.5rem"><button class="mini clair" onclick="supprimerAnnonce('${an.id}')">Supprimer</button></div>
-      </div>`).join("");
+      const now = new Date();
+      box.innerHTML = data.map(an => {
+        const evt = an.date_evenement ? new Date(an.date_evenement) : null;
+        const expiree = evt && evt < now;
+        const evtTxt = evt ? `${evt.toLocaleDateString('fr-FR')} à ${evt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}` : null;
+        return `<div class="msg-c ${expiree?'lu':''}">
+          <div class="meta">${new Date(an.cree_le).toLocaleString('fr-FR')} · cible : <strong>${lib(an.cible)}</strong>${evtTxt?` · événement : <strong>${evtTxt}</strong>`:''}${expiree?' <span class="pill ko">expirée</span>':''}</div>
+          <div style="font-weight:600;margin:0.2rem 0">${echapper(an.titre)}</div>
+          <div style="white-space:pre-wrap">${echapper(an.corps)}</div>
+          <div style="margin-top:0.5rem;display:flex;gap:0.4rem;flex-wrap:wrap">
+            <button class="mini vert" onclick="modifierAnnonce('${an.id}')">Modifier</button>
+            <button class="mini clair" onclick="supprimerAnnonce('${an.id}')">Supprimer</button>
+          </div>
+        </div>`;
+      }).join("");
     }
     async function supprimerAnnonce(id){
       if (!confirm("Supprimer cette annonce ?")) return;

@@ -62,8 +62,9 @@
       formDemande.style.display = "none";
       formNouveau.style.display = "block";
     }
-    // Le lien de réinitialisation contient "type=recovery" dans l'URL…
-    if (location.hash.includes("type=recovery")) passerEnRecovery();
+    // Le lien de réinitialisation contient "type=recovery" dans l'URL
+    // (ou ?recovery=1 après redirection depuis une autre page)…
+    if (location.search.includes("recovery=1") || location.hash.includes("type=recovery")) passerEnRecovery();
     // …et/ou déclenche l'événement PASSWORD_RECOVERY de Supabase.
     if (TOH_PRET) {
       sb.auth.onAuthStateChange((event) => {

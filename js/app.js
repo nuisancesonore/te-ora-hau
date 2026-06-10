@@ -18,6 +18,26 @@ let TOH_PRET = false;   // config valide ?
   }
 })();
 
+/* ---------- Récupération de mot de passe (sur toutes les pages) ----------
+   Quelle que soit la page d'atterrissage du lien reçu par e-mail, on bascule
+   vers la page dédiée pour saisir un nouveau mot de passe. */
+(function gererRecovery() {
+  if (!sb) return;
+  const surMdp = /mot-de-passe\.html$/.test(location.pathname);
+  const cible = location.origin + location.pathname.replace(/[^/]*$/, "") + "mot-de-passe.html";
+  // Le jeton est encore dans l'URL → on redirige en le conservant.
+  if (location.hash.includes("type=recovery") && !surMdp) {
+    location.replace(cible + "?recovery=1" + location.hash);
+    return;
+  }
+  // Sinon, Supabase signale l'événement (jeton déjà consommé).
+  sb.auth.onAuthStateChange((event) => {
+    if (event === "PASSWORD_RECOVERY" && !/mot-de-passe\.html$/.test(location.pathname)) {
+      location.replace(cible + "?recovery=1");
+    }
+  });
+})();
+
 /* ---------- Authentification ---------- */
 async function inscrire(nom, email, motdepasse, commune) {
   const { data, error } = await sb.auth.signUp({

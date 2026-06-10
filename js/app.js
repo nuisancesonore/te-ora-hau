@@ -181,12 +181,12 @@ async function rendreNav(pageActive) {
     const espaceActif = ["espace", "mes-signalements", "annuaire", "forum"].includes(pageActive) ? "actif" : "";
     const dropEspace = `
       <div class="menu-drop">
-        <a href="espace.html" class="drop-trigger ${espaceActif}">Mon espace <span class="caret">▾</span></a>
+        <a href="espace.html" id="nav-espace-trigger" class="drop-trigger ${espaceActif}">Mon espace <span class="caret">▾</span></a>
         <div class="drop-menu">
-          <a href="espace.html">Tableau de bord</a>
+          <a href="espace.html" id="nav-tableau">Tableau de bord</a>
           <a href="mes-signalements.html">Mes signalements</a>
           <a href="annuaire.html">Annuaire des adhérents</a>
-          <a href="forum.html">Forum</a>
+          <a href="forum.html" id="nav-forum">Forum</a>
         </div>
       </div>`;
     blocAuth = dropEspace +
@@ -256,6 +256,8 @@ async function rendreNav(pageActive) {
     }));
   }
 
+  if (profil) verifierNotifications(profil);
+
   if (!TOH_PRET) afficherBanniereConfig();
 
   // Effet fluide au défilement : le menu remonte et "avale" la bannière
@@ -289,6 +291,45 @@ async function rendreNav(pageActive) {
   window.addEventListener("resize", ajusterDefilement);
   if (banImg && !banImg.complete) banImg.addEventListener("load", ajusterDefilement);
   ajusterDefilement();
+}
+
+/* ---------- Pastilles de notification (annonces + forum) ---------- */
+function marquerNotif(id, n) {
+  const el = document.getElementById(id);
+  if (!el || el.querySelector(".notif-dot")) return;
+  el.insertAdjacentHTML("beforeend", `<span class="notif-dot">${n > 9 ? "9+" : n}</span>`);
+  const trig = document.getElementById("nav-espace-trigger");
+  if (trig && !trig.querySelector(".notif-point")) {
+    trig.insertAdjacentHTML("beforeend", `<span class="notif-point"></span>`);
+  }
+}
+async function verifierNotifications(profil) {
+  if (!sb) return;
+  // --- Annonces non lues (selon le ciblage et hors événements passés) ---
+  try {
+    const { data } = await sb.from("annonces")
+      .select("cree_le, cible, date_evenement").order("cree_le", { ascending: false }).limit(30);
+    const now = new Date();
+    const st = statutCotisation(profil);
+    const voitTout = profil.role === "bureau";
+    const visibles = (data || []).filter(a => {
+      const okCible = voitTout || a.cible === "tous" || (a.cible === "ajour" && st.aJour) || (a.cible === "retard" && !st.aJour);
+      if (!okCible) return false;
+      if (a.date_evenement && new Date(a.date_evenement) < now) return false;
+      return true;
+    });
+    const vu = parseInt(localStorage.getItem("TOH_vu_annonces") || "0", 10);
+    const nNew = visibles.filter(a => new Date(a.cree_le).getTime() > vu).length;
+    if (nNew > 0) marquerNotif("nav-tableau", nNew);
+  } catch (_) {}
+  // --- Messages du forum non lus ---
+  try {
+    const { data } = await sb.from("forum_messages")
+      .select("cree_le").order("cree_le", { ascending: false }).limit(100);
+    const vu = parseInt(localStorage.getItem("TOH_vu_forum") || "0", 10);
+    const nNew = (data || []).filter(m => new Date(m.cree_le).getTime() > vu).length;
+    if (nNew > 0) marquerNotif("nav-forum", nNew);
+  } catch (_) {}
 }
 
 function afficherBanniereConfig() {

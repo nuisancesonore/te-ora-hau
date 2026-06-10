@@ -152,6 +152,18 @@ nav.menu a.lien-cotiser.actif { background: #256f47; }
   display: inline-flex; align-items: center; gap: 0.4rem;
 }
 
+/* Pastilles de notification (annonces / forum) */
+.notif-dot {
+  display: inline-block; min-width: 17px; height: 17px; line-height: 17px;
+  padding: 0 5px; background: #e23a2e; color: #fff; border-radius: 9px;
+  font-size: 0.7rem; font-weight: 700; text-align: center;
+  margin-left: 0.35rem; vertical-align: middle;
+}
+.notif-point {
+  display: inline-block; width: 9px; height: 9px; background: #e23a2e;
+  border-radius: 50%; margin-left: 0.35rem; vertical-align: middle;
+}
+
 /* ---------- Bannière ---------- */
 .hero {
   background:

@@ -139,11 +139,12 @@ nav.menu a.lien-cotiser.actif { background: #256f47; }
   }
   nav.menu.ouvert {
     display: flex;
-    max-height: calc(100vh - 150px);
-    max-height: calc(100dvh - 150px);   /* tient compte de la barre du navigateur */
+    max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 140px);   /* tient compte de la barre du navigateur */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    padding-bottom: 5rem;               /* garantit que "Déconnexion" remonte dans l'écran */
   }
   nav.menu a { padding: 0.7rem 0.9rem; }
   .menu-drop { width: 100%; }

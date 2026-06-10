@@ -29,7 +29,17 @@
     .kpi .l{ font-size:0.8rem; color:var(--gris); margin-top:0.3rem; }
     .filtre-bar{ display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; margin:0.4rem 0 0.8rem; }
     .filtre-bar label{ font-weight:600; color:var(--bleu-fonce); }
-    .filtre-bar select{ padding:0.5rem 0.7rem; border:1.5px solid #d6d6cf; border-radius:9px; font-size:0.95rem; min-width:200px; }</style>
+    .filtre-bar select{ padding:0.5rem 0.7rem; border:1.5px solid #d6d6cf; border-radius:9px; font-size:0.95rem; min-width:200px; }
+    .modal-profil{ display:none; position:fixed; inset:0; background:rgba(6,74,84,0.55); z-index:2000; align-items:center; justify-content:center; padding:1rem; }
+    .modal-profil.ouvert{ display:flex; }
+    .mp-box{ background:#fff; border-radius:16px; max-width:420px; width:100%; padding:1.6rem 1.6rem 1.3rem; box-shadow:var(--ombre); position:relative; }
+    .mp-x{ position:absolute; top:0.5rem; right:0.8rem; border:none; background:none; font-size:1.7rem; line-height:1; cursor:pointer; color:var(--gris); }
+    .mp-box h3{ color:var(--bleu-fonce); margin:0 0 0.15rem; }
+    .mp-tag{ font-size:0.82rem; color:var(--gris); margin-bottom:1rem; }
+    table.mp{ width:100%; border-collapse:collapse; font-size:0.92rem; }
+    table.mp td{ padding:0.45rem 0; border-bottom:1px solid #f0f0ea; vertical-align:top; }
+    table.mp td.k{ color:var(--gris); white-space:nowrap; padding-right:0.8rem; width:40%; }
+    table.mp tr:last-child td{ border-bottom:none; }</style>
 </head>
 <body>
   <div id="nav-mount"></div>
@@ -53,6 +63,15 @@
 
     <div id="stats"></div>
   </main>
+
+  <!-- Fiche profil de l'auteur (bureau uniquement) -->
+  <div id="modal-profil" class="modal-profil" onclick="if(event.target===this)fermerProfil()">
+    <div class="mp-box">
+      <button class="mp-x" onclick="fermerProfil()" aria-label="Fermer">&times;</button>
+      <div id="modal-profil-corps"></div>
+    </div>
+  </div>
+
   <div id="footer-mount"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -68,17 +87,32 @@
       // Carte publique : on lit la vue "signalements_publics" (sans données
       // personnelles — l'adresse du plaignant n'y figure pas). Repli sur la
       // table pour les membres connectés si la vue n'est pas encore déployée.
+      // Le bureau voit l'identité des auteurs (suivi des dossiers) ; les autres
+      // lisent la vue publique, sans aucune donnée personnelle.
+      const estBureau = !!(profil && profil.role === "bureau");
       const COLS = "id,type,commune,quartier,intensite,horaire,recurrence,constat,debut,adresse_source,description,lat,lng";
-      let { data, error } = await sb.from("signalements_publics").select(COLS);
-      // Repli pour les membres connectés si la vue publique n'est pas encore
-      // déployée : on relit la table avec "*" (tolère les colonnes manquantes).
-      if (error && profil) ({ data, error } = await sb.from("signalements").select("*"));
+      let data, error;
+      if (estBureau) {
+        ({ data, error } = await sb.from("signalements").select("*"));
+      } else {
+        ({ data, error } = await sb.from("signalements_publics").select(COLS));
+        if (error && profil) ({ data, error } = await sb.from("signalements").select("*"));
+      }
       if (error){
         etat.innerHTML = `<div class="message ${profil?'err':'ok'}" style="display:block">${
           profil ? "Erreur : " + echapper(error.message)
                  : "La carte publique sera bientôt disponible. En attendant, <a href=\"connexion.html\">connectez-vous</a> pour consulter les signalements."
         }</div>`;
         data = [];
+      }
+
+      // Profils des auteurs (bureau uniquement) — pour afficher l'identité au clic.
+      const profilsParId = {};
+      if (estBureau) {
+        const { data: ps } = await sb.from("profils")
+          .select("id, nom, email, telephone, date_naissance, commune, adresse, type_nuisance, type_adhesion, cotisation_payee, cotisation_echeance");
+        (ps || []).forEach(p => { profilsParId[p.id] = p; });
+        window.TOH_PROFILS = profilsParId;
       }
 
       const plein = aDroitAcces(profil);
@@ -101,15 +135,26 @@
         }).addTo(map);
         // Détail complet (cause, démarche, adresse) réservé aux adhérents validés.
         if (plein) {
-          m.bindPopup(
+          let html =
             `<strong>${echapper(s.type)}</strong><br>`+
             `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}<br>`+
             `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
             (s.debut?`<br>Depuis ${moisAn(s.debut)}`:"")+
             `<br><strong>${echapper(s.constat||"Signalement seul")}</strong>`+
             (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+
-            (s.description?`<br><em>${echapper(s.description)}</em>`:"")
-          );
+            (s.description?`<br><em>${echapper(s.description)}</em>`:"");
+          // Identité de l'auteur — réservée au bureau.
+          if (estBureau && s.auteur && profilsParId[s.auteur]) {
+            const a = profilsParId[s.auteur];
+            const age = ageProfil(a.date_naissance);
+            html += `<div style="margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid #e6e6e6">`+
+              `<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:#999">Signalé par</div>`+
+              `<div style="font-weight:600">${echapper(a.nom)||'—'}${age!=null?` · ${age} ans`:''}</div>`+
+              (a.telephone||a.email ? `<div style="font-size:0.85rem">${a.telephone?echapper(a.telephone):''}${a.telephone&&a.email?' · ':''}${echapper(a.email)||''}</div>` : "")+
+              `<a href="#" onclick="voirProfil('${s.auteur}');return false;" style="font-weight:600">Voir le profil →</a>`+
+              `</div>`;
+          }
+          m.bindPopup(html);
         }
         // Visiteur : juste le point, sans détail de la cause.
       });
@@ -202,6 +247,39 @@
       document.getElementById("sel-commune-stats").addEventListener("change", e => rendreStats(e.target.value));
       rendreStats("");
     })();
+
+    /* ----- Fiche profil de l'auteur (bureau) ----- */
+    function ageProfil(d){
+      if (!d) return null; const x = new Date(d); if (isNaN(x)) return null;
+      const t = new Date(); let a = t.getFullYear()-x.getFullYear();
+      const m = t.getMonth()-x.getMonth();
+      if (m<0 || (m===0 && t.getDate()<x.getDate())) a--;
+      return a;
+    }
+    function voirProfil(id){
+      const p = (window.TOH_PROFILS||{})[id];
+      if (!p) return;
+      const age = ageProfil(p.date_naissance);
+      const aJour = p.cotisation_payee && (!p.cotisation_echeance || new Date(p.cotisation_echeance) >= new Date());
+      const ech = p.cotisation_echeance ? new Date(p.cotisation_echeance).toLocaleDateString('fr-FR') : '—';
+      const tel = (p.telephone||'').trim();
+      const lig = (k,v) => `<tr><td class="k">${k}</td><td>${v}</td></tr>`;
+      document.getElementById("modal-profil-corps").innerHTML =
+        `<h3>${echapper(p.nom)||'Adhérent'}</h3>`+
+        `<div class="mp-tag">${echapper(p.type_adhesion)||'Adhérent'} · ${aJour?'cotisation à jour':'cotisation à régler'}</div>`+
+        `<table class="mp">`+
+          lig('Âge', age!=null ? age+' ans' : '—')+
+          lig('Téléphone', tel ? `<a href="tel:${encodeURIComponent(tel)}">${echapper(tel)}</a>` : '—')+
+          lig('E-mail', p.email ? `<a href="mailto:${encodeURIComponent(p.email)}">${echapper(p.email)}</a>` : '—')+
+          lig('Commune', echapper(p.commune)||'—')+
+          lig('Adresse', echapper(p.adresse)||'—')+
+          lig('Nuisance subie', echapper(p.type_nuisance)||'—')+
+          lig('Échéance cotisation', ech)+
+        `</table>`;
+      document.getElementById("modal-profil").classList.add("ouvert");
+    }
+    function fermerProfil(){ document.getElementById("modal-profil").classList.remove("ouvert"); }
+    document.addEventListener("keydown", e => { if (e.key === "Escape") fermerProfil(); });
   </script>
 </body>
 </html>

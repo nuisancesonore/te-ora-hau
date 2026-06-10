@@ -23,6 +23,10 @@
     .rappel-coti { border-radius:10px; padding:0.7rem 0.9rem; font-size:0.9rem; margin-bottom:0.8rem; }
     .rappel-coti.r-urgent { background:#fce6e1; color:#b2381f; border:1px solid #f3c2b6; }
     .rappel-coti.r-doux { background:#fff4e0; color:#8a5a00; border:1px solid #f0d9a8; }
+    .grp-titre { font-weight:700; color:var(--bleu-fonce); margin:0.4rem 0 0.5rem; font-size:0.95rem; }
+    .bloc-completer { background:#fff8ef; border:1px solid #f0d9a8; border-radius:10px; padding:0.9rem 1rem; margin-top:1rem; }
+    .bloc-completer .grp-titre { margin-top:0; }
+    .badge-todo { background:#8a5a00; color:#fff; font-size:0.7rem; font-weight:700; padding:0.1rem 0.5rem; border-radius:20px; margin-left:0.4rem; vertical-align:middle; }
   </style>
 </head>
 <body>
@@ -68,6 +72,9 @@
 
       const st = statutCotisation(profil);
       const aJour = st.aJour;
+      // Type de nuisance : aligné sur la liste des signalements (si l'ancienne
+      // valeur libre ne correspond pas, on laisse vide pour re-choisir).
+      const nuis = SIG_TYPES.includes(profil.type_nuisance || "") ? profil.type_nuisance : "";
 
       // Rappel de cotisation à la connexion : 2 mois avant, puis 1 mois avant.
       let rappel = "";
@@ -85,6 +92,7 @@
 
       contenu.innerHTML = `
         <h2 class="section-titre">Mon espace adhérent</h2>
+        ${!nuis ? `<div class="rappel-coti r-doux" style="margin-bottom:1rem">Complétez votre profil : indiquez le <strong>type de nuisance</strong> que vous subissez (encadré « À compléter », plus bas). Cela aide l'association à cibler ses actions.</div>` : ''}
         <div id="annonces" style="margin-bottom:1.4rem"></div>
         <div class="layout">
           <div>
@@ -127,22 +135,29 @@
 
           <div class="form-wrap" style="max-width:100%;margin:0">
             <h2 style="color:var(--bleu-fonce)">Mon profil</h2>
-            <p class="intro">Ces informations permettront à l'association de mieux connaître les nuisances rencontrées et de cibler ses actions.</p>
+            <p class="intro">Vos coordonnées sont reprises de votre inscription : rien à retaper. Il reste à indiquer le type de nuisance que vous subissez.</p>
             <div id="msg" class="message"></div>
             <form id="form-profil">
+              <p class="grp-titre">Mes coordonnées</p>
               <div class="champ"><label>Nom et prénom</label><input id="nom" value="${echapper(profil.nom)}" required></div>
               <div class="champ"><label>Date de naissance</label><input type="date" id="date_naissance" value="${echapper(profil.date_naissance)}"></div>
-              <div class="champ"><label>Commune</label><select id="commune"></select>
+              <div class="champ"><label>Commune de résidence</label><select id="commune"></select>
                 <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem"></div>
               <div class="champ"><label>Adresse</label><input id="adresse" value="${echapper(profil.adresse)}" placeholder="Quartier, rue, lotissement…"></div>
               <div class="champ"><label>Téléphone <span style="font-weight:400;color:var(--gris)">— pour les SMS de l'association</span></label><input id="telephone" type="tel" value="${echapper(profil.telephone)}" placeholder="Ex. 87 12 34 56"></div>
-              <div class="champ"><label>Type de nuisance subie</label>
-                <input id="type_nuisance" value="${echapper(profil.type_nuisance)}" placeholder="Ex. sono de bar, voisinage, chantier…"></div>
-              <div class="champ" style="display:flex;align-items:center;gap:0.5rem">
-                <input type="checkbox" id="annuaire" style="width:auto" ${profil.annuaire_optin?'checked':''}>
-                <label for="annuaire" style="margin:0">Apparaître dans l'annuaire des membres (même commune)</label>
+
+              <div class="bloc-completer">
+                <p class="grp-titre">À compléter ${nuis ? '' : '<span class="badge-todo">à renseigner</span>'}</p>
+                <p style="font-size:0.83rem;color:var(--gris);margin:-0.25rem 0 0.7rem">Ces informations ne sont pas demandées à l'inscription.</p>
+                <div class="champ"><label>Type de nuisance subie</label>
+                  <select id="type_nuisance">${optionsListe(SIG_TYPES, nuis, "— Choisir —")}</select></div>
+                <div class="champ" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0">
+                  <input type="checkbox" id="annuaire" style="width:auto" ${profil.annuaire_optin?'checked':''}>
+                  <label for="annuaire" style="margin:0">Apparaître dans l'annuaire des membres (même commune)</label>
+                </div>
               </div>
-              <button type="submit" class="btn btn-primaire btn-bloc">Enregistrer</button>
+
+              <button type="submit" class="btn btn-primaire btn-bloc" style="margin-top:1rem">Enregistrer</button>
             </form>
           </div>
         </div>`;

@@ -55,7 +55,7 @@
                 <datalist id="liste-quartiers"></datalist></div>
               <div class="champ"><label>Adresse de la source du bruit <span style="font-weight:400;color:var(--gris)">— se remplit au clic, modifiable</span></label>
                 <input id="adresse_source" placeholder="Placez le point sur la carte pour la remplir"></div>
-              <div class="champ"><label>Votre adresse <span style="font-weight:400;color:var(--gris)">— vous qui subissez (optionnel)</span></label>
+              <div class="champ"><label>Votre adresse <span style="font-weight:400;color:var(--gris)">— vous qui subissez · repris de votre profil (modifiable)</span></label>
                 <input id="adresse_plaignant" placeholder="Votre adresse / quartier"></div>
               <div class="champ"><label>Horaire</label>
                 <select id="horaire">${optionsListe(SIG_HORAIRES)}</select></div>
@@ -82,6 +82,10 @@
       const selCommune = document.getElementById("commune");
       selCommune.innerHTML = optionsCommunes(profil.commune);
       const valCommune = brancherCommuneAutre(selCommune, document.getElementById("commune_autre"));
+
+      // Pré-remplissage depuis le profil (modifiable) : votre adresse + type habituel.
+      if (profil.adresse) document.getElementById("adresse_plaignant").value = profil.adresse;
+      if (SIG_TYPES.includes(profil.type_nuisance || "")) document.getElementById("type").value = profil.type_nuisance;
 
       // Suggestions de quartier selon la commune choisie
       function majQuartiers(){

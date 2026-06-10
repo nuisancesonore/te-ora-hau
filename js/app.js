@@ -385,15 +385,26 @@ async function compterNonLus(profil) {
   } catch (_) {}
   return { annonces, forum, total: annonces + forum };
 }
+// Retire les notifications encore affichées dans la barre du téléphone.
+async function fermerNotifsAffichees() {
+  try {
+    if (!("serviceWorker" in navigator)) return;
+    const reg = await navigator.serviceWorker.ready;
+    (await reg.getNotifications()).forEach((n) => n.close());
+  } catch (_) {}
+}
 async function verifierNotifications(profil) {
   const c = await compterNonLus(profil);
   if (c.annonces > 0) marquerNotif("nav-tableau", c.annonces);
   if (c.forum > 0) marquerNotif("nav-forum", c.forum);
   majBadgeApp(c.total);
+  if (c.total === 0) fermerNotifsAffichees();   // plus rien à lire → on nettoie tout
 }
 // À appeler après lecture (Mon espace / Forum) pour rafraîchir le badge d'icône.
 async function rafraichirBadge(profil) {
-  majBadgeApp((await compterNonLus(profil)).total);
+  const c = await compterNonLus(profil);
+  majBadgeApp(c.total);
+  if (c.total === 0) fermerNotifsAffichees();   // tout lu → badge + notifications effacés
 }
 
 function afficherBanniereConfig() {

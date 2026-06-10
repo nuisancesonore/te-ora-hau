@@ -43,7 +43,7 @@ let TOH_PRET = false;   // config valide ?
   const head = document.head;
   if (!head) return;
   const lien = (rel, href, attrs) => {
-    if (document.querySelector(`link[rel="${rel}"]`)) return;
+    if (document.querySelector(`link[rel="${rel}"][href="${href}"]`)) return;
     const l = document.createElement("link");
     l.rel = rel; l.href = href;
     if (attrs) for (const k in attrs) l.setAttribute(k, attrs[k]);
@@ -53,6 +53,7 @@ let TOH_PRET = false;   // config valide ?
     if (document.querySelector(`meta[name="${name}"]`)) return;
     const m = document.createElement("meta"); m.name = name; m.content = content; head.appendChild(m);
   };
+  lien("icon", "favicon.ico", { sizes: "any" });
   lien("icon", "images/favicon-32.png", { type: "image/png", sizes: "32x32" });
   lien("apple-touch-icon", "images/apple-touch-icon.png");
   lien("manifest", "manifest.webmanifest");

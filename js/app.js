@@ -63,6 +63,11 @@ let TOH_PRET = false;   // config valide ?
   meta("mobile-web-app-capable", "yes");
 })();
 
+/* ---------- Service worker (installation en vraie app + badge d'icône) ---------- */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+
 /* ---------- Authentification ---------- */
 async function inscrire(nom, email, motdepasse, commune) {
   const { data, error } = await sb.auth.signUp({

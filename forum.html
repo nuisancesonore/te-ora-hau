@@ -39,7 +39,7 @@
 
         contenu.innerHTML = `
           <h2 class="section-titre">Forum des membres</h2>
-          <p style="color:var(--gris);margin-bottom:1.4rem">Ia ora na ${echapper(profil.nom)} — partagez vos situations et entraidez-vous.</p>
+          <p style="color:var(--gris);margin-bottom:1.4rem">Ia ora na ${echapper(nomComplet(profil))} — partagez vos situations et entraidez-vous.</p>
           <div class="form-wrap" style="max-width:100%;margin-bottom:2rem">
             <form id="form-msg">
               <div class="champ">
@@ -56,7 +56,7 @@
           const texte = document.getElementById("texte").value.trim();
           if (!texte) return;
           const s = await sessionActive();
-          await sb.from("forum_messages").insert({ auteur: s.user.id, auteur_nom: profil.nom, texte });
+          await sb.from("forum_messages").insert({ auteur: s.user.id, auteur_nom: nomComplet(profil), texte });
           await dessiner();
         });
       }

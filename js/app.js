@@ -110,10 +110,10 @@ async function desactiverNotifications() {
 }
 
 /* ---------- Authentification ---------- */
-async function inscrire(nom, email, motdepasse, commune) {
+async function inscrire(nom, prenom, email, motdepasse, commune) {
   const { data, error } = await sb.auth.signUp({
     email, password: motdepasse,
-    options: { data: { nom, commune: commune || "" } },
+    options: { data: { nom, prenom: prenom || "", commune: commune || "" } },
   });
   if (error) return { ok: false, msg: traduireErreur(error.message) };
   // Le profil est créé automatiquement par un trigger SQL.
@@ -461,6 +461,12 @@ async function exigerConnexion(redir) {
 function echapper(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
     ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+// Nom complet pour l'affichage = "NOM Prénom" (rétro-compatible : si "nom"
+// contient déjà le nom complet et que "prenom" est vide, renvoie "nom").
+function nomComplet(p) {
+  if (!p) return "";
+  return ((p.nom || "") + (p.prenom ? " " + p.prenom : "")).trim();
 }
 function maintenantTexte() {
   const d = new Date(); const p = n => String(n).padStart(2, "0");

@@ -95,7 +95,7 @@
       if (profil){
         const st = statutCotisation(profil);
         r.className = "rappel";
-        r.innerHTML = `Bonjour <strong>${echapper(profil.nom)}</strong> —
+        r.innerHTML = `Bonjour <strong>${echapper(nomComplet(profil))}</strong> —
           cotisation <span class="badge ${st.aJour?'ok':'ko'}">${st.aJour?'à jour':'à régler'}</span>
           ${st.aJour?`(échéance le ${st.echeance})`:''}.<br>
           Votre numéro d'adhérent&nbsp;: <span class="num">${st.numero}</span> — à indiquer lors de votre paiement.`;

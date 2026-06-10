@@ -347,7 +347,7 @@
       const q = (document.getElementById("q").value||"").toLowerCase();
       const f = document.getElementById("filtre").value;
       const lignes = ADH.filter(a => {
-        const m = (a.nom+" "+(a.email||"")).toLowerCase().includes(q);
+        const m = (a.nom+" "+(a.prenom||"")+" "+(a.email||"")).toLowerCase().includes(q);
         const fo = f===""||(f==="ok"&&estAJour(a))||(f==="ko"&&!estAJour(a));
         return m && fo;
       }).map(a => {
@@ -355,7 +355,7 @@
         const echFr = a.cotisation_echeance ? new Date(a.cotisation_echeance).toLocaleDateString("fr-FR") : "—";
         return `
         <tr>
-          <td>${echapper(a.nom)||'—'}${a.role==='bureau'?' <span class="pill ok">bureau</span>':''}</td>
+          <td>${echapper(nomComplet(a))||'—'}${a.role==='bureau'?' <span class="pill ok">bureau</span>':''}</td>
           <td>${echapper(a.email)||'—'}</td>
           <td>${echapper(a.commune)||'—'}</td>
           <td>${estAJour(a)?'<span class="pill ok">À jour</span>':'<span class="pill ko">En retard</span>'}</td>
@@ -398,8 +398,8 @@
         `&body=${encodeURIComponent("Ia ora na,\n\nVotre cotisation à l'association Te Ora Hau arrive à échéance. Merci de penser à la renouveler pour continuer à soutenir notre action contre les nuisances sonores.\n\nMauruuru,\nLe bureau de Te Ora Hau")}`;
     }
     function exportCSV(){
-      const en = ["Nom","Email","Commune","Type nuisance","Cotisation payee","Echeance","Role"];
-      const lignes = ADH.map(a => [a.nom,a.email,a.commune,a.type_nuisance,a.cotisation_payee,a.cotisation_echeance,a.role]
+      const en = ["Nom","Prenom","Email","Telephone","Commune","Type adhesion","Type nuisance","Cotisation payee","Echeance","Role"];
+      const lignes = ADH.map(a => [a.nom,a.prenom,a.email,a.telephone,a.commune,a.type_adhesion,a.type_nuisance,a.cotisation_payee,a.cotisation_echeance,a.role]
         .map(v => `"${String(v==null?'':v).replace(/"/g,'""')}"`).join(","));
       const csv = en.join(",")+"\n"+lignes.join("\n");
       const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });

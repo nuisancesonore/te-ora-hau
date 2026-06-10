@@ -20,26 +20,16 @@
   <main>
     <div class="form-wrap form-large">
       <h2>Adhérer à Te Ora Hau</h2>
-      <p class="intro">Rejoignez la lutte contre les nuisances sonores. Choisissez votre profil, créez votre compte, puis soutenez l'association par la cotisation.</p>
+      <p class="intro">Rejoignez la lutte contre les nuisances sonores : créez votre compte, puis soutenez l'association par la cotisation.</p>
       <div id="msg" class="message"></div>
       <form id="form-inscription" class="form-grid">
-        <div class="champ pleine">
-          <label for="type_adhesion">Je suis…</label>
-          <select id="type_adhesion" required>
-            <option value="Adhérent" selected>Adhérent — je subis des nuisances et demande de l'aide</option>
-            <option value="Assesseur">Assesseur — je cotise et soutiens activement l'association</option>
-            <option value="Sympathisant">Sympathisant — je soutiens la cause</option>
-          </select>
-          <p style="font-size:0.82rem;color:var(--gris);margin-top:0.45rem;line-height:1.5">
-            <strong>Adhérent</strong>&nbsp;: vous bénéficiez du soutien de l'association (cotisation 3 000 XPF/an par foyer).<br>
-            <strong>Assesseur</strong>&nbsp;: adhérent engagé, vous soutenez et pouvez suppléer l'association.<br>
-            <strong>Sympathisant</strong>&nbsp;: vous soutenez la cause sans subir de nuisance particulière.<br>
-            Les <strong>membres du bureau</strong> sont élus&nbsp;: ce statut est attribué par l'association.
-          </p>
+        <div class="champ">
+          <label for="nom">Nom</label>
+          <input type="text" id="nom" required placeholder="Ex. TEROOATEA">
         </div>
         <div class="champ">
-          <label for="nom">Nom et prénom</label>
-          <input type="text" id="nom" required placeholder="Ex. Heimata TEROOATEA">
+          <label for="prenom">Prénom</label>
+          <input type="text" id="prenom" required placeholder="Ex. Heimata">
         </div>
         <div class="champ">
           <label for="naissance">Date de naissance</label>
@@ -56,7 +46,7 @@
         <div class="champ">
           <label for="commune">Commune de résidence</label>
           <select id="commune" required></select>
-          <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem">
+          <input id="commune_autre" placeholder="Île puis commune (ex. Raiatea, Uturoa)" style="display:none;margin-top:0.5rem">
         </div>
         <div class="champ pleine">
           <label for="email">Adresse e-mail</label>
@@ -99,8 +89,8 @@
     document.getElementById("form-inscription").addEventListener("submit", async function(e) {
       e.preventDefault();
       if (!TOH_PRET) { montrer("err", "Supabase n'est pas configuré (voir SETUP.md)."); return; }
-      const type = document.getElementById("type_adhesion").value;
       const nom = document.getElementById("nom").value.trim();
+      const prenom = document.getElementById("prenom").value.trim();
       const naissance = document.getElementById("naissance").value || null;
       const adresse = document.getElementById("adresse").value.trim();
       const telephone = document.getElementById("telephone").value.trim();
@@ -110,10 +100,10 @@
       const mdp2 = document.getElementById("mdp2").value;
       if (mdp !== mdp2) { montrer("err", "Les mots de passe ne correspondent pas."); return; }
       montrer("ok", "Création du compte…");
-      const res = await inscrire(nom, email, mdp, commune);
+      const res = await inscrire(nom, prenom, email, mdp, commune);
       montrer(res.ok ? "ok" : "err", res.msg);
       if (res.ok) {
-        const complement = { type_adhesion: type, date_naissance: naissance, adresse: adresse, telephone: telephone };
+        const complement = { date_naissance: naissance, adresse: adresse, telephone: telephone };
         // Mémorisé pour être appliqué à la 1re connexion (cas confirmation e-mail).
         try { localStorage.setItem("TOH_profil_complement", JSON.stringify(complement)); } catch (_) {}
         if (res.session) {

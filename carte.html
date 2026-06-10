@@ -110,7 +110,7 @@
       const profilsParId = {};
       if (estBureau) {
         const { data: ps } = await sb.from("profils")
-          .select("id, nom, email, telephone, date_naissance, commune, adresse, type_nuisance, type_adhesion, cotisation_payee, cotisation_echeance");
+          .select("id, nom, prenom, email, telephone, date_naissance, commune, adresse, type_nuisance, type_adhesion, cotisation_payee, cotisation_echeance");
         (ps || []).forEach(p => { profilsParId[p.id] = p; });
         window.TOH_PROFILS = profilsParId;
       }
@@ -149,7 +149,7 @@
             const age = ageProfil(a.date_naissance);
             html += `<div style="margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid #e6e6e6">`+
               `<div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;color:#999">Signalé par</div>`+
-              `<div style="font-weight:600">${echapper(a.nom)||'—'}${age!=null?` · ${age} ans`:''}</div>`+
+              `<div style="font-weight:600">${echapper(nomComplet(a))||'—'}${age!=null?` · ${age} ans`:''}</div>`+
               (a.telephone||a.email ? `<div style="font-size:0.85rem">${a.telephone?echapper(a.telephone):''}${a.telephone&&a.email?' · ':''}${echapper(a.email)||''}</div>` : "")+
               `<a href="#" onclick="voirProfil('${s.auteur}');return false;" style="font-weight:600">Voir le profil →</a>`+
               `</div>`;
@@ -265,7 +265,7 @@
       const tel = (p.telephone||'').trim();
       const lig = (k,v) => `<tr><td class="k">${k}</td><td>${v}</td></tr>`;
       document.getElementById("modal-profil-corps").innerHTML =
-        `<h3>${echapper(p.nom)||'Adhérent'}</h3>`+
+        `<h3>${echapper(nomComplet(p))||'Adhérent'}</h3>`+
         `<div class="mp-tag">${echapper(p.type_adhesion)||'Adhérent'} · ${aJour?'cotisation à jour':'cotisation à régler'}</div>`+
         `<table class="mp">`+
           lig('Âge', age!=null ? age+' ans' : '—')+

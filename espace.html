@@ -106,7 +106,7 @@
           <div>
             <div class="carte-membre">
               <div class="ligne">
-                <div><div class="label">Membre</div><h3>${echapper(profil.nom)}</h3></div>
+                <div><div class="label">Membre</div><h3>${echapper(nomComplet(profil))}</h3></div>
                 <span class="badge ${(aJour||profil.role==='bureau')?'ok':'ko'}">${profil.role==='bureau'?'Bureau':(aJour?'À jour':'Cotisation à régler')}</span>
               </div>
               <div style="display:flex;gap:1.4rem;margin:1.2rem 0 0.4rem;flex-wrap:wrap;align-items:flex-end">
@@ -152,10 +152,11 @@
             <div id="msg" class="message"></div>
             <form id="form-profil">
               <p class="grp-titre">Mes coordonnées</p>
-              <div class="champ"><label>Nom et prénom</label><input id="nom" value="${echapper(profil.nom)}" required></div>
+              <div class="champ"><label>Nom</label><input id="nom" value="${echapper(profil.nom)}" required></div>
+              <div class="champ"><label>Prénom</label><input id="prenom" value="${echapper(profil.prenom)}"></div>
               <div class="champ"><label>Date de naissance</label><input type="date" id="date_naissance" value="${echapper(profil.date_naissance)}"></div>
               <div class="champ"><label>Commune de résidence</label><select id="commune"></select>
-                <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem"></div>
+                <input id="commune_autre" placeholder="Île puis commune (ex. Raiatea, Uturoa)" style="display:none;margin-top:0.5rem"></div>
               <div class="champ"><label>Adresse</label><input id="adresse" value="${echapper(profil.adresse)}" placeholder="Quartier, rue, lotissement…"></div>
               <div class="champ"><label>Téléphone <span style="font-weight:400;color:var(--gris)">— pour les SMS de l'association</span></label><input id="telephone" type="tel" value="${echapper(profil.telephone)}" placeholder="Ex. 87 12 34 56"></div>
 
@@ -245,6 +246,7 @@
         e.preventDefault();
         const maj = {
           nom: document.getElementById("nom").value.trim(),
+          prenom: document.getElementById("prenom").value.trim(),
           commune: valCommune(),
           type_nuisance: document.getElementById("type_nuisance").value.trim(),
           annuaire_optin: document.getElementById("annuaire").checked,
@@ -256,8 +258,8 @@
         let partiel = false;
         // Filet de secours : si des colonnes récentes n'existent pas encore,
         // on réessaie sans elles plutôt que d'échouer.
-        if (error && /column|schema cache|date_naissance|adresse|telephone/i.test(error.message||"")){
-          const maj2 = Object.assign({}, maj); delete maj2.date_naissance; delete maj2.adresse; delete maj2.telephone;
+        if (error && /column|schema cache|date_naissance|adresse|telephone|prenom/i.test(error.message||"")){
+          const maj2 = Object.assign({}, maj); delete maj2.date_naissance; delete maj2.adresse; delete maj2.telephone; delete maj2.prenom;
           const retry = await sb.from("profils").update(maj2).eq("id", profil.id);
           error = retry.error; partiel = !error;
         }

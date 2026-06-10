@@ -56,9 +56,10 @@
           if (comp.type_adhesion && !profil.type_adhesion) maj.type_adhesion = comp.type_adhesion;
           if (comp.date_naissance && !profil.date_naissance) maj.date_naissance = comp.date_naissance;
           if (comp.adresse && !profil.adresse) maj.adresse = comp.adresse;
+          if (comp.telephone && !profil.telephone) maj.telephone = comp.telephone;
           if (Object.keys(maj).length) {
             let { error } = await sb.from("profils").update(maj).eq("id", profil.id);
-            if (error) { const m2 = Object.assign({}, maj); delete m2.date_naissance; delete m2.adresse; await sb.from("profils").update(m2).eq("id", profil.id); }
+            if (error) { const m2 = Object.assign({}, maj); delete m2.date_naissance; delete m2.adresse; delete m2.telephone; await sb.from("profils").update(m2).eq("id", profil.id); }
             Object.assign(profil, maj);
           }
           localStorage.removeItem("TOH_profil_complement");
@@ -84,6 +85,7 @@
 
       contenu.innerHTML = `
         <h2 class="section-titre">Mon espace adhérent</h2>
+        <div id="annonces" style="margin-bottom:1.4rem"></div>
         <div class="layout">
           <div>
             <div class="carte-membre">
@@ -133,6 +135,7 @@
               <div class="champ"><label>Commune</label><select id="commune"></select>
                 <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem"></div>
               <div class="champ"><label>Adresse</label><input id="adresse" value="${echapper(profil.adresse)}" placeholder="Quartier, rue, lotissement…"></div>
+              <div class="champ"><label>Téléphone <span style="font-weight:400;color:var(--gris)">— pour les SMS de l'association</span></label><input id="telephone" type="tel" value="${echapper(profil.telephone)}" placeholder="Ex. 87 12 34 56"></div>
               <div class="champ"><label>Type de nuisance subie</label>
                 <input id="type_nuisance" value="${echapper(profil.type_nuisance)}" placeholder="Ex. sono de bar, voisinage, chantier…"></div>
               <div class="champ" style="display:flex;align-items:center;gap:0.5rem">
@@ -155,6 +158,21 @@
       sel.innerHTML = optionsCommunes(profil.commune);
       const valCommune = brancherCommuneAutre(sel, document.getElementById("commune_autre"));
 
+      // Annonces de l'association visibles par ce membre (selon le ciblage).
+      (async () => {
+        const { data } = await sb.from("annonces").select("*").order("cree_le", { ascending:false });
+        if (!data || !data.length) return;
+        const voitTout = profil.role === "bureau";
+        const vis = data.filter(an => voitTout || an.cible==="tous" || (an.cible==="ajour"&&aJour) || (an.cible==="retard"&&!aJour));
+        if (!vis.length) return;
+        document.getElementById("annonces").innerHTML =
+          `<h3 style="color:var(--bleu-fonce);margin-bottom:0.6rem">Annonces de l'association</h3>` +
+          vis.slice(0,5).map(an => `<div class="rappel-coti r-doux" style="text-align:left">
+            <strong>${echapper(an.titre)}</strong><br><span style="white-space:pre-wrap">${echapper(an.corps)}</span>
+            <div style="font-size:0.78rem;color:var(--gris);margin-top:0.3rem">${new Date(an.cree_le).toLocaleDateString('fr-FR')}</div>
+          </div>`).join("");
+      })();
+
       const msg = document.getElementById("msg");
       document.getElementById("form-profil").addEventListener("submit", async function(e) {
         e.preventDefault();
@@ -165,20 +183,21 @@
           annuaire_optin: document.getElementById("annuaire").checked,
           date_naissance: document.getElementById("date_naissance").value || null,
           adresse: document.getElementById("adresse").value.trim(),
+          telephone: document.getElementById("telephone").value.trim(),
         };
         let { error } = await sb.from("profils").update(maj).eq("id", profil.id);
         let partiel = false;
-        // Filet de secours : si les colonnes date_naissance/adresse n'existent
-        // pas encore, on réessaie sans elles plutôt que d'échouer.
-        if (error && /column|schema cache|date_naissance|adresse/i.test(error.message||"")){
-          const maj2 = Object.assign({}, maj); delete maj2.date_naissance; delete maj2.adresse;
+        // Filet de secours : si des colonnes récentes n'existent pas encore,
+        // on réessaie sans elles plutôt que d'échouer.
+        if (error && /column|schema cache|date_naissance|adresse|telephone/i.test(error.message||"")){
+          const maj2 = Object.assign({}, maj); delete maj2.date_naissance; delete maj2.adresse; delete maj2.telephone;
           const retry = await sb.from("profils").update(maj2).eq("id", profil.id);
           error = retry.error; partiel = !error;
         }
         msg.className = "message " + (error ? "err" : "ok");
         msg.textContent = error ? "Erreur : " + error.message
           : (partiel
-              ? "Profil enregistré ✔ (date de naissance et adresse seront prises en compte une fois la base mise à jour)"
+              ? "Profil enregistré ✔ (certaines infos seront prises en compte une fois la base mise à jour)"
               : "Profil enregistré ✔");
       });
     })();

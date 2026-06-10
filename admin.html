@@ -26,6 +26,14 @@
     .msg-c.lu { border-left-color:#bbb; opacity:0.7; }
     .msg-c .meta { font-size:0.8rem; color:var(--gris); margin-bottom:0.2rem; }
     .msg-c a.mini { text-decoration:none; display:inline-block; }
+    .dcards { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:1rem; }
+    .dcard { background:#fff; border-radius:12px; box-shadow:var(--ombre); padding:1rem 1.2rem; }
+    .dcard h3 { color:var(--bleu-fonce); font-size:1rem; margin-bottom:0.6rem; }
+    .drow { display:flex; align-items:center; gap:0.6rem; padding:0.3rem 0; font-size:0.88rem; }
+    .drow .lib { flex:0 0 42%; }
+    .drow .bar { flex:1; height:7px; background:#eee; border-radius:4px; overflow:hidden; }
+    .drow .bar>span { display:block; height:100%; background:var(--bleu-lagon); border-radius:4px; }
+    .drow .n { flex:0 0 auto; font-weight:700; color:var(--bleu-fonce); min-width:54px; text-align:right; }
   </style>
 </head>
 <body>
@@ -38,10 +46,12 @@
   <script src="js/app.js"></script>
   <script>
     let ADH = [];
+    let MOI = null;
     (async function() {
       await initPage("admin");
       const contenu = document.getElementById("contenu");
       const profil = await monProfil();
+      MOI = profil;
       if (!profil || profil.role !== "bureau") {
         contenu.innerHTML = `<div class="verrou"><div class="ico">⛔</div>
           <h2 style="color:var(--bleu-fonce)">Accès réservé au bureau</h2>
@@ -77,14 +87,172 @@
         </div>
         <div id="tableau"></div>
 
+        <h2 class="section-titre" style="margin-top:2.5rem">Statistiques des adhérents</h2>
+        <div id="stats-detail"></div>
+
+        <h2 class="section-titre" style="margin-top:2.5rem">Communication aux membres</h2>
+        <div id="communication"></div>
+
         <h2 class="section-titre" style="margin-top:2.5rem">Messages de contact</h2>
         <div id="messages"><p style="color:var(--gris)">Chargement…</p></div>`;
 
       document.getElementById("q").addEventListener("input", dessiner);
       document.getElementById("filtre").addEventListener("change", dessiner);
       dessiner();
+      rendreStatsDetail();
+      rendreCommunication();
       chargerMessages();
     })();
+
+    /* ----- Statistiques détaillées des adhérents ----- */
+    function compteur(arr, fn){
+      const m = {};
+      arr.forEach(a => { const k = (fn(a)||"").toString().trim() || "Non précisé"; m[k] = (m[k]||0)+1; });
+      return Object.entries(m).sort((x,y) => y[1]-x[1]);
+    }
+    function dcard(titre, entries){
+      const tot = entries.reduce((s,[,n]) => s+n, 0) || 1;
+      const max = entries.length ? entries[0][1] : 1;
+      const rows = entries.length ? entries.map(([k,n]) =>
+        `<div class="drow"><span class="lib">${echapper(k)}</span>
+          <span class="bar"><span style="width:${Math.round(n/max*100)}%"></span></span>
+          <span class="n">${n} <small style="color:var(--gris);font-weight:500">(${Math.round(n/tot*100)}%)</small></span></div>`).join("")
+        : `<div class="drow"><span class="lib" style="color:var(--gris)">Aucune donnée</span></div>`;
+      return `<div class="dcard"><h3>${titre}</h3>${rows}</div>`;
+    }
+    function ageDe(a){
+      if (!a.date_naissance) return null;
+      const d = new Date(a.date_naissance); if (isNaN(d)) return null;
+      const t = new Date(); let age = t.getFullYear()-d.getFullYear();
+      const m = t.getMonth()-d.getMonth();
+      if (m<0 || (m===0 && t.getDate()<d.getDate())) age--;
+      return age;
+    }
+    function trancheAge(a){
+      const age = ageDe(a);
+      if (age==null) return "Non renseigné";
+      if (age<30) return "Moins de 30 ans";
+      if (age<45) return "30–44 ans";
+      if (age<60) return "45–59 ans";
+      return "60 ans et plus";
+    }
+    function rendreStatsDetail(){
+      document.getElementById("stats-detail").innerHTML = `<div class="dcards">
+        ${dcard("Par type d'adhésion", compteur(ADH, a=>a.type_adhesion))}
+        ${dcard("Par nuisance subie", compteur(ADH, a=>a.type_nuisance))}
+        ${dcard("Par commune", compteur(ADH, a=>a.commune))}
+        ${dcard("Par statut de cotisation", compteur(ADH, a=>estAJour(a)?"À jour":"En retard"))}
+        ${dcard("Par tranche d'âge", compteur(ADH, a=>trancheAge(a)))}
+      </div>`;
+    }
+
+    /* ----- Communication aux membres ----- */
+    function destinatairesPour(cible){
+      return ADH.filter(a => cible==="ajour" ? estAJour(a) : cible==="retard" ? !estAJour(a) : true);
+    }
+    function normTel(t){
+      let n = (t||"").replace(/[^0-9+]/g,"");
+      if (/^\d{8}$/.test(n)) n = "+689"+n;   // numéro local PF à 8 chiffres
+      return n;
+    }
+    function emailsCibles(){ const c=document.getElementById("com-cible").value; return [...new Set(destinatairesPour(c).map(a=>(a.email||"").trim()).filter(Boolean))]; }
+    function telsCibles(){ const c=document.getElementById("com-cible").value; return [...new Set(destinatairesPour(c).map(a=>normTel(a.telephone)).filter(Boolean))]; }
+    function majResume(){
+      const dest = destinatairesPour(document.getElementById("com-cible").value);
+      const ne = emailsCibles().length, nt = telsCibles().length;
+      document.getElementById("com-resume").innerHTML = `<strong>${dest.length}</strong> membre(s) ciblé(s) · ${ne} avec e-mail · ${nt} avec téléphone`;
+    }
+    function rendreCommunication(){
+      document.getElementById("communication").innerHTML = `
+        <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
+          <div class="champ"><label>Audience</label>
+            <select id="com-cible">
+              <option value="tous">Tous les adhérents</option>
+              <option value="ajour">À jour de cotisation</option>
+              <option value="retard">Non à jour de cotisation</option>
+            </select>
+            <p id="com-resume" style="font-size:0.85rem;color:var(--gris);margin-top:0.3rem"></p></div>
+          <div class="champ"><label>Titre / objet</label><input id="com-titre" placeholder="Ex. Réunion publique le 12 juillet à 18h"></div>
+          <div class="champ"><label>Message</label><textarea id="com-corps" rows="4" placeholder="Votre message aux membres…"></textarea></div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-vert" onclick="publierAnnonce()">Publier l'annonce (sur le site)</button>
+            <button class="btn btn-clair" onclick="envoyerEmailRapide()">E-mail (Cci)</button>
+            <button class="btn btn-clair" onclick="copierEmails(this)">Copier les e-mails</button>
+            <button class="btn btn-clair" onclick="envoyerSMSRapide()">SMS</button>
+            <button class="btn btn-clair" onclick="copierTels(this)">Copier les numéros</button>
+            <button class="btn btn-clair" onclick="envoyerEmailMasse(this)">Envoi e-mail en masse (serveur)</button>
+          </div>
+          <p style="font-size:0.8rem;color:var(--gris);margin-top:0.6rem">« Publier l'annonce » l'affiche dans l'espace des membres ciblés. « E-mail (Cci) » et « SMS » ouvrent votre logiciel mail / votre messagerie (envoi depuis votre compte). L'« envoi en masse » nécessite le backend Resend déployé.</p>
+        </div>
+        <h3 style="color:var(--bleu-fonce);margin-bottom:0.6rem">Annonces publiées</h3>
+        <div id="annonces-liste"><p style="color:var(--gris)">Chargement…</p></div>`;
+      document.getElementById("com-cible").addEventListener("change", majResume);
+      majResume();
+      chargerAnnonces();
+    }
+    function envoyerEmailRapide(){
+      const sujet = document.getElementById("com-titre").value.trim();
+      const corps = document.getElementById("com-corps").value.trim();
+      const emails = emailsCibles();
+      if (!emails.length) return alert("Aucun destinataire avec e-mail dans cette audience.");
+      const url = `mailto:?bcc=${encodeURIComponent(emails.join(","))}&subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
+      if (url.length > 1900 && !confirm(`Liste longue (${emails.length} destinataires) : certains logiciels mail la tronquent. Continuer ? (sinon, « Copier les e-mails » ou « Envoi en masse »)`)) return;
+      window.location.href = url;
+    }
+    function copier(txt, btn){ navigator.clipboard.writeText(txt).then(()=>{ const t=btn.textContent; btn.textContent="Copié ✓"; setTimeout(()=>btn.textContent=t,1500); }).catch(()=>alert("Copie impossible.")); }
+    function copierEmails(btn){ const e=emailsCibles(); if(!e.length) return alert("Aucun e-mail."); copier(e.join(", "), btn); }
+    function copierTels(btn){ const t=telsCibles(); if(!t.length) return alert("Aucun numéro."); copier(t.join(", "), btn); }
+    function envoyerSMSRapide(){
+      const corps = document.getElementById("com-corps").value.trim();
+      const tels = telsCibles();
+      if (!tels.length) return alert("Aucun destinataire avec téléphone dans cette audience.");
+      // Ouvre l'application de messagerie du téléphone (envoi via votre abonnement).
+      window.location.href = `sms:${tels.join(",")}?&body=${encodeURIComponent(corps)}`;
+    }
+    async function envoyerEmailMasse(btn){
+      const sujet = document.getElementById("com-titre").value.trim();
+      const corps = document.getElementById("com-corps").value.trim();
+      const cible = document.getElementById("com-cible").value;
+      if (!sujet || !corps) return alert("Indiquez un titre et un message.");
+      if (!confirm("Envoyer cet e-mail en masse via le serveur ?")) return;
+      const t = btn.textContent; btn.textContent = "Envoi…";
+      try {
+        const { data, error } = await sb.functions.invoke("diffusion-email", { body: { sujet, corps, cible } });
+        if (error) throw error;
+        alert("Envoi déclenché : " + (data && data.envoyes!=null ? data.envoyes+" e-mail(s)" : "OK"));
+      } catch(e){ alert("Envoi en masse indisponible (backend non déployé ?).\n" + (e.message||e)); }
+      btn.textContent = t;
+    }
+    async function publierAnnonce(){
+      const titre = document.getElementById("com-titre").value.trim();
+      const corps = document.getElementById("com-corps").value.trim();
+      const cible = document.getElementById("com-cible").value;
+      if (!titre || !corps) return alert("Indiquez un titre et un message.");
+      const { error } = await sb.from("annonces").insert({ titre, corps, cible, auteur_nom: MOI ? MOI.nom : "" });
+      if (error) return alert("Erreur : "+error.message+"\n(Avez-vous déployé migration-communication.sql ?)");
+      document.getElementById("com-titre").value=""; document.getElementById("com-corps").value="";
+      alert("Annonce publiée ✔ Les membres ciblés la verront dans leur espace.");
+      chargerAnnonces();
+    }
+    async function chargerAnnonces(){
+      const box = document.getElementById("annonces-liste");
+      const { data, error } = await sb.from("annonces").select("*").order("cree_le", { ascending:false });
+      if (error){ box.innerHTML = `<p style="color:var(--gris)">Annonces non activées (déployez <strong>migration-communication.sql</strong>).</p>`; return; }
+      if (!data || !data.length){ box.innerHTML = `<p style="color:var(--gris)">Aucune annonce publiée.</p>`; return; }
+      const lib = c => c==="ajour" ? "à jour" : c==="retard" ? "non à jour" : "tous";
+      box.innerHTML = data.map(an => `<div class="msg-c">
+        <div class="meta">${new Date(an.cree_le).toLocaleString('fr-FR')} · cible : <strong>${lib(an.cible)}</strong></div>
+        <div style="font-weight:600;margin:0.2rem 0">${echapper(an.titre)}</div>
+        <div style="white-space:pre-wrap">${echapper(an.corps)}</div>
+        <div style="margin-top:0.5rem"><button class="mini clair" onclick="supprimerAnnonce('${an.id}')">Supprimer</button></div>
+      </div>`).join("");
+    }
+    async function supprimerAnnonce(id){
+      if (!confirm("Supprimer cette annonce ?")) return;
+      const { error } = await sb.from("annonces").delete().eq("id", id);
+      if (error) return alert("Erreur : "+error.message);
+      chargerAnnonces();
+    }
 
     async function chargerMessages(){
       const box = document.getElementById("messages");

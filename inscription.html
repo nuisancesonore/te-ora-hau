@@ -50,6 +50,10 @@
           <input type="text" id="adresse" placeholder="Rue, quartier, lieu-dit…">
         </div>
         <div class="champ">
+          <label for="telephone">Téléphone <span style="font-weight:400;color:var(--gris)">— pour les SMS de l'association</span></label>
+          <input type="tel" id="telephone" placeholder="Ex. 87 12 34 56">
+        </div>
+        <div class="champ">
           <label for="commune">Commune</label>
           <select id="commune" required></select>
           <input id="commune_autre" placeholder="Précisez la commune" style="display:none;margin-top:0.5rem">
@@ -99,6 +103,7 @@
       const nom = document.getElementById("nom").value.trim();
       const naissance = document.getElementById("naissance").value || null;
       const adresse = document.getElementById("adresse").value.trim();
+      const telephone = document.getElementById("telephone").value.trim();
       const commune = valCommune();
       const email = document.getElementById("email").value.trim();
       const mdp = document.getElementById("mdp").value;
@@ -108,7 +113,7 @@
       const res = await inscrire(nom, email, mdp, commune);
       montrer(res.ok ? "ok" : "err", res.msg);
       if (res.ok) {
-        const complement = { type_adhesion: type, date_naissance: naissance, adresse: adresse };
+        const complement = { type_adhesion: type, date_naissance: naissance, adresse: adresse, telephone: telephone };
         // Mémorisé pour être appliqué à la 1re connexion (cas confirmation e-mail).
         try { localStorage.setItem("TOH_profil_complement", JSON.stringify(complement)); } catch (_) {}
         if (res.session) {

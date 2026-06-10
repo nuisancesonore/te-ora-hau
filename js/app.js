@@ -38,6 +38,30 @@ let TOH_PRET = false;   // config valide ?
   });
 })();
 
+/* ---------- Icône « Ajouter à l'écran d'accueil » (favicon + PWA) ---------- */
+(function injecterIconesPWA() {
+  const head = document.head;
+  if (!head) return;
+  const lien = (rel, href, attrs) => {
+    if (document.querySelector(`link[rel="${rel}"]`)) return;
+    const l = document.createElement("link");
+    l.rel = rel; l.href = href;
+    if (attrs) for (const k in attrs) l.setAttribute(k, attrs[k]);
+    head.appendChild(l);
+  };
+  const meta = (name, content) => {
+    if (document.querySelector(`meta[name="${name}"]`)) return;
+    const m = document.createElement("meta"); m.name = name; m.content = content; head.appendChild(m);
+  };
+  lien("icon", "images/favicon-32.png", { type: "image/png", sizes: "32x32" });
+  lien("apple-touch-icon", "images/apple-touch-icon.png");
+  lien("manifest", "manifest.webmanifest");
+  meta("theme-color", "#064a54");
+  meta("apple-mobile-web-app-title", "Te Ora Hau");
+  meta("apple-mobile-web-app-capable", "yes");
+  meta("mobile-web-app-capable", "yes");
+})();
+
 /* ---------- Authentification ---------- */
 async function inscrire(nom, email, motdepasse, commune) {
   const { data, error } = await sb.auth.signUp({

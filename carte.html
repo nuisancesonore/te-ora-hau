@@ -82,24 +82,26 @@
       }
 
       const plein = aDroitAcces(profil);
-      if (plein) {
-        // Adhérent à jour : carte détaillée avec les points.
-        const map = L.map("map").setView([-17.62, -149.46], 11);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          { attribution:"© OpenStreetMap", maxZoom:19 }).addTo(map);
-        const geoloc = data.filter(s => s.lat != null && s.lng != null);
-        if (!geoloc.length){ etat.innerHTML = `<div class="message ok" style="display:block">Aucun signalement géolocalisé pour le moment. Soyez le premier : <a href="signaler.html">signaler</a>.</div>`; }
-        const couleur = i => i==="Insupportable" ? "#b2381f" : i==="Faible" ? "#e8b84b" : "#ff7a59";
-        // Le contour (bord) du point indique le niveau de démarche (constat).
-        const bord = c => c==="Constat + plainte" ? {color:"#064a54", weight:4}
-                         : c==="Constat d'autorité" ? {color:"#0a7d8c", weight:3}
-                         : {color:"#ffffff", weight:2};
-        const moisAn = moisAnnee; // formateur "AAAA-MM" -> "mois AAAA" (js/app.js)
-        geoloc.forEach(s => {
-          const b = bord(s.constat);
-          L.circleMarker([s.lat, s.lng], {
-            radius:9, color:b.color, weight:b.weight, fillColor:couleur(s.intensite), fillOpacity:0.9,
-          }).addTo(map).bindPopup(
+
+      // La carte est toujours affichée avec les points (couleur = intensité).
+      const map = L.map("map").setView([-17.62, -149.46], 11);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { attribution:"© OpenStreetMap", maxZoom:19 }).addTo(map);
+      const geoloc = data.filter(s => s.lat != null && s.lng != null);
+      const couleur = i => i==="Insupportable" ? "#b2381f" : i==="Faible" ? "#e8b84b" : "#ff7a59";
+      // Contour = niveau de démarche (réservé aux adhérents validés).
+      const bord = c => c==="Constat + plainte" ? {color:"#064a54", weight:4}
+                       : c==="Constat d'autorité" ? {color:"#0a7d8c", weight:3}
+                       : {color:"#ffffff", weight:2};
+      const moisAn = moisAnnee; // formateur "AAAA-MM" -> "mois AAAA" (js/app.js)
+      geoloc.forEach(s => {
+        const b = plein ? bord(s.constat) : { color:"#ffffff", weight:2 };
+        const m = L.circleMarker([s.lat, s.lng], {
+          radius:9, color:b.color, weight:b.weight, fillColor:couleur(s.intensite), fillOpacity:0.9,
+        }).addTo(map);
+        // Détail complet (cause, démarche, adresse) réservé aux adhérents validés.
+        if (plein) {
+          m.bindPopup(
             `<strong>${echapper(s.type)}</strong><br>`+
             `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}<br>`+
             `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
@@ -108,15 +110,24 @@
             (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+
             (s.description?`<br><em>${echapper(s.description)}</em>`:"")
           );
-        });
-      } else {
-        // Visiteur ou adhésion non validée : statistiques seules, carte masquée.
-        document.getElementById("map").style.display = "none";
-        document.querySelectorAll(".legende").forEach(el => el.style.display = "none");
+        }
+        // Visiteur : juste le point, sans détail de la cause.
+      });
+
+      // La légende "démarche (contour)" n'est visible que pour les adhérents validés.
+      if (!plein) {
+        const legendes = document.querySelectorAll(".legende");
+        if (legendes[1]) legendes[1].style.display = "none";   // 2e légende = démarche
+      }
+
+      // Message d'état
+      if (!geoloc.length) {
+        etat.innerHTML = `<div class="message ok" style="display:block">Aucun signalement géolocalisé pour le moment.${plein ? ' Soyez le premier : <a href="signaler.html">signaler</a>.' : ''}</div>`;
+      } else if (!plein) {
         etat.innerHTML = `<div class="message ok" style="display:block">${
           profil
-            ? "Votre adhésion est <strong>en attente de validation</strong> par le bureau. Voici les statistiques publiques ; la carte détaillée des signalements sera accessible une fois votre cotisation validée. <a href=\"cotiser.html\">Régler ma cotisation</a>"
-            : "Voici les <strong>statistiques publiques</strong> des nuisances signalées. Pour accéder à la <strong>carte détaillée</strong> et signaler vous-même, <a href=\"connexion.html\">connectez-vous</a> et adhérez à Te Ora Hau."
+            ? "Votre adhésion est <strong>en attente de validation</strong>. Les points montrent les zones et l'intensité ; le <strong>détail</strong> (cause, démarche, adresse) et la possibilité de <strong>signaler</strong> seront débloqués après validation. <a href=\"cotiser.html\">Régler ma cotisation</a>"
+            : "Carte publique : les points montrent les <strong>zones</strong> et l'<strong>intensité</strong> des nuisances signalées. Pour le <strong>détail</strong> et pour <strong>signaler</strong> vous-même, <a href=\"connexion.html\">connectez-vous</a> et adhérez à Te Ora Hau."
         }</div>`;
       }
 
@@ -152,24 +163,30 @@
           ? `<div class="kpi"><div class="n" style="font-size:1.15rem">${echapper(filtre)}</div><div class="l">Commune sélectionnée</div></div>`
           : (()=>{ const pc = compter(data,"commune"); const t = pc[0]?`${pc[0][0]} (${pc[0][1]})`:"—";
                    return `<div class="kpi"><div class="n" style="font-size:1.15rem">${echapper(t)}</div><div class="l">Commune la plus touchée</div></div>`; })();
-        // Quand une commune est filtrée, on détaille par quartier au lieu de "par commune"
-        const premierTableau = filtre
+
+        // KPI "appuyés par un constat" : adhérents validés uniquement.
+        const kpiConstat = plein ? `<div class="kpi"><div class="n">${p(constat)}%</div><div class="l">Appuyés par un constat</div></div>` : ``;
+        // Détail par quartier : seulement pour les adhérents validés, commune filtrée.
+        const premierTableau = (plein && filtre)
           ? tableau("Par quartier / localité", compter(sous,"quartier"), n, true)
           : tableau("Par commune", compter(sous,"commune"), n, true);
+        // "Par démarche" et "Par intensité" : adhérents validés uniquement.
+        const tablesAvancees = plein
+          ? `${tableau("Par démarche", compter(sous,"constat"), n)}${tableau("Par intensité", compter(sous,"intensite"), n)}`
+          : ``;
 
         document.getElementById("stats-corps").innerHTML =
           `<div class="kpis">
              <div class="kpi"><div class="n">${n}</div><div class="l">Signalements</div></div>
              <div class="kpi"><div class="n">${p(fortes)}%</div><div class="l">Forts ou insupportables</div></div>
-             <div class="kpi"><div class="n">${p(constat)}%</div><div class="l">Appuyés par un constat</div></div>
+             ${kpiConstat}
              ${k4}
            </div>
            <div class="stat-total">${geo} géolocalisé(s) sur ${n}${filtre?` (commune : ${echapper(filtre)})`:""}.</div>
            <div class="stats-wrap">
              ${premierTableau}
              ${tableau("Par objet (type)", compter(sous,"type"), n, true)}
-             ${tableau("Par démarche", compter(sous,"constat"), n)}
-             ${tableau("Par intensité", compter(sous,"intensite"), n)}
+             ${tablesAvancees}
            </div>`;
       }
 

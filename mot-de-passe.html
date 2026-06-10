@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mot de passe oublié · Te Ora Hau</title>
+  <title>Mot de passe · Te Ora Hau</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,9 +11,11 @@
 
   <main>
     <div class="form-wrap">
-      <h2>Mot de passe oublié</h2>
-      <p class="intro">Indiquez votre e-mail : un lien de réinitialisation vous sera envoyé.</p>
+      <h2 id="titre">Mot de passe oublié</h2>
+      <p class="intro" id="intro">Indiquez votre e-mail : un lien de réinitialisation vous sera envoyé.</p>
       <div id="msg" class="message"></div>
+
+      <!-- Étape 1 : demander le lien de réinitialisation -->
       <form id="form-mdp">
         <div class="champ">
           <label for="email">Adresse e-mail</label>
@@ -21,6 +23,20 @@
         </div>
         <button type="submit" class="btn btn-primaire btn-bloc">Réinitialiser</button>
       </form>
+
+      <!-- Étape 2 : choisir un nouveau mot de passe (après clic sur le lien reçu) -->
+      <form id="form-nouveau" style="display:none">
+        <div class="champ">
+          <label for="np">Nouveau mot de passe</label>
+          <input type="password" id="np" required minlength="6" placeholder="6 caractères minimum">
+        </div>
+        <div class="champ">
+          <label for="np2">Confirmer le mot de passe</label>
+          <input type="password" id="np2" required minlength="6">
+        </div>
+        <button type="submit" class="btn btn-primaire btn-bloc">Enregistrer le nouveau mot de passe</button>
+      </form>
+
       <p class="form-foot"><a href="connexion.html">Retour à la connexion</a></p>
     </div>
   </main>
@@ -32,12 +48,48 @@
   <script>
     initPage("");
     const msg = document.getElementById("msg");
-    document.getElementById("form-mdp").addEventListener("submit", async function(e) {
+    const formDemande = document.getElementById("form-mdp");
+    const formNouveau = document.getElementById("form-nouveau");
+    function montrer(type, texte){ msg.className = "message " + type; msg.textContent = texte; }
+
+    // Affiche le formulaire "nouveau mot de passe" quand on arrive depuis le lien reçu.
+    let recoveryAffiche = false;
+    function passerEnRecovery(){
+      if (recoveryAffiche) return;
+      recoveryAffiche = true;
+      document.getElementById("titre").textContent = "Choisir un nouveau mot de passe";
+      document.getElementById("intro").textContent = "Saisissez votre nouveau mot de passe ci-dessous.";
+      formDemande.style.display = "none";
+      formNouveau.style.display = "block";
+    }
+    // Le lien de réinitialisation contient "type=recovery" dans l'URL…
+    if (location.hash.includes("type=recovery")) passerEnRecovery();
+    // …et/ou déclenche l'événement PASSWORD_RECOVERY de Supabase.
+    if (TOH_PRET) {
+      sb.auth.onAuthStateChange((event) => {
+        if (event === "PASSWORD_RECOVERY") passerEnRecovery();
+      });
+    }
+
+    // Étape 1 : envoyer le lien
+    formDemande.addEventListener("submit", async function(e) {
       e.preventDefault();
       const email = document.getElementById("email").value.trim();
       if (TOH_PRET) await reinitMotDePasse(email);
-      msg.className = "message ok";
-      msg.textContent = "Si un compte est associé à cet e-mail, un lien de réinitialisation vient d'être envoyé.";
+      montrer("ok", "Si un compte est associé à cet e-mail, un lien de réinitialisation vient d'être envoyé. Ouvrez-le pour choisir un nouveau mot de passe.");
+    });
+
+    // Étape 2 : enregistrer le nouveau mot de passe
+    formNouveau.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const p1 = document.getElementById("np").value;
+      const p2 = document.getElementById("np2").value;
+      if (p1 !== p2) { montrer("err", "Les mots de passe ne correspondent pas."); return; }
+      if (!TOH_PRET) { montrer("err", "Service indisponible."); return; }
+      const { error } = await sb.auth.updateUser({ password: p1 });
+      if (error) { montrer("err", traduireErreur(error.message)); return; }
+      montrer("ok", "Mot de passe modifié ✔ Redirection vers la connexion…");
+      setTimeout(() => location.href = "connexion.html", 1600);
     });
   </script>
 </body>

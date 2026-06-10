@@ -41,7 +41,7 @@ async function deconnecter() {
 }
 
 async function reinitMotDePasse(email) {
-  const redirect = location.origin + location.pathname.replace(/[^/]+$/, "connexion.html");
+  const redirect = location.origin + location.pathname.replace(/[^/]+$/, "mot-de-passe.html");
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect });
   return { ok: !error, msg: error ? traduireErreur(error.message) : "" };
 }

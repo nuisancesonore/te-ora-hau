@@ -68,6 +68,47 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
 
+/* ---------- Notifications push (abonnement de l'appareil) ---------- */
+const TOH_VAPID = (window.TOH_CONFIG || {}).VAPID_PUBLIC_KEY || "";
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64); const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+async function etatNotifications() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return "non-supporte";
+  if (!TOH_VAPID) return "non-configure";
+  if (Notification.permission === "denied") return "refuse";
+  try { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); return sub ? "actif" : "inactif"; }
+  catch (_) { return "inactif"; }
+}
+async function activerNotifications() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) { alert("Les notifications ne sont pas supportées sur cet appareil/navigateur."); return false; }
+  if (!TOH_VAPID) { alert("Les notifications ne sont pas encore configurées par l'association."); return false; }
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") { alert("Notifications non autorisées. Vous pourrez les activer dans les réglages du navigateur."); return false; }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(TOH_VAPID) });
+    const s = await sessionActive();
+    if (!s) { alert("Connectez-vous d'abord."); return false; }
+    const { error } = await sb.from("push_subscriptions").upsert({ user_id: s.user.id, endpoint: sub.endpoint, subscription: sub.toJSON() }, { onConflict: "endpoint" });
+    if (error) { alert("Erreur d'enregistrement : " + error.message); return false; }
+    return true;
+  } catch (e) { alert("Activation impossible : " + (e.message || e)); return false; }
+}
+async function desactiverNotifications() {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) { try { await sb.from("push_subscriptions").delete().eq("endpoint", sub.endpoint); } catch (_) {} await sub.unsubscribe(); }
+    return true;
+  } catch (_) { return false; }
+}
+
 /* ---------- Authentification ---------- */
 async function inscrire(nom, email, motdepasse, commune) {
   const { data, error } = await sb.auth.signUp({

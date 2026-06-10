@@ -139,6 +139,11 @@
               <p style="color:var(--gris)">Échangez avec les autres adhérents, posez vos questions et partagez vos démarches.</p>
               <a href="forum.html" class="btn btn-clair" style="margin-top:0.5rem">Ouvrir le forum</a>
             </div>
+            <div class="carte" style="margin-top:1.2rem">
+              <h3>Notifications</h3>
+              <p style="color:var(--gris)" id="notif-txt">Recevez une alerte (et un chiffre sur l'icône) quand l'association publie une annonce.</p>
+              <button class="btn btn-clair" id="btn-notif" style="margin-top:0.5rem">Activer les notifications</button>
+            </div>
           </div>
 
           <div class="form-wrap" style="max-width:100%;margin:0">
@@ -211,6 +216,28 @@
               <div class="date">Publié le ${new Date(an.cree_le).toLocaleDateString('fr-FR')}</div>
             </div>`;
           }).join("");
+      })();
+
+      // Réglage des notifications push (activer / désactiver sur cet appareil).
+      (async () => {
+        const btn = document.getElementById("btn-notif");
+        const txt = document.getElementById("notif-txt");
+        if (!btn) return;
+        function refl(e){
+          if (e === "non-supporte"){ btn.style.display="none"; txt.textContent = "Les notifications ne sont pas supportées sur cet appareil."; }
+          else if (e === "non-configure"){ btn.style.display="none"; txt.textContent = "Notifications bientôt disponibles."; }
+          else if (e === "refuse"){ btn.style.display="none"; txt.textContent = "Notifications bloquées dans les réglages du navigateur/téléphone."; }
+          else if (e === "actif"){ btn.textContent = "Désactiver les notifications"; txt.textContent = "Notifications activées sur cet appareil ✔"; }
+          else { btn.textContent = "Activer les notifications"; txt.textContent = "Recevez une alerte (et un chiffre sur l'icône) quand l'association publie une annonce. Pensez à installer le site sur votre écran d'accueil."; }
+        }
+        refl(await etatNotifications());
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          const actif = (await etatNotifications()) === "actif";
+          if (actif) await desactiverNotifications(); else await activerNotifications();
+          refl(await etatNotifications());
+          btn.disabled = false;
+        });
       })();
 
       const msg = document.getElementById("msg");

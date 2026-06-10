@@ -180,6 +180,7 @@
             <input type="datetime-local" id="com-date"></div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
             <button class="btn btn-vert" id="btn-publier" onclick="publierAnnonce()">Publier l'annonce (sur le site)</button>
+            <button class="btn btn-vert" onclick="publierEtNotifier(this)" title="Publie l'annonce ET envoie une notification push (PUSH.md)">Publier et notifier (push)</button>
             <button class="btn btn-clair" id="btn-annuler-edit" onclick="annulerEdition()" style="display:none">Annuler la modification</button>
             <button class="btn btn-clair" onclick="envoyerEmailRapide()">E-mail (Cci)</button>
             <button class="btn btn-clair" onclick="copierEmails(this)">Copier les e-mails</button>
@@ -274,6 +275,32 @@
       if (res.error) return alert("Erreur : "+res.error.message+"\n(Avez-vous déployé migration-communication.sql ?)");
       annulerEdition();
       alert(wasEdit ? "Annonce mise à jour ✔" : "Annonce publiée ✔ Les membres ciblés la verront dans leur espace.");
+      chargerAnnonces();
+    }
+    async function publierEtNotifier(btn){
+      const titre = document.getElementById("com-titre").value.trim();
+      const corps = document.getElementById("com-corps").value.trim();
+      const cible = document.getElementById("com-cible").value;
+      const dv = document.getElementById("com-date").value;
+      const date_evenement = dv ? new Date(dv).toISOString() : null;
+      if (!titre || !corps) return alert("Indiquez un titre et un message.");
+      if (!confirm("Publier l'annonce ET envoyer une notification push aux membres ciblés ?")) return;
+      const t = btn.textContent; btn.textContent = "Envoi…";
+      // 1) Publier l'annonce (avec filet de secours si colonne date manquante)
+      let res = await sb.from("annonces").insert({ titre, corps, cible, date_evenement, auteur_nom: MOI ? MOI.nom : "" });
+      if (res.error && /date_evenement|column|schema cache/i.test(res.error.message||""))
+        res = await sb.from("annonces").insert({ titre, corps, cible, auteur_nom: MOI ? MOI.nom : "" });
+      if (res.error){ btn.textContent = t; return alert("Erreur publication : "+res.error.message); }
+      // 2) Envoyer la notification push
+      try {
+        const { data, error } = await sb.functions.invoke("envoi-push", { body: { titre, corps, cible } });
+        if (error) throw error;
+        alert("Annonce publiée ✔ Notifications envoyées : " + (data && data.envoyes!=null ? data.envoyes : "?"));
+      } catch(e){
+        alert("Annonce publiée ✔\nMais l'envoi push n'est pas actif (backend non déployé — voir PUSH.md).");
+      }
+      annulerEdition();
+      btn.textContent = t;
       chargerAnnonces();
     }
     async function chargerAnnonces(){

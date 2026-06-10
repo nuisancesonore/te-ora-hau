@@ -3,7 +3,7 @@
   "short_name": "Te Ora Hau",
   "description": "Association polynésienne de lutte contre les nuisances sonores.",
   "lang": "fr",
-  "start_url": "./index.html",
+  "start_url": "./espace.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",

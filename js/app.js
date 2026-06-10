@@ -400,11 +400,12 @@ async function verifierNotifications(profil) {
   majBadgeApp(c.total);
   if (c.total === 0) fermerNotifsAffichees();   // plus rien à lire → on nettoie tout
 }
-// À appeler après lecture (Mon espace / Forum) pour rafraîchir le badge d'icône.
+// À appeler après lecture (Mon espace / Forum) : met à jour le chiffre ET
+// retire les bannières de notification affichées (le membre est en train de lire).
 async function rafraichirBadge(profil) {
   const c = await compterNonLus(profil);
   majBadgeApp(c.total);
-  if (c.total === 0) fermerNotifsAffichees();   // tout lu → badge + notifications effacés
+  fermerNotifsAffichees();
 }
 
 function afficherBanniereConfig() {

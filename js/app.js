@@ -303,9 +303,19 @@ function marquerNotif(id, n) {
     trig.insertAdjacentHTML("beforeend", `<span class="notif-point"></span>`);
   }
 }
-async function verifierNotifications(profil) {
-  if (!sb) return;
-  // --- Annonces non lues (selon le ciblage et hors événements passés) ---
+// Badge chiffré sur l'icône de l'app installée (PWA).
+// Pris en charge par Android Chrome et Chrome/Edge sur ordinateur ; pas par iOS.
+function majBadgeApp(total) {
+  try {
+    if ("setAppBadge" in navigator) {
+      if (total > 0) navigator.setAppBadge(total); else navigator.clearAppBadge();
+    }
+  } catch (_) {}
+}
+// Compte les éléments non lus : annonces ciblées (hors événements passés) + forum.
+async function compterNonLus(profil) {
+  let annonces = 0, forum = 0;
+  if (!sb) return { annonces, forum, total: 0 };
   try {
     const { data } = await sb.from("annonces")
       .select("cree_le, cible, date_evenement").order("cree_le", { ascending: false }).limit(30);
@@ -319,17 +329,25 @@ async function verifierNotifications(profil) {
       return true;
     });
     const vu = parseInt(localStorage.getItem("TOH_vu_annonces") || "0", 10);
-    const nNew = visibles.filter(a => new Date(a.cree_le).getTime() > vu).length;
-    if (nNew > 0) marquerNotif("nav-tableau", nNew);
+    annonces = visibles.filter(a => new Date(a.cree_le).getTime() > vu).length;
   } catch (_) {}
-  // --- Messages du forum non lus ---
   try {
     const { data } = await sb.from("forum_messages")
       .select("cree_le").order("cree_le", { ascending: false }).limit(100);
     const vu = parseInt(localStorage.getItem("TOH_vu_forum") || "0", 10);
-    const nNew = (data || []).filter(m => new Date(m.cree_le).getTime() > vu).length;
-    if (nNew > 0) marquerNotif("nav-forum", nNew);
+    forum = (data || []).filter(m => new Date(m.cree_le).getTime() > vu).length;
   } catch (_) {}
+  return { annonces, forum, total: annonces + forum };
+}
+async function verifierNotifications(profil) {
+  const c = await compterNonLus(profil);
+  if (c.annonces > 0) marquerNotif("nav-tableau", c.annonces);
+  if (c.forum > 0) marquerNotif("nav-forum", c.forum);
+  majBadgeApp(c.total);
+}
+// À appeler après lecture (Mon espace / Forum) pour rafraîchir le badge d'icône.
+async function rafraichirBadge(profil) {
+  majBadgeApp((await compterNonLus(profil)).total);
 }
 
 function afficherBanniereConfig() {

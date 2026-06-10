@@ -28,8 +28,9 @@
       async function dessiner() {
         const { data: messages } = await sb.from("forum_messages")
           .select("*").order("cree_le", { ascending: false });
-        // Marque le forum comme "lu" (efface la pastille de notification).
+        // Marque le forum comme "lu" (efface la pastille / met à jour le badge d'icône).
         try { localStorage.setItem("TOH_vu_forum", String(messages && messages.length ? new Date(messages[0].cree_le).getTime() : Date.now())); } catch(_){}
+        try { rafraichirBadge(profil); } catch(_){}
         const liste = (messages || []).map(m => `
           <div class="msg-forum">
             <div class="meta"><strong>${echapper(m.auteur_nom)}</strong> · ${new Date(m.cree_le).toLocaleString("fr-FR")}</div>

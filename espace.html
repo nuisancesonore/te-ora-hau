@@ -194,8 +194,9 @@
           if (an.date_evenement && new Date(an.date_evenement) < maintenant) return false;
           return true;
         });
-        // Marque les annonces comme "vues" (efface la pastille de notification).
+        // Marque les annonces comme "vues" (efface la pastille / met à jour le badge d'icône).
         localStorage.setItem("TOH_vu_annonces", String(vis.length ? new Date(vis[0].cree_le).getTime() : Date.now()));
+        try { rafraichirBadge(profil); } catch(_){}
         if (!vis.length) return;
         document.getElementById("annonces").innerHTML =
           `<h3 style="color:var(--bleu-fonce);margin-bottom:0.7rem">Annonces de l'association</h3>` +

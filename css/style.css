@@ -137,7 +137,14 @@ nav.menu a.lien-cotiser.actif { background: #256f47; }
     margin-top: 0.6rem;
     gap: 0.15rem;
   }
-  nav.menu.ouvert { display: flex; max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  nav.menu.ouvert {
+    display: flex;
+    max-height: calc(100vh - 150px);
+    max-height: calc(100dvh - 150px);   /* tient compte de la barre du navigateur */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
   nav.menu a { padding: 0.7rem 0.9rem; }
   .menu-drop { width: 100%; }
   .drop-menu {

@@ -8,6 +8,6 @@ window.TOH_CONFIG = {
   SUPABASE_URL: "https://alaesbkvfprgpngrowbt.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_R0hXlownDkPs0aCMvGMNaw_qU5gGkcB",
   // Clé publique VAPID pour les notifications push (voir PUSH.md).
-  // Laisser vide tant que les push ne sont pas configurées.
-  VAPID_PUBLIC_KEY: "",
+  // (La clé PRIVÉE correspondante reste secrète, côté Supabase uniquement.)
+  VAPID_PUBLIC_KEY: "BPeHR_Okyy-LH_aIDmDCPSKMl5F6RD7tSNjfzDLAe9oP3F79XDBuOSmWRxnlx7YWxRsk1qKCyBbAYedQcGJ8BMs",
 };

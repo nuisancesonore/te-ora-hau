@@ -27,6 +27,10 @@
     .bloc-completer { background:#fff8ef; border:1px solid #f0d9a8; border-radius:10px; padding:0.9rem 1rem; margin-top:1rem; }
     .bloc-completer .grp-titre { margin-top:0; }
     .badge-todo { background:#8a5a00; color:#fff; font-size:0.7rem; font-weight:700; padding:0.1rem 0.5rem; border-radius:20px; margin-left:0.4rem; vertical-align:middle; }
+    .annonce { background:#fff; border-radius:12px; box-shadow:var(--ombre); border-left:4px solid var(--bleu-lagon); padding:1rem 1.2rem; margin-bottom:0.9rem; }
+    .annonce h4 { color:var(--bleu-fonce); font-size:1.08rem; margin:0 0 0.4rem; }
+    .annonce .corps { white-space:pre-wrap; line-height:1.55; }
+    .annonce .date { font-size:0.78rem; color:var(--gris); margin-top:0.6rem; }
   </style>
 </head>
 <body>
@@ -181,10 +185,11 @@
         const vis = data.filter(an => voitTout || an.cible==="tous" || (an.cible==="ajour"&&aJour) || (an.cible==="retard"&&!aJour));
         if (!vis.length) return;
         document.getElementById("annonces").innerHTML =
-          `<h3 style="color:var(--bleu-fonce);margin-bottom:0.6rem">Annonces de l'association</h3>` +
-          vis.slice(0,5).map(an => `<div class="rappel-coti r-doux" style="text-align:left">
-            <strong>${echapper(an.titre)}</strong><br><span style="white-space:pre-wrap">${echapper(an.corps)}</span>
-            <div style="font-size:0.78rem;color:var(--gris);margin-top:0.3rem">${new Date(an.cree_le).toLocaleDateString('fr-FR')}</div>
+          `<h3 style="color:var(--bleu-fonce);margin-bottom:0.7rem">Annonces de l'association</h3>` +
+          vis.slice(0,5).map(an => `<div class="annonce">
+            <h4>${echapper(an.titre)}</h4>
+            <div class="corps">${echapper(an.corps)}</div>
+            <div class="date">Publié le ${new Date(an.cree_le).toLocaleDateString('fr-FR')}</div>
           </div>`).join("");
       })();
 

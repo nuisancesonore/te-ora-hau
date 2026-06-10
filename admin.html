@@ -180,7 +180,7 @@
             <button class="btn btn-clair" onclick="copierEmails(this)">Copier les e-mails</button>
             <button class="btn btn-clair" onclick="envoyerSMSRapide()">SMS</button>
             <button class="btn btn-clair" onclick="copierTels(this)">Copier les numéros</button>
-            <button class="btn btn-clair" onclick="envoyerEmailMasse(this)">Envoi e-mail en masse (serveur)</button>
+            <button class="btn btn-clair" onclick="envoyerEmailMasse(this)" title="Nécessite le backend Resend déployé (voir COMMUNICATION.md)">Envoi en masse (à activer)</button>
           </div>
           <p style="font-size:0.8rem;color:var(--gris);margin-top:0.6rem">« Publier l'annonce » l'affiche dans l'espace des membres ciblés. « E-mail (Cci) » et « SMS » ouvrent votre logiciel mail / votre messagerie (envoi depuis votre compte). L'« envoi en masse » nécessite le backend Resend déployé.</p>
         </div>
@@ -220,7 +220,7 @@
         const { data, error } = await sb.functions.invoke("diffusion-email", { body: { sujet, corps, cible } });
         if (error) throw error;
         alert("Envoi déclenché : " + (data && data.envoyes!=null ? data.envoyes+" e-mail(s)" : "OK"));
-      } catch(e){ alert("Envoi en masse indisponible (backend non déployé ?).\n" + (e.message||e)); }
+      } catch(e){ alert("L'envoi en masse n'est pas encore activé.\nIl faut déployer le backend Resend (voir COMMUNICATION.md).\nEn attendant, utilisez « E-mail (Cci) » ou « Copier les e-mails »."); }
       btn.textContent = t;
     }
     async function publierAnnonce(){

@@ -224,15 +224,21 @@ async function rendreNav(pageActive) {
   if (profil) {
     // Membre connecté : déroulant "Mon espace" (tableau de bord, signalements,
     // annuaire, forum) · Cotiser · (Admin) · Déconnexion
-    const espaceActif = ["espace", "mes-signalements", "annuaire", "forum"].includes(pageActive) ? "actif" : "";
+    const espaceActif = ["espace", "signaler", "mes-signalements", "annuaire", "forum", "outils"].includes(pageActive) ? "actif" : "";
+    // Les entrées réservées sont marquées d'un cadenas tant que la cotisation
+    // n'est pas validée par le bureau (les pages expliquent alors quoi faire).
+    const acces = aDroitAcces(profil);
+    const lk = acces ? "" : "🔒 ";
     const dropEspace = `
       <div class="menu-drop">
         <a href="espace.html" id="nav-espace-trigger" class="drop-trigger ${espaceActif}">Mon espace <span class="caret">▾</span></a>
         <div class="drop-menu">
           <a href="espace.html" id="nav-tableau">Tableau de bord</a>
-          <a href="mes-signalements.html">Mes signalements</a>
-          <a href="annuaire.html">Annuaire des adhérents</a>
-          <a href="forum.html" id="nav-forum">Forum</a>
+          <a href="signaler.html">${lk}Signaler une nuisance</a>
+          <a href="mes-signalements.html">${lk}Mes signalements</a>
+          <a href="outils.html">${lk}Courriers &amp; journal</a>
+          <a href="annuaire.html">${lk}Annuaire des adhérents</a>
+          <a href="forum.html" id="nav-forum">${lk}Forum</a>
         </div>
       </div>`;
     blocAuth = dropEspace +
@@ -377,7 +383,9 @@ async function compterNonLus(profil) {
     const vu = parseInt(localStorage.getItem("TOH_vu_annonces") || "0", 10);
     annonces = visibles.filter(a => new Date(a.cree_le).getTime() > vu).length;
   } catch (_) {}
-  try {
+  // Forum : compté uniquement si le membre y a accès (cotisation validée),
+  // sinon la pastille ne pourrait jamais s'effacer.
+  if (aDroitAcces(profil)) try {
     const { data } = await sb.from("forum_messages")
       .select("cree_le").order("cree_le", { ascending: false }).limit(100);
     const vu = parseInt(localStorage.getItem("TOH_vu_forum") || "0", 10);

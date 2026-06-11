@@ -80,6 +80,7 @@
 
       const st = statutCotisation(profil);
       const aJour = st.aJour;
+      const acces = profil.role === "bureau" || aJour;   // accès complet ?
       // Type de nuisance : aligné sur la liste des signalements (si l'ancienne
       // valeur libre ne correspond pas, on laisse vide pour re-choisir).
       const nuis = SIG_TYPES.includes(profil.type_nuisance || "") ? profil.type_nuisance : "";
@@ -118,12 +119,22 @@
                 <div id="qr"></div>
               </div>
             </div>
+            ${acces ? `
+            <div class="carte" style="margin-top:1.2rem;border-top-color:var(--vert-paix)">
+              <h3>Agir</h3>
+              <p style="color:var(--gris)">Un bruit vous gêne ? Signalez-le sur la carte, puis appuyez votre démarche avec un courrier et votre journal de bruit.</p>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.6rem">
+                <a href="signaler.html" class="btn btn-vert">Signaler une nuisance</a>
+                <a href="outils.html" class="btn btn-clair">Courriers &amp; journal</a>
+              </div>
+            </div>` : ``}
             <div class="carte" style="margin-top:1.2rem;border-top-color:var(--corail)">
               <h3>Cotisation</h3>
               ${rappel}
               <p style="color:var(--gris)">Réglez par virement, chèque ou espèces. Votre statut sera mis à jour par le bureau après réception.</p>
               <a href="cotiser.html" class="btn btn-primaire" style="margin-top:0.5rem">Comment payer ma cotisation →</a>
             </div>
+            ${acces ? `
             <div class="carte" style="margin-top:1.2rem;border-top-color:var(--bleu-lagon)">
               <h3>Mes signalements</h3>
               <p style="color:var(--gris)">Consultez, modifiez ou supprimez les nuisances que vous avez signalées.</p>
@@ -138,7 +149,11 @@
               <h3>Forum des membres</h3>
               <p style="color:var(--gris)">Échangez avec les autres adhérents, posez vos questions et partagez vos démarches.</p>
               <a href="forum.html" class="btn btn-clair" style="margin-top:0.5rem">Ouvrir le forum</a>
-            </div>
+            </div>` : `
+            <div class="carte" style="margin-top:1.2rem;opacity:0.85">
+              <h3>🔒 Bientôt débloqué</h3>
+              <p style="color:var(--gris)">Dès que le bureau aura validé votre cotisation, vous aurez accès à&nbsp;: <strong>signaler une nuisance</strong>, la <strong>carte détaillée</strong>, le <strong>forum</strong>, l'<strong>annuaire</strong> et les <strong>outils</strong> (courriers, journal de bruit).</p>
+            </div>`}
             <div class="carte" style="margin-top:1.2rem">
               <h3>Notifications</h3>
               <p style="color:var(--gris)" id="notif-txt">Recevez une alerte (et un chiffre sur l'icône) quand l'association publie une annonce.</p>

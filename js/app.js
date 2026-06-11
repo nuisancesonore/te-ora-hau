@@ -224,11 +224,13 @@ async function rendreNav(pageActive) {
   if (profil) {
     // Membre connecté : déroulant "Mon espace" (tableau de bord, signalements,
     // annuaire, forum) · Cotiser · (Admin) · Déconnexion
-    const espaceActif = ["espace", "signaler", "mes-signalements", "annuaire", "forum", "outils"].includes(pageActive) ? "actif" : "";
+    const espaceActif = ["espace", "signaler", "mes-signalements", "annuaire", "forum", "outils", "missions"].includes(pageActive) ? "actif" : "";
     // Les entrées réservées sont marquées d'un cadenas tant que la cotisation
     // n'est pas validée par le bureau (les pages expliquent alors quoi faire).
     const acces = aDroitAcces(profil);
     const lk = acces ? "" : "🔒 ";
+    // "Mes missions" : uniquement pour les assesseurs (et le bureau).
+    const estAssesseur = profil.type_adhesion === "Assesseur" || profil.role === "bureau";
     const dropEspace = `
       <div class="menu-drop">
         <a href="espace.html" id="nav-espace-trigger" class="drop-trigger ${espaceActif}">Mon espace <span class="caret">▾</span></a>
@@ -239,6 +241,7 @@ async function rendreNav(pageActive) {
           <a href="outils.html">${lk}Courriers &amp; journal</a>
           <a href="annuaire.html">${lk}Annuaire des adhérents</a>
           <a href="forum.html" id="nav-forum">${lk}Forum</a>
+          ${estAssesseur ? `<a href="missions.html" id="nav-missions">Mes missions</a>` : ``}
         </div>
       </div>`;
     blocAuth = dropEspace +
@@ -391,7 +394,18 @@ async function compterNonLus(profil) {
     const vu = parseInt(localStorage.getItem("TOH_vu_forum") || "0", 10);
     forum = (data || []).filter(m => new Date(m.cree_le).getTime() > vu).length;
   } catch (_) {}
-  return { annonces, forum, total: annonces + forum };
+  // Missions : nouvelles missions qui concernent l'assesseur (ou le bureau).
+  let missions = 0;
+  if (profil.type_adhesion === "Assesseur" || profil.role === "bureau") try {
+    const { data } = await sb.from("missions")
+      .select("cree_le, assigne_a, statut").order("cree_le", { ascending: false }).limit(50);
+    const vu = parseInt(localStorage.getItem("TOH_vu_missions") || "0", 10);
+    missions = (data || []).filter(m =>
+      new Date(m.cree_le).getTime() > vu &&
+      m.statut !== "Terminée" && m.statut !== "Abandonnée" &&
+      (!m.assigne_a || m.assigne_a === profil.id)).length;
+  } catch (_) {}
+  return { annonces, forum, missions, total: annonces + forum + missions };
 }
 // Retire les notifications encore affichées dans la barre du téléphone.
 async function fermerNotifsAffichees() {
@@ -405,6 +419,7 @@ async function verifierNotifications(profil) {
   const c = await compterNonLus(profil);
   if (c.annonces > 0) marquerNotif("nav-tableau", c.annonces);
   if (c.forum > 0) marquerNotif("nav-forum", c.forum);
+  if (c.missions > 0) marquerNotif("nav-missions", c.missions);
   majBadgeApp(c.total);
   if (c.total === 0) fermerNotifsAffichees();   // plus rien à lire → on nettoie tout
 }

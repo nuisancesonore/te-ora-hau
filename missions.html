@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes missions · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .sect-titre { color:var(--bleu-fonce); font-size:1.15rem; margin:1.6rem 0 0.7rem; }
+    .mission { background:#fff; border-radius:12px; box-shadow:var(--ombre); padding:1rem 1.2rem; margin-bottom:0.9rem; border-left:4px solid var(--bleu-lagon); }
+    .mission.ouverte { border-left-color:var(--corail); }
+    .mission.finie { border-left-color:#bbb; opacity:0.75; }
+    .mission h3 { color:var(--bleu-fonce); font-size:1.05rem; margin:0 0 0.25rem; }
+    .mission .meta { font-size:0.8rem; color:var(--gris); margin-bottom:0.4rem; }
+    .mission .desc { white-space:pre-wrap; font-size:0.95rem; }
+    .m-actions { display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center; margin-top:0.7rem; }
+    .m-actions select { padding:0.35rem 0.5rem; border:1.5px solid #d6d6cf; border-radius:8px; font-size:0.88rem; }
+    .pill { padding:0.15rem 0.6rem; border-radius:12px; font-size:0.76rem; font-weight:700; }
+    .pill.afaire { background:#fce6e1; color:#b2381f; }
+    .pill.encours { background:#fff4e0; color:#8a5a00; }
+    .pill.terminee { background:#e3f5ea; color:#1d6b3f; }
+    .pill.abandonnee { background:#eee; color:#777; }
+    .echeance-proche { color:#b2381f; font-weight:700; }
+    details.coms { margin-top:0.6rem; }
+    details.coms summary { cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--bleu-lagon); list-style:none; }
+    details.coms summary::-webkit-details-marker { display:none; }
+    .com-item { background:#f7f4ec; border-radius:8px; padding:0.5rem 0.8rem; margin-top:0.5rem; font-size:0.88rem; }
+    .com-item .qui { font-size:0.75rem; color:var(--gris); }
+    .com-form { display:flex; gap:0.4rem; margin-top:0.5rem; }
+    .com-form input { flex:1; padding:0.5rem 0.7rem; border:1.5px solid #d6d6cf; border-radius:8px; font-size:0.88rem; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <div id="footer-mount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let PROFIL = null, UID = null, MISSIONS = [], COMS = {};
+    (async function(){
+      await initPage("missions");
+      const contenu = document.getElementById("contenu");
+      PROFIL = await monProfil();
+      if (!PROFIL){
+        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
+          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
+          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Cette page est réservée aux assesseurs de l'association.</p>
+          <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
+        return;
+      }
+      const estAssesseur = PROFIL.type_adhesion === "Assesseur" || PROFIL.role === "bureau";
+      if (!estAssesseur){
+        contenu.innerHTML = `<div class="verrou"><div class="ico">🤝</div>
+          <h2 style="color:var(--bleu-fonce)">Réservé aux assesseurs</h2>
+          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Cette page présente les missions confiées par le bureau aux assesseurs de Te Ora Hau. Envie de vous engager davantage ? <a href="contact.html">Contactez le bureau</a>.</p>
+          <a href="espace.html" class="btn btn-clair">Mon espace</a></div>`;
+        return;
+      }
+      const s = await sessionActive(); UID = s.user.id;
+      await charger();
+    })();
+
+    async function charger(){
+      const contenu = document.getElementById("contenu");
+      const { data, error } = await sb.from("missions").select("*")
+        .order("echeance", { ascending:true, nullsFirst:false }).order("cree_le", { ascending:false });
+      if (error){
+        contenu.innerHTML = `<h2 class="section-titre">Mes missions</h2>
+          <div class="message ok" style="display:block">Les missions ne sont pas encore activées (le bureau doit lancer <strong>migration-missions.sql</strong>).</div>`;
+        return;
+      }
+      MISSIONS = data || [];
+
+      // Commentaires de toutes les missions (un seul appel)
+      COMS = {};
+      try {
+        const { data: cs } = await sb.from("missions_commentaires").select("*").order("cree_le", { ascending:true });
+        (cs || []).forEach(c => { (COMS[c.mission_id] = COMS[c.mission_id] || []).push(c); });
+      } catch(_){}
+
+      // Marque comme vues (efface la pastille de notification)
+      try {
+        const plusRecente = MISSIONS.length ? Math.max(...MISSIONS.map(m => new Date(m.cree_le).getTime())) : Date.now();
+        localStorage.setItem("TOH_vu_missions", String(plusRecente));
+        rafraichirBadge(PROFIL);
+      } catch(_){}
+
+      const finie = m => m.statut === "Terminée" || m.statut === "Abandonnée";
+      const ouvertes = MISSIONS.filter(m => !m.assigne_a && !finie(m));
+      const miennes  = MISSIONS.filter(m => m.assigne_a === UID && !finie(m));
+      const passees  = MISSIONS.filter(m => finie(m) && (m.assigne_a === UID || PROFIL.role === "bureau"));
+
+      contenu.innerHTML = `
+        <h2 class="section-titre">Mes missions</h2>
+        <p style="color:var(--gris);margin-bottom:1rem">Les missions confiées par le bureau de Te Ora Hau. Mettez à jour l'avancement et laissez un commentaire : le bureau suit votre travail en direct. Mauruuru !</p>
+
+        <h3 class="sect-titre">À prendre — ouvertes à tous (${ouvertes.length})</h3>
+        ${ouvertes.length ? ouvertes.map(m => carte(m, "ouverte")).join("") : `<p style="color:var(--gris)">Aucune mission ouverte pour le moment.</p>`}
+
+        <h3 class="sect-titre">Mes missions en cours (${miennes.length})</h3>
+        ${miennes.length ? miennes.map(m => carte(m, "mienne")).join("") : `<p style="color:var(--gris)">Aucune mission en cours. Prenez-en une ci-dessus !</p>`}
+
+        ${passees.length ? `<h3 class="sect-titre">Terminées (${passees.length})</h3>` + passees.map(m => carte(m, "finie")).join("") : ""}`;
+    }
+
+    function pill(st){
+      const cl = st === "À faire" ? "afaire" : st === "En cours" ? "encours" : st === "Terminée" ? "terminee" : "abandonnee";
+      return `<span class="pill ${cl}">${st}</span>`;
+    }
+    function carte(m, mode){
+      const ech = m.echeance ? new Date(m.echeance) : null;
+      const proche = ech && (ech.getTime() - Date.now()) < 7 * 86400000;
+      const coms = COMS[m.id] || [];
+      const blocComs = `
+        <details class="coms" ${coms.length ? "" : ""}>
+          <summary>💬 Suivi (${coms.length} commentaire${coms.length > 1 ? "s" : ""})</summary>
+          ${coms.map(c => `<div class="com-item"><div class="qui">${echapper(c.auteur_nom) || "—"} · ${new Date(c.cree_le).toLocaleString("fr-FR")}</div>${echapper(c.texte)}</div>`).join("")}
+          <div class="com-form">
+            <input id="com-${m.id}" placeholder="Rendre compte au bureau… (ex. mairie contactée, réponse sous 8 jours)">
+            <button class="btn btn-vert" style="padding:0.45rem 0.9rem" onclick="commenter('${m.id}')">Envoyer</button>
+          </div>
+        </details>`;
+      return `<div class="mission ${mode === "ouverte" ? "ouverte" : ""} ${mode === "finie" ? "finie" : ""}">
+        <h3>${echapper(m.titre)}</h3>
+        <div class="meta">${pill(m.statut)}${m.echeance ? ` · échéance <span class="${proche ? "echeance-proche" : ""}">${new Date(m.echeance).toLocaleDateString("fr-FR")}</span>` : ""}${m.cree_par_nom ? ` · confiée par ${echapper(m.cree_par_nom)}` : ""}</div>
+        ${m.description ? `<div class="desc">${echapper(m.description)}</div>` : ""}
+        <div class="m-actions">
+          ${mode === "ouverte" ? `<button class="btn btn-vert" onclick="prendre('${m.id}')">Je prends cette mission</button>` : ""}
+          ${mode === "mienne" ? `<label style="font-size:0.85rem;color:var(--gris)">Avancement :</label>
+            <select onchange="majStatut('${m.id}', this.value)">
+              ${["À faire","En cours","Terminée","Abandonnée"].map(o => `<option${m.statut === o ? " selected" : ""}>${o}</option>`).join("")}
+            </select>` : ""}
+        </div>
+        ${mode !== "ouverte" ? blocComs : ""}
+      </div>`;
+    }
+
+    async function prendre(id){
+      const { error } = await sb.from("missions")
+        .update({ assigne_a: UID, statut: "En cours" }).eq("id", id).is("assigne_a", null);
+      if (error) return alert("Erreur : " + error.message);
+      await charger();
+    }
+    async function majStatut(id, val){
+      const { error } = await sb.from("missions").update({ statut: val }).eq("id", id);
+      if (error) return alert("Erreur : " + error.message);
+      await charger();
+    }
+    async function commenter(id){
+      const inp = document.getElementById("com-" + id);
+      const texte = (inp.value || "").trim();
+      if (!texte) return;
+      const { error } = await sb.from("missions_commentaires")
+        .insert({ mission_id: id, auteur: UID, auteur_nom: nomComplet(PROFIL), texte });
+      if (error) return alert("Erreur : " + error.message);
+      await charger();
+    }
+  </script>
+</body>
+</html>

@@ -107,6 +107,10 @@
         <p style="color:var(--gris);margin:-0.6rem 0 0.8rem;font-size:0.9rem">Les démarches que les adhérents consignent depuis leurs outils (courrier amiable, mise en demeure, mairie, gendarmerie, plainte…) — pour suivre et appuyer leurs dossiers.</p>
         <div id="demarches-bureau"><p style="color:var(--gris)">Chargement…</p></div>
 
+        <h2 class="section-titre" style="margin-top:2.5rem">Missions des assesseurs</h2>
+        <p style="color:var(--gris);margin:-0.6rem 0 0.8rem;font-size:0.9rem">Confiez des missions aux assesseurs (à un assesseur précis, ou ouverte à tous : le premier qui la prend se l'attribue). Ils rendent compte depuis leur page « Mes missions ».</p>
+        <div id="missions-admin"><p style="color:var(--gris)">Chargement…</p></div>
+
         <h2 class="section-titre" style="margin-top:2.5rem">Communication aux membres</h2>
         <div id="communication"></div>
 
@@ -120,7 +124,90 @@
       rendreCommunication();
       chargerMessages();
       chargerDemarchesBureau();
+      rendreMissionsAdmin();
     })();
+
+    /* ----- Missions des assesseurs ----- */
+    let MISSIONS_ADM = [], MCOMS = {};
+    function rendreMissionsAdmin(){
+      const assesseurs = ADH.filter(a => a.type_adhesion === "Assesseur");
+      document.getElementById("missions-admin").innerHTML = `
+        <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
+          <div id="mmsg" class="message"></div>
+          <div class="champ"><label>Titre de la mission</label>
+            <input id="m-titre" placeholder="Ex. Distribuer les flyers à Paea, contacter la mairie de Faa'a…"></div>
+          <div class="champ"><label>Détails / consignes (facultatif)</label>
+            <textarea id="m-desc" rows="3" placeholder="Précisez le contexte, le lieu, les contacts utiles…"></textarea></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.8rem">
+            <div class="champ"><label>Confier à</label>
+              <select id="m-qui">
+                <option value="">Tous les assesseurs (le premier qui la prend)</option>
+                ${assesseurs.map(a => `<option value="${a.id}">${echapper(nomComplet(a) || a.email)}</option>`).join("")}
+              </select></div>
+            <div class="champ"><label>Échéance (facultatif)</label><input type="date" id="m-ech"></div>
+          </div>
+          <button class="btn btn-vert" onclick="creerMission()">Confier la mission</button>
+          ${assesseurs.length ? "" : `<p style="font-size:0.82rem;color:var(--gris);margin-top:0.5rem">Aucun assesseur inscrit pour l'instant — les missions « ouvertes à tous » les attendront.</p>`}
+        </div>
+        <div id="missions-liste"><p style="color:var(--gris)">Chargement…</p></div>`;
+      chargerMissionsAdmin();
+    }
+    async function chargerMissionsAdmin(){
+      const box = document.getElementById("missions-liste");
+      const { data, error } = await sb.from("missions").select("*").order("cree_le", { ascending:false });
+      if (error){ box.innerHTML = `<p style="color:var(--gris)">Missions non activées (déployez <strong>migration-missions.sql</strong>).</p>`; return; }
+      MISSIONS_ADM = data || [];
+      MCOMS = {};
+      try {
+        const { data: cs } = await sb.from("missions_commentaires").select("*").order("cree_le", { ascending:true });
+        (cs || []).forEach(c => { (MCOMS[c.mission_id] = MCOMS[c.mission_id] || []).push(c); });
+      } catch(_){}
+      if (!MISSIONS_ADM.length){ box.innerHTML = `<p style="color:var(--gris)">Aucune mission pour le moment.</p>`; return; }
+      const nomDe = id => { const a = ADH.find(x => x.id === id); return a ? (nomComplet(a) || a.email) : "—"; };
+      const pl = st => st === "Terminée" ? '<span class="pill ok">Terminée</span>'
+        : st === "Abandonnée" ? '<span class="pill ko">Abandonnée</span>' : echapper(st);
+      box.innerHTML = MISSIONS_ADM.map(m => {
+        const coms = MCOMS[m.id] || [];
+        const dernier = coms.length ? coms[coms.length - 1] : null;
+        return `<div class="msg-c" style="border-left-color:${m.statut === "Terminée" ? "#1d6b3f" : m.assigne_a ? "var(--bleu-lagon)" : "var(--corail)"}">
+          <div class="meta">${m.echeance ? `échéance ${new Date(m.echeance).toLocaleDateString("fr-FR")} · ` : ""}${m.assigne_a ? `assignée à <strong>${echapper(nomDe(m.assigne_a))}</strong>` : "<strong>ouverte à tous</strong>"} · ${pl(m.statut)}</div>
+          <div style="font-weight:600;margin:0.2rem 0">${echapper(m.titre)}</div>
+          ${m.description ? `<div style="white-space:pre-wrap;font-size:0.9rem">${echapper(m.description)}</div>` : ""}
+          ${dernier ? `<div style="background:#f7f4ec;border-radius:8px;padding:0.45rem 0.7rem;margin-top:0.45rem;font-size:0.85rem"><span style="color:var(--gris);font-size:0.75rem">Dernier suivi — ${echapper(dernier.auteur_nom) || "—"} · ${new Date(dernier.cree_le).toLocaleDateString("fr-FR")}</span><br>${echapper(dernier.texte)}</div>` : ""}
+          <div style="margin-top:0.5rem;display:flex;gap:0.4rem;flex-wrap:wrap">
+            ${m.statut !== "Terminée" && m.statut !== "Abandonnée" ? `<button class="mini vert" onclick="cloreMission('${m.id}')">Marquer terminée</button>` : ""}
+            <button class="mini clair" onclick="supprimerMission('${m.id}')">Supprimer</button>
+          </div>
+        </div>`;
+      }).join("");
+    }
+    async function creerMission(){
+      const titre = (document.getElementById("m-titre").value || "").trim();
+      const desc = (document.getElementById("m-desc").value || "").trim();
+      const qui = document.getElementById("m-qui").value || null;
+      const ech = document.getElementById("m-ech").value || null;
+      const msg = document.getElementById("mmsg");
+      if (!titre){ msg.className = "message err"; msg.textContent = "Indiquez un titre."; return; }
+      const { error } = await sb.from("missions").insert({
+        titre, description: desc, assigne_a: qui, echeance: ech,
+        cree_par_nom: MOI ? nomComplet(MOI) : "",
+      });
+      msg.className = "message " + (error ? "err" : "ok");
+      msg.textContent = error ? "Erreur : " + error.message + " (migration-missions.sql lancée ?)" : "Mission confiée ✔ Elle apparaît sur la page « Mes missions » des assesseurs.";
+      if (!error){ document.getElementById("m-titre").value = ""; document.getElementById("m-desc").value = ""; document.getElementById("m-ech").value = ""; }
+      chargerMissionsAdmin();
+    }
+    async function cloreMission(id){
+      const { error } = await sb.from("missions").update({ statut: "Terminée" }).eq("id", id);
+      if (error) return alert("Erreur : " + error.message);
+      chargerMissionsAdmin();
+    }
+    async function supprimerMission(id){
+      if (!confirm("Supprimer cette mission ?")) return;
+      const { error } = await sb.from("missions").delete().eq("id", id);
+      if (error) return alert("Erreur : " + error.message);
+      chargerMissionsAdmin();
+    }
 
     /* ----- Démarches des adhérents (suivi des dossiers) ----- */
     async function chargerDemarchesBureau(){

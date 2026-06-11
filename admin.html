@@ -70,6 +70,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <script>
     let ADH = [];
     let MOI = null;
@@ -129,6 +130,14 @@
         </details>
 
         <details class="acc">
+          <summary><span class="t">Dossier pour les autorités</span></summary>
+          <div class="corps">
+            <p style="color:var(--gris);margin:0 0 0.8rem;font-size:0.9rem">Transforme les signalements en <strong>rapport PDF prêt à remettre</strong> : demande d'intervention à la mairie, signalement à la gendarmerie, éléments pour le Procureur, ou chiffres clés pour la presse. Données anonymisées — aucun nom d'adhérent n'apparaît.</p>
+            <div id="dossier-autorites"></div>
+          </div>
+        </details>
+
+        <details class="acc">
           <summary><span class="t">Démarches des adhérents</span><span class="badge-n" id="cnt-demarches"></span></summary>
           <div class="corps">
             <p style="color:var(--gris);margin:0 0 0.8rem;font-size:0.9rem">Les démarches que les adhérents consignent depuis leurs outils (courrier amiable, mise en demeure, mairie, gendarmerie, plainte…) — pour suivre et appuyer leurs dossiers.</p>
@@ -162,7 +171,223 @@
       chargerMessages();
       chargerDemarchesBureau();
       rendreMissionsAdmin();
+      rendreDossierAutorites();
     })();
+
+    /* ----- Dossier pour les autorités (rapports PDF) ----- */
+    function rendreDossierAutorites(){
+      document.getElementById("dossier-autorites").innerHTML = `
+        <div class="form-wrap" style="max-width:100%;margin:0">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0 0.8rem">
+            <div class="champ"><label>Destinataire du rapport</label>
+              <select id="da-dest">
+                <option value="mairie">Mairie — demande d'intervention</option>
+                <option value="gendarmerie">Gendarmerie / police — demande de constatations</option>
+                <option value="procureur">Procureur de la République — éléments factuels</option>
+                <option value="global">Global — chiffres clés (presse / public)</option>
+              </select></div>
+            <div class="champ"><label>Commune concernée</label>
+              <select id="da-commune"><option value="">Toutes les communes</option></select></div>
+          </div>
+          <button class="btn btn-vert" onclick="genererRapport(this)">Générer le rapport (PDF)</button>
+          <p style="font-size:0.8rem;color:var(--gris);margin-top:0.5rem">Conseil : pour la mairie ou la gendarmerie, choisissez la commune concernée ; pour la presse, laissez « Toutes les communes ».</p>
+        </div>`;
+      (async () => {
+        const { data } = await sb.from("signalements").select("commune");
+        const cs = [...new Set((data||[]).map(s => (s.commune||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fr"));
+        const sel = document.getElementById("da-commune");
+        if (sel) sel.innerHTML = `<option value="">Toutes les communes</option>` + cs.map(c => `<option>${echapper(c)}</option>`).join("");
+      })();
+    }
+
+    function moisDepuis(debut){           // "AAAA-MM" -> nb de mois écoulés
+      if (!debut) return null;
+      const p = String(debut).split("-");
+      const d = new Date(parseInt(p[0]), parseInt(p[1]) - 1, 1);
+      if (isNaN(d)) return null;
+      const now = new Date();
+      return Math.max(0, (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()));
+    }
+    function repartition(arr, fn){
+      const m = {};
+      arr.forEach(s => { const k = (fn(s)||"").toString().trim() || "Non précisé"; m[k] = (m[k]||0)+1; });
+      return Object.entries(m).sort((a,b) => b[1]-a[1]);
+    }
+    function tableRap(titre, entries, total){
+      if (!entries.length) return "";
+      const rows = entries.slice(0, 8).map(([k,n]) =>
+        `<tr><td>${echapper(k)}</td><td style="text-align:right;white-space:nowrap"><b>${n}</b> (${Math.round(n/Math.max(total,1)*100)}%)</td></tr>`).join("");
+      return `<div class="rb"><h3>${titre}</h3><table>${rows}</table></div>`;
+    }
+
+    async function genererRapport(btn){
+      const dest = document.getElementById("da-dest").value;
+      const commune = document.getElementById("da-commune").value;
+      if ((dest === "mairie" || dest === "gendarmerie") && !commune){
+        if (!confirm("Aucune commune choisie : le rapport couvrira toutes les communes. Continuer ?")) return;
+      }
+      const lbl = btn.textContent; btn.disabled = true; btn.textContent = "Génération…";
+      try {
+        const { data: sigs, error } = await sb.from("signalements").select("*");
+        if (error) throw error;
+        const { data: dems } = await sb.from("demarches").select("*");
+        const tout = sigs || [];
+        const S = commune ? tout.filter(s => (s.commune||"").trim() === commune) : tout;
+        if (!S.length){ alert("Aucun signalement" + (commune ? " pour " + commune : "") + "."); return; }
+
+        // ----- Indicateurs -----
+        const n = S.length;
+        const foyers = new Set(S.map(s => s.auteur).filter(Boolean)).size;
+        const pct = x => Math.round(x / n * 100);
+        const nuit = S.filter(s => /nuit/i.test(s.horaire||"")).length;
+        const soirNuit = S.filter(s => /nuit|soir/i.test(s.horaire||"")).length;
+        const constats = S.filter(s => s.constat && s.constat !== "Signalement seul").length;
+        const plaintes = S.filter(s => s.constat === "Constat + plainte").length;
+        const fortes = S.filter(s => s.intensite === "Forte" || s.intensite === "Insupportable").length;
+        const anciens = S.map(s => moisDepuis(s.debut)).filter(v => v != null);
+        const ancMoy = anciens.length ? Math.round(anciens.reduce((a,b)=>a+b,0) / anciens.length) : null;
+        const dates = S.map(s => new Date(s.cree_le)).filter(d => !isNaN(d));
+        const depuisLe = dates.length ? new Date(Math.min(...dates.map(d=>d.getTime()))).toLocaleDateString("fr-FR") : "—";
+
+        // Démarches liées (filtre commune sur le destinataire si commune choisie)
+        const D = (dems || []).filter(d => !commune || (d.destinataire||"").toLowerCase().includes(commune.toLowerCase()));
+        const demMairie = D.filter(d => d.type === "Demande au Maire");
+        const demGend = D.filter(d => d.type === "Signalement gendarmerie/police");
+        const demPlainte = (dems || []).filter(d => d.type === "Plainte au Procureur");
+        const sansRep = a => a.filter(d => d.reponse === "Sans réponse").length;
+
+        // ----- Textes selon le destinataire -----
+        const lieu = commune || "Polynésie française";
+        const TXT = {
+          mairie: {
+            titre: "Nuisances sonores — Demande d'intervention",
+            sous: `À l'attention de Madame, Monsieur le Maire${commune ? " de " + commune : ""}`,
+            intro: `L'association <b>Te Ora Hau</b> (« Vivre en paix »), dédiée à la lutte contre les nuisances sonores, souhaite porter à votre connaissance les faits suivants, signalés par ses adhérents${commune ? " sur le territoire de votre commune" : ""}. En votre qualité d'autorité chargée du bon ordre et de la <b>tranquillité publique</b>, et la police municipale étant habilitée à constater par procès-verbal les infractions aux arrêtés municipaux, nous sollicitons votre intervention et l'application de la réglementation sur le bruit (Code de l'environnement de la Polynésie française).`,
+            conclusion: `Nous nous tenons à votre disposition pour vous présenter ce dossier et identifier ensemble les mesures adaptées (contrôles de la police municipale, rappel de la réglementation, arrêté municipal). Les adhérents concernés peuvent témoigner des faits.`,
+            extra: demMairie.length ? `<p><b>Démarches déjà engagées auprès de votre commune par nos adhérents :</b> ${demMairie.length} demande(s) d'intervention${sansRep(demMairie) ? `, dont <b>${sansRep(demMairie)} restée(s) sans réponse</b>` : ""}.</p>` : ""
+          },
+          gendarmerie: {
+            titre: "Nuisances sonores — Signalement et demande de constatations",
+            sous: `À l'attention de la brigade de gendarmerie${commune ? " de " + commune : ""}`,
+            intro: `L'association <b>Te Ora Hau</b> porte à votre connaissance les nuisances sonores récurrentes signalées par ses adhérents${commune ? ` sur la commune de ${commune}` : ""}. Une part importante de ces faits survient <b>de nuit</b> et est susceptible de constituer un <b>tapage nocturne</b>, réprimé par l'article R. 623-2 du code pénal. Nous sollicitons des passages et constatations aux périodes indiquées.`,
+            conclusion: `Les localisations précises et les périodes des faits figurent ci-dessous. Les adhérents concernés se tiennent à votre disposition pour tout complément.`,
+            extra: demGend.length ? `<p><b>Signalements déjà déposés par nos adhérents :</b> ${demGend.length}${sansRep(demGend) ? `, dont ${sansRep(demGend)} sans suite connue` : ""}.</p>` : ""
+          },
+          procureur: {
+            titre: "Nuisances sonores — Éléments factuels",
+            sous: "À l'attention de Monsieur le Procureur de la République — Tribunal de première instance de Papeete",
+            intro: `L'association <b>Te Ora Hau</b> souhaite porter à votre connaissance des éléments factuels relatifs à des nuisances sonores <b>persistantes</b>${commune ? ` sur la commune de ${commune}` : " en Polynésie française"}, signalées par ses adhérents. Ces faits, pour partie nocturnes et constatés par les autorités locales, sont susceptibles de caractériser des infractions de <b>tapage nocturne</b> (art. R. 623-2 du code pénal) et des manquements à la réglementation territoriale sur le bruit, demeurés sans réponse efficace malgré les démarches entreprises.`,
+            conclusion: `${demPlainte.length ? `<b>${demPlainte.length} plainte(s)</b> ont déjà été déposées par nos adhérents. ` : ""}L'association se tient à votre disposition pour communiquer le détail des dossiers et les coordonnées des plaignants avec leur accord.`,
+            extra: ""
+          },
+          global: {
+            titre: "Les nuisances sonores : chiffres clés",
+            sous: `Données issues des signalements des adhérents de Te Ora Hau — ${lieu}`,
+            intro: `Le bruit n'est pas une simple gêne : c'est un enjeu de <b>santé publique</b> et de <b>tranquillité</b>. Voici les chiffres issus des signalements documentés par les adhérents de l'association Te Ora Hau (« Vivre en paix »).`,
+            conclusion: `L'association appelle les autorités à faire appliquer la réglementation existante (Code de l'environnement de la Polynésie française, tapage nocturne) et invite les habitants concernés à documenter les nuisances qu'ils subissent.`,
+            extra: ""
+          }
+        }[dest];
+
+        // ----- Indicateurs affichés -----
+        const kpis = [
+          [n, "signalement" + (n>1?"s":"") + " documentés"],
+          [foyers || "—", "foyer" + (foyers>1?"s":"") + " concerné(s)"],
+          [pct(soirNuit) + "%", "en soirée ou de nuit"],
+          [pct(nuit) + "%", "de nuit (tapage nocturne potentiel)"],
+          [pct(constats) + "%", "appuyés par un constat officiel"],
+          [pct(fortes) + "%", "d'intensité forte ou insupportable"],
+        ];
+        if (ancMoy != null) kpis.push([ancMoy >= 12 ? (Math.round(ancMoy/12*10)/10 + " an(s)") : (ancMoy + " mois"), "d'ancienneté moyenne des nuisances"]);
+
+        // ----- Évolution sur 6 mois -----
+        const MOISC = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+        const evol = [];
+        for (let i = 5; i >= 0; i--){
+          const d = new Date(); d.setMonth(d.getMonth() - i);
+          const k = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+          const c = S.filter(s => (s.cree_le||"").slice(0,7) === k).length;
+          evol.push([MOISC[d.getMonth()] + " " + d.getFullYear(), c]);
+        }
+
+        // ----- Liste des faits (autorités uniquement, anonymisée) -----
+        let liste = "";
+        if (dest !== "global"){
+          const lignes = S.slice(0, 30).map(s =>
+            `<tr><td>${s.debut ? echapper(moisAnneeRap(s.debut)) : "—"}</td><td>${echapper(s.type)||"—"}</td>`+
+            `<td>${echapper(s.quartier) || echapper(s.commune) || "—"}</td><td>${echapper(s.horaire)||"—"}</td>`+
+            `<td>${echapper(s.intensite)||"—"}</td><td>${echapper(s.constat||"Signalement seul")}</td></tr>`).join("");
+          liste = `<h2>Détail des signalements${S.length > 30 ? ` (30 premiers sur ${S.length})` : ""}</h2>
+            <table class="liste"><tr><th>Depuis</th><th>Type</th><th>Quartier</th><th>Horaire</th><th>Intensité</th><th>Démarche</th></tr>${lignes}</table>
+            <p class="pf">Liste anonymisée — l'association tient les dossiers complets à disposition des autorités, avec l'accord des plaignants.</p>`;
+        }
+
+        // ----- Page A4 -----
+        const page = document.createElement("div");
+        page.style.cssText = "position:fixed;left:-9999px;top:0;width:210mm;box-sizing:border-box;padding:13mm 15mm;"+
+          "background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;font-size:10.2pt;line-height:1.5;";
+        page.innerHTML = `
+          <style>
+            .rap-ent { display:flex; align-items:center; gap:12px; border-bottom:3px solid #c0392b; padding-bottom:8px; margin-bottom:10px; }
+            .rap-ent img { width:58px; }
+            .rap-ent h1 { font-size:15pt; margin:0; }
+            .rap-ent .s { font-size:9pt; color:#444; }
+            .kpis { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
+            .kpi { flex:1 1 28%; border:1px solid #ccc; border-radius:8px; padding:8px 10px; text-align:center; }
+            .kpi b { display:block; font-size:15pt; color:#064a54; }
+            .kpi span { font-size:8.5pt; color:#444; }
+            h2 { font-size:11pt; border-left:4px solid #c0392b; padding-left:6px; margin:14px 0 6px; }
+            .rb-wrap { display:flex; flex-wrap:wrap; gap:10px; }
+            .rb { flex:1 1 45%; }
+            .rb h3 { font-size:9.5pt; margin:0 0 3px; color:#064a54; }
+            .rb table, table.liste { width:100%; border-collapse:collapse; font-size:8.8pt; }
+            .rb td, table.liste td, table.liste th { border:1px solid #bbb; padding:3px 6px; }
+            table.liste th { background:#eef2fb; text-align:left; }
+            .pf { font-size:8pt; color:#666; margin-top:4px; }
+            .pied { margin-top:14px; border-top:1px solid #ccc; padding-top:6px; font-size:8.5pt; color:#555; }
+          </style>
+          <div class="rap-ent">
+            <img src="images/icon-192.png">
+            <div style="flex:1;text-align:center">
+              <h1>${TXT.titre}</h1>
+              <div class="s"><b>Association Te Ora Hau</b> — « Vivre en paix » · ${TXT.sous}</div>
+            </div>
+            <div style="width:58px"></div>
+          </div>
+          <p style="text-align:right;font-size:9pt;color:#555">${commune ? "Commune : <b>" + echapper(commune) + "</b> · " : ""}Signalements recensés depuis le ${depuisLe} · Rapport établi le ${new Date().toLocaleDateString("fr-FR")}</p>
+          <p>${TXT.intro}</p>
+          <div class="kpis">${kpis.map(k => `<div class="kpi"><b>${k[0]}</b><span>${k[1]}</span></div>`).join("")}</div>
+          ${TXT.extra}
+          <h2>Répartition des nuisances</h2>
+          <div class="rb-wrap">
+            ${tableRap("Par type de bruit", repartition(S, s=>s.type), n)}
+            ${commune ? tableRap("Par quartier", repartition(S, s=>s.quartier), n) : tableRap("Par commune", repartition(S, s=>s.commune), n)}
+            ${tableRap("Par horaire", repartition(S, s=>s.horaire), n)}
+            <div class="rb"><h3>Nouveaux signalements (6 derniers mois)</h3><table>${evol.map(e=>`<tr><td>${e[0]}</td><td style="text-align:right"><b>${e[1]}</b></td></tr>`).join("")}</table></div>
+          </div>
+          ${liste}
+          <h2>Conclusion</h2>
+          <p>${TXT.conclusion}</p>
+          <div class="pied">Association Te Ora Hau — BP 2524, 98713 Papeete · contact@teorahau.net · 87 72 16 87 — Rapport généré à partir des signalements géolocalisés et datés déposés par les adhérents sur la plateforme de l'association.</div>`;
+        document.body.appendChild(page);
+        const nomF = "rapport-nuisances-" + dest + (commune ? "-" + commune.toLowerCase().replace(/[^a-z0-9]+/gi,"-") : "-global") + ".pdf";
+        await html2pdf().set({
+          margin: 0, filename: nomF,
+          image: { type:"jpeg", quality:0.97 },
+          html2canvas: { scale:2, useCORS:true, backgroundColor:"#ffffff" },
+          jsPDF: { unit:"mm", format:"a4", orientation:"portrait" },
+          pagebreak: { mode:["css","legacy"] }
+        }).from(page).save();
+        page.remove();
+      } catch(e){
+        alert("Erreur lors de la génération : " + (e.message || e));
+      }
+      btn.disabled = false; btn.textContent = lbl;
+    }
+    function moisAnneeRap(v){
+      const M = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+      const p = String(v).split("-"); return (M[parseInt(p[1])-1]||"") + " " + p[0];
+    }
 
     /* ----- Missions des assesseurs ----- */
     let MISSIONS_ADM = [], MCOMS = {};

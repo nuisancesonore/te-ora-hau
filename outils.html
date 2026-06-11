@@ -186,9 +186,14 @@
       document.getElementById("form-dem").addEventListener("submit", ajouterDemarche);
       await chargerDemarches();
       prefillDemarches();
-      // Lien direct vers l'onglet suivi (ex. depuis Mon espace).
-      if (location.hash === "#demarches") {
-        const b = document.querySelector('.onglets button[data-p="demarches"]');
+      // Lien direct vers un onglet (ex. depuis Mon espace ou après un signalement).
+      let onglet = location.hash === "#demarches" ? "demarches" : "";
+      try {
+        const o = localStorage.getItem("TOH_onglet_outils");
+        if (o) { onglet = o; localStorage.removeItem("TOH_onglet_outils"); }
+      } catch(_){}
+      if (onglet) {
+        const b = document.querySelector('.onglets button[data-p="' + onglet + '"]');
         if (b) b.click();
       }
     })();

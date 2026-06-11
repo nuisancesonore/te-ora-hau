@@ -244,6 +244,8 @@
         const constats = S.filter(s => s.constat && s.constat !== "Signalement seul").length;
         const plaintes = S.filter(s => s.constat === "Constat + plainte").length;
         const fortes = S.filter(s => s.intensite === "Forte" || s.intensite === "Insupportable").length;
+        const voisinsG = S.filter(s => s.voisins_genes).length;
+        const avecPreuves = S.filter(s => (s.preuves||"").trim()).length;
         const anciens = S.map(s => moisDepuis(s.debut)).filter(v => v != null);
         const ancMoy = anciens.length ? Math.round(anciens.reduce((a,b)=>a+b,0) / anciens.length) : null;
         const dates = S.map(s => new Date(s.cree_le)).filter(d => !isNaN(d));
@@ -299,6 +301,8 @@
           [pct(fortes) + "%", "d'intensité forte ou insupportable"],
         ];
         if (ancMoy != null) kpis.push([ancMoy >= 12 ? (Math.round(ancMoy/12*10)/10 + " an(s)") : (ancMoy + " mois"), "d'ancienneté moyenne des nuisances"]);
+        if (voisinsG) kpis.push([pct(voisinsG) + "%", "avec plusieurs foyers gênés"]);
+        if (avecPreuves) kpis.push([pct(avecPreuves) + "%", "avec preuves (enregistrements, attestations)"]);
 
         // ----- Évolution sur 6 mois -----
         const MOISC = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
@@ -315,7 +319,7 @@
         if (dest !== "global"){
           const lignes = S.slice(0, 30).map(s =>
             `<tr><td>${s.debut ? echapper(moisAnneeRap(s.debut)) : "—"}</td><td>${echapper(s.type)||"—"}</td>`+
-            `<td>${echapper(s.quartier) || echapper(s.commune) || "—"}</td><td>${echapper(s.horaire)||"—"}</td>`+
+            `<td>${echapper(s.quartier) || echapper(s.commune) || "—"}</td><td>${echapper(s.horaire)||"—"}${s.horaire_detail?`<br><span style="font-size:7.5pt;color:#555">${echapper(s.horaire_detail)}</span>`:""}</td>`+
             `<td>${echapper(s.intensite)||"—"}</td><td>${echapper(s.constat||"Signalement seul")}</td></tr>`).join("");
           liste = `<h2>Détail des signalements${S.length > 30 ? ` (30 premiers sur ${S.length})` : ""}</h2>
             <table class="liste"><tr><th>Depuis</th><th>Type</th><th>Quartier</th><th>Horaire</th><th>Intensité</th><th>Démarche</th></tr>${lignes}</table>

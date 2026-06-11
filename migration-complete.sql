@@ -280,6 +280,19 @@ drop policy if exists mcom_insert on public.missions_commentaires;
 create policy mcom_insert on public.missions_commentaires
   for insert with check ((public.is_bureau() or public.is_assesseur()) and auteur = auth.uid());
 
+-- ---------- 12) Renforcement du dossier des signalements ----------
+alter table public.signalements add column if not exists horaire_detail text;
+alter table public.signalements add column if not exists voisins_genes boolean not null default false;
+alter table public.signalements add column if not exists preuves text;
+
+create or replace view public.signalements_publics as
+select
+  id, type, commune, quartier, intensite, horaire, recurrence,
+  constat, debut, adresse_source, description, lat, lng, cree_le,
+  horaire_detail
+from public.signalements;
+grant select on public.signalements_publics to anon, authenticated;
+
 -- ============================================================
 -- TERMINÉ. Rechargez le site (Ctrl+F5) après exécution.
 -- ============================================================

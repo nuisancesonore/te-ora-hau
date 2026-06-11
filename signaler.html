@@ -74,6 +74,23 @@
                 <p style="font-size:0.8rem;color:var(--gris);margin-top:0.3rem">Précisez si votre signalement est appuyé par un constat officiel et/ou une plainte — cela renforce le dossier.</p></div>
               <div class="champ"><label>Description</label>
                 <textarea id="description" rows="3" placeholder="Décrivez la situation…"></textarea></div>
+
+              <details style="margin-bottom:1rem">
+                <summary style="cursor:pointer;font-weight:600;color:var(--bleu-lagon);font-size:0.92rem">➕ Renforcer le dossier (optionnel, 30 secondes)</summary>
+                <div style="margin-top:0.7rem">
+                  <div class="champ"><label>Précision sur les horaires <span style="font-weight:400;color:var(--gris)">— aide les autorités à constater</span></label>
+                    <input id="horaire_detail" placeholder="Ex. surtout de 22h à 2h, les vendredis et samedis"></div>
+                  <div class="champ" style="display:flex;align-items:center;gap:0.5rem">
+                    <input type="checkbox" id="voisins" style="width:auto">
+                    <label for="voisins" style="margin:0">D'autres foyers / voisins sont également gênés</label></div>
+                  <div class="champ"><label>Preuves dont vous disposez</label>
+                    <div style="display:flex;gap:1.2rem;flex-wrap:wrap;font-size:0.92rem">
+                      <label style="font-weight:400;display:flex;align-items:center;gap:0.35rem"><input type="checkbox" id="p-enr" style="width:auto"> Enregistrements / photos / vidéos</label>
+                      <label style="font-weight:400;display:flex;align-items:center;gap:0.35rem"><input type="checkbox" id="p-att" style="width:auto"> Attestations de témoins</label>
+                    </div></div>
+                </div>
+              </details>
+
               <button type="submit" class="btn btn-primaire btn-bloc">Envoyer le signalement</button>
             </form>
           </div>
@@ -190,11 +207,17 @@
           constat: document.getElementById("constat").value,
           debut: document.getElementById("debut").value || null,
           description: document.getElementById("description").value.trim(),
+          horaire_detail: document.getElementById("horaire_detail").value.trim(),
+          voisins_genes: document.getElementById("voisins").checked,
+          preuves: [document.getElementById("p-enr").checked ? "Enregistrements/photos" : "",
+                    document.getElementById("p-att").checked ? "Attestations de témoins" : ""]
+                   .filter(Boolean).join(" ; "),
           lat: pt?pt.lat:null, lng: pt?pt.lng:null,
         };
         let { error } = await sb.from("signalements").insert(row);
-        if (error && /column|schema cache|constat|debut/i.test(error.message)) {  // colonnes pas encore ajoutées
+        if (error && /column|schema cache|constat|debut|horaire_detail|voisins|preuves/i.test(error.message)) {  // colonnes pas encore ajoutées
           delete row.constat; delete row.debut;
+          delete row.horaire_detail; delete row.voisins_genes; delete row.preuves;
           ({ error } = await sb.from("signalements").insert(row));
         }
         if (error){ msg.className="message err"; msg.textContent="Erreur : "+error.message; return; }
@@ -208,8 +231,10 @@
         msg.innerHTML = `Merci&nbsp;! Votre signalement a été enregistré. Prochaine étape&nbsp;?
           <span style="display:inline-flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.7rem">
             <a href="outils.html" class="btn btn-vert">Rédiger un courrier</a>
+            <a href="outils.html" onclick="localStorage.setItem('TOH_onglet_outils','journal')" class="btn btn-clair">Tenir mon journal de bruit</a>
             <a href="carte.html" class="btn btn-clair">Voir la carte</a>
-          </span>`;
+          </span>
+          <span style="display:block;margin-top:0.5rem;font-size:0.85rem;color:var(--gris)">Conseil&nbsp;: notez chaque épisode dans votre journal de bruit — c'est la preuve qui pèse le plus auprès des autorités.</span>`;
         msg.scrollIntoView({ behavior:"smooth", block:"center" });
       });
     })();

@@ -70,7 +70,8 @@
       return `
         <h3>${echapper(sg.type)||'Signalement'}</h3>
         <div class="meta">${lieu} · ${echapper(sg.horaire)||''} · Intensité ${echapper(sg.intensite)||''} · ${echapper(sg.recurrence)||''}</div>
-        <div class="meta">Démarche : <strong>${echapper(sg.constat||'Signalement seul')}</strong>${sg.debut?` · Depuis ${echapper(moisAn(sg.debut))}`:''}</div>
+        <div class="meta">Démarche : <strong>${echapper(sg.constat||'Signalement seul')}</strong>${sg.debut?` · Depuis ${echapper(moisAn(sg.debut))}`:''}${sg.horaire_detail?` · ${echapper(sg.horaire_detail)}`:''}</div>
+        ${(sg.voisins_genes || sg.preuves) ? `<div class="meta">${sg.voisins_genes?'Voisins également gênés':''}${sg.voisins_genes&&sg.preuves?' · ':''}${sg.preuves?'Preuves : '+echapper(sg.preuves):''}</div>` : ''}
         ${sg.adresse_source?`<div class="meta">Source : ${echapper(sg.adresse_source)}</div>`:''}
         ${sg.adresse_plaignant?`<div class="meta">Plaignant : ${echapper(sg.adresse_plaignant)}</div>`:''}
         ${sg.description?`<div style="margin-top:0.3rem">${echapper(sg.description)}</div>`:''}
@@ -96,6 +97,9 @@
           <div><label>Récurrence</label><select id="e-recurrence-${id}">${opts(RECURRENCES, data.recurrence)}</select></div>
           <div><label>Constat / démarche</label><select id="e-constat-${id}">${opts(CONSTATS, data.constat||'Signalement seul')}</select></div>
           <div><label>Début des nuisances</label><input type="month" id="e-debut-${id}" value="${attr(data.debut)}"></div>
+          <div><label>Précision horaires <span style="font-weight:400;color:var(--gris)">(ex. 22h–2h, week-ends)</span></label><input id="e-hdetail-${id}" value="${attr(data.horaire_detail)}"></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:0.4rem"><label style="display:flex;align-items:center;gap:0.4rem;margin:0"><input type="checkbox" id="e-vois-${id}" ${data.voisins_genes?'checked':''} style="width:auto"> Voisins également gênés</label></div>
+          <div class="pleine"><label>Preuves disponibles</label><input id="e-preuves-${id}" value="${attr(data.preuves)}" placeholder="Ex. Enregistrements/photos ; Attestations de témoins"></div>
           <div class="pleine"><label>Adresse de la source du bruit</label><input id="e-source-${id}" value="${attr(data.adresse_source)}"></div>
           <div class="pleine"><label>Votre adresse <span style="font-weight:400;color:var(--gris)">(vous qui subissez)</span></label><input id="e-plaignant-${id}" value="${attr(data.adresse_plaignant)}"></div>
           <div class="pleine"><label>Description</label><textarea id="e-desc-${id}" rows="2">${echapper(data.description)}</textarea></div>
@@ -113,16 +117,20 @@
         type: val("e-type-"+id), commune: val("e-commune-"+id), quartier: val("e-quartier-"+id),
         horaire: val("e-horaire-"+id), intensite: val("e-intensite-"+id), recurrence: val("e-recurrence-"+id),
         constat: val("e-constat-"+id), debut: val("e-debut-"+id) || null,
+        horaire_detail: val("e-hdetail-"+id),
+        voisins_genes: document.getElementById("e-vois-"+id).checked,
+        preuves: val("e-preuves-"+id),
         adresse_source: val("e-source-"+id), adresse_plaignant: val("e-plaignant-"+id),
         description: val("e-desc-"+id),
       };
       const m = document.getElementById("emsg-"+id);
       let { error } = await sb.from("signalements").update(maj).eq("id", id);
       let partiel = false;
-      // Filet de secours : si les colonnes "constat"/"debut" n'existent pas
-      // encore dans la base, on réessaie sans elles plutôt que d'échouer.
-      if (error && /column|schema cache|constat|debut/i.test(error.message||"")){
+      // Filet de secours : si des colonnes récentes n'existent pas encore
+      // dans la base, on réessaie sans elles plutôt que d'échouer.
+      if (error && /column|schema cache|constat|debut|horaire_detail|voisins|preuves/i.test(error.message||"")){
         const maj2 = Object.assign({}, maj); delete maj2.constat; delete maj2.debut;
+        delete maj2.horaire_detail; delete maj2.voisins_genes; delete maj2.preuves;
         const retry = await sb.from("signalements").update(maj2).eq("id", id);
         error = retry.error; partiel = !error;
       }

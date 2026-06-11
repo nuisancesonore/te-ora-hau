@@ -137,9 +137,11 @@
         if (plein) {
           let html =
             `<strong>${echapper(s.type)}</strong><br>`+
-            `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}<br>`+
+            `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}${s.horaire_detail?` (${echapper(s.horaire_detail)})`:''}<br>`+
             `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
             (s.debut?`<br>Depuis ${moisAn(s.debut)}`:"")+
+            (s.voisins_genes?`<br>Voisins également gênés`:"")+
+            (s.preuves?`<br>Preuves : ${echapper(s.preuves)}`:"")+
             `<br><strong>${echapper(s.constat||"Signalement seul")}</strong>`+
             (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+
             (s.description?`<br><em>${echapper(s.description)}</em>`:"");

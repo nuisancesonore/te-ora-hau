@@ -100,7 +100,8 @@
       const mdp2 = document.getElementById("mdp2").value;
       if (mdp !== mdp2) { montrer("err", "Les mots de passe ne correspondent pas."); return; }
       montrer("ok", "Création du compte…");
-      const res = await inscrire(nom, prenom, email, mdp, commune);
+      const res = await inscrire(nom, prenom, email, mdp, commune,
+        { date_naissance: naissance || "", adresse: adresse, telephone: telephone });
       montrer(res.ok ? "ok" : "err", res.msg);
       if (res.ok) {
         const complement = { date_naissance: naissance, adresse: adresse, telephone: telephone };

@@ -110,10 +110,13 @@ async function desactiverNotifications() {
 }
 
 /* ---------- Authentification ---------- */
-async function inscrire(nom, prenom, email, motdepasse, commune) {
+async function inscrire(nom, prenom, email, motdepasse, commune, extra) {
+  // Toutes les infos passent dans les métadonnées du compte : le profil est
+  // créé complet par le trigger SQL, même si l'e-mail doit être confirmé.
+  const meta = Object.assign({ nom, prenom: prenom || "", commune: commune || "" }, extra || {});
   const { data, error } = await sb.auth.signUp({
     email, password: motdepasse,
-    options: { data: { nom, prenom: prenom || "", commune: commune || "" } },
+    options: { data: meta },
   });
   if (error) return { ok: false, msg: traduireErreur(error.message) };
   // Le profil est créé automatiquement par un trigger SQL.

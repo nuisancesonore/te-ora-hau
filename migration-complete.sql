@@ -180,14 +180,18 @@ begin
   else
     v_role := 'membre'; v_type := 'Adhérent';
   end if;
-  insert into public.profils (id, nom, prenom, email, commune, role, type_adhesion)
+  insert into public.profils (id, nom, prenom, email, commune, role, type_adhesion,
+                              date_naissance, adresse, telephone)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'nom', ''),
     coalesce(new.raw_user_meta_data->>'prenom', ''),
     new.email,
     coalesce(new.raw_user_meta_data->>'commune', ''),
-    v_role, v_type
+    v_role, v_type,
+    nullif(new.raw_user_meta_data->>'date_naissance', '')::date,
+    coalesce(new.raw_user_meta_data->>'adresse', ''),
+    coalesce(new.raw_user_meta_data->>'telephone', '')
   );
   return new;
 end;

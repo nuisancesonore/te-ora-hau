@@ -37,9 +37,15 @@
       if (v){ contenu.innerHTML = v; return; }
 
       // Membres ayant accepté d'apparaître (règle RLS profils_select_annuaire).
-      const { data, error } = await sb.from("profils")
+      let { data, error } = await sb.from("profils")
         .select("id, nom, prenom, commune, type_nuisance")
         .eq("annuaire_optin", true);
+      // Filet de secours tant que la colonne "prenom" n'est pas en base.
+      if (error && /prenom|column|schema cache/i.test(error.message || "")){
+        ({ data, error } = await sb.from("profils")
+          .select("id, nom, commune, type_nuisance")
+          .eq("annuaire_optin", true));
+      }
 
       if (error){
         contenu.innerHTML = `<h2 class="section-titre">Annuaire des adhérents</h2>

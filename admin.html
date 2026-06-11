@@ -34,6 +34,15 @@
     .drow .bar { flex:1; height:7px; background:#eee; border-radius:4px; overflow:hidden; }
     .drow .bar>span { display:block; height:100%; background:var(--bleu-lagon); border-radius:4px; }
     .drow .n { flex:0 0 auto; font-weight:700; color:var(--bleu-fonce); min-width:54px; text-align:right; }
+    details.acc { background:#fff; border-radius:12px; box-shadow:var(--ombre); margin-bottom:0.9rem; overflow:hidden; }
+    details.acc > summary { cursor:pointer; padding:1rem 1.3rem; font-weight:700; color:var(--bleu-fonce); list-style:none; display:flex; align-items:center; gap:0.7rem; font-size:1.05rem; }
+    details.acc > summary::-webkit-details-marker { display:none; }
+    details.acc > summary .t { flex:1; }
+    details.acc > summary::after { content:"▸"; color:var(--corail); font-weight:700; transition:transform 0.15s; }
+    details.acc[open] > summary::after { transform:rotate(90deg); }
+    details.acc > .corps { padding:0 1.3rem 1.3rem; }
+    .badge-n { background:var(--bleu-lagon); color:#fff; border-radius:20px; font-size:0.75rem; font-weight:700; padding:0.12rem 0.6rem; }
+    .badge-n:empty { display:none; }
     .com-etape { font-weight:800; color:var(--bleu-fonce); margin:1.2rem 0 0.2rem; padding-top:1rem; border-top:1px solid #eee; font-size:0.95rem; }
     .com-etape.premiere { margin-top:0; padding-top:0; border-top:none; }
     .com-hint { font-size:0.8rem; color:var(--gris); margin:0 0 0.6rem; }
@@ -95,34 +104,54 @@
           <div class="stat" style="border-top-color:var(--corail)"><div class="n">${enRetard}</div><div class="l">À relancer</div></div>
           <div class="stat" style="border-top-color:var(--bleu-lagon)"><div class="n">${communes}</div><div class="l">Communes</div></div>
         </div>
-        <div class="barre">
-          <input id="q" placeholder="Rechercher un nom / e-mail…" style="flex:1;min-width:180px">
-          <select id="filtre">
-            <option value="">Tous</option>
-            <option value="ok">À jour</option>
-            <option value="ko">En retard</option>
-          </select>
-          <button class="btn btn-clair" onclick="exportCSV()">Exporter CSV</button>
-        </div>
-        <p class="hint-scroll"><span class="fl">↔</span> Faites glisser le tableau pour voir toutes les colonnes</p>
-        <div class="tableau-wrap"><div id="tableau"></div></div>
 
-        <h2 class="section-titre" style="margin-top:2.5rem">Statistiques des adhérents</h2>
-        <div id="stats-detail"></div>
+        <details class="acc" open>
+          <summary><span class="t">Adhérents — cotisations &amp; validation</span><span class="badge-n">${total}</span></summary>
+          <div class="corps">
+            <div class="barre">
+              <input id="q" placeholder="Rechercher un nom / e-mail…" style="flex:1;min-width:180px">
+              <select id="filtre">
+                <option value="">Tous</option>
+                <option value="ok">À jour</option>
+                <option value="ko">En retard</option>
+              </select>
+              <button class="btn btn-clair" onclick="exportCSV()">Exporter CSV</button>
+            </div>
+            <p class="hint-scroll"><span class="fl">↔</span> Faites glisser le tableau pour voir toutes les colonnes</p>
+            <div class="tableau-wrap"><div id="tableau"></div></div>
+          </div>
+        </details>
 
-        <h2 class="section-titre" style="margin-top:2.5rem">Démarches des adhérents</h2>
-        <p style="color:var(--gris);margin:-0.6rem 0 0.8rem;font-size:0.9rem">Les démarches que les adhérents consignent depuis leurs outils (courrier amiable, mise en demeure, mairie, gendarmerie, plainte…) — pour suivre et appuyer leurs dossiers.</p>
-        <div id="demarches-bureau"><p style="color:var(--gris)">Chargement…</p></div>
+        <details class="acc">
+          <summary><span class="t">Statistiques des adhérents</span></summary>
+          <div class="corps"><div id="stats-detail"></div></div>
+        </details>
 
-        <h2 class="section-titre" style="margin-top:2.5rem">Missions des assesseurs</h2>
-        <p style="color:var(--gris);margin:-0.6rem 0 0.8rem;font-size:0.9rem">Confiez des missions aux assesseurs (à un assesseur précis, ou ouverte à tous : le premier qui la prend se l'attribue). Ils rendent compte depuis leur page « Mes missions ».</p>
-        <div id="missions-admin"><p style="color:var(--gris)">Chargement…</p></div>
+        <details class="acc">
+          <summary><span class="t">Démarches des adhérents</span><span class="badge-n" id="cnt-demarches"></span></summary>
+          <div class="corps">
+            <p style="color:var(--gris);margin:0 0 0.8rem;font-size:0.9rem">Les démarches que les adhérents consignent depuis leurs outils (courrier amiable, mise en demeure, mairie, gendarmerie, plainte…) — pour suivre et appuyer leurs dossiers.</p>
+            <div id="demarches-bureau"><p style="color:var(--gris)">Chargement…</p></div>
+          </div>
+        </details>
 
-        <h2 class="section-titre" style="margin-top:2.5rem">Communication aux membres</h2>
-        <div id="communication"></div>
+        <details class="acc">
+          <summary><span class="t">Missions des assesseurs</span><span class="badge-n" id="cnt-missions"></span></summary>
+          <div class="corps">
+            <p style="color:var(--gris);margin:0 0 0.8rem;font-size:0.9rem">Confiez des missions aux assesseurs (à un assesseur précis, ou ouverte à tous : le premier qui la prend se l'attribue). Ils rendent compte depuis leur page « Mes missions ».</p>
+            <div id="missions-admin"><p style="color:var(--gris)">Chargement…</p></div>
+          </div>
+        </details>
 
-        <h2 class="section-titre" style="margin-top:2.5rem">Messages de contact</h2>
-        <div id="messages"><p style="color:var(--gris)">Chargement…</p></div>`;
+        <details class="acc">
+          <summary><span class="t">Communication aux membres</span></summary>
+          <div class="corps"><div id="communication"></div></div>
+        </details>
+
+        <details class="acc">
+          <summary><span class="t">Messages de contact</span><span class="badge-n" id="cnt-messages"></span></summary>
+          <div class="corps"><div id="messages"><p style="color:var(--gris)">Chargement…</p></div></div>
+        </details>`;
 
       document.getElementById("q").addEventListener("input", dessiner);
       document.getElementById("filtre").addEventListener("change", dessiner);
@@ -164,6 +193,7 @@
       const { data, error } = await sb.from("missions").select("*").order("cree_le", { ascending:false });
       if (error){ box.innerHTML = `<p style="color:var(--gris)">Missions non activées (déployez <strong>migration-missions.sql</strong>).</p>`; return; }
       MISSIONS_ADM = data || [];
+      setCnt("cnt-missions", MISSIONS_ADM.filter(m => m.statut !== "Terminée" && m.statut !== "Abandonnée").length);
       MCOMS = {};
       try {
         const { data: cs } = await sb.from("missions_commentaires").select("*").order("cree_le", { ascending:true });
@@ -222,6 +252,7 @@
       const { data, error } = await sb.from("demarches").select("*")
         .order("cree_le", { ascending:false }).limit(150);
       if (error){ box.innerHTML = `<p style="color:var(--gris)">Suivi non activé (déployez <strong>migration-demarches.sql</strong>).</p>`; return; }
+      setCnt("cnt-demarches", (data || []).length);
       if (!data || !data.length){ box.innerHTML = `<p style="color:var(--gris)">Aucune démarche enregistrée pour le moment.</p>`; return; }
       const nomDe = id => { const a = ADH.find(x => x.id === id); return a ? (nomComplet(a) || a.email || "—") : "—"; };
       const pastille = r => r === "Résolu" ? '<span class="pill ok">Résolu</span>'
@@ -463,10 +494,14 @@
       chargerAnnonces();
     }
 
+    // Compteur affiché dans le titre d'une section repliable.
+    function setCnt(id, n){ const el = document.getElementById(id); if (el) el.textContent = n > 0 ? n : ""; }
+
     async function chargerMessages(){
       const box = document.getElementById("messages");
       const { data, error } = await sb.from("messages_contact").select("*").order("cree_le", { ascending:false });
       if (error){ box.innerHTML = `<p style="color:var(--gris)">Messagerie de contact non activée (déployez <strong>migration-contact.sql</strong>).</p>`; return; }
+      setCnt("cnt-messages", (data || []).filter(m => !m.traite).length);
       if (!data || !data.length){ box.innerHTML = `<p style="color:var(--gris)">Aucun message pour le moment.</p>`; return; }
       box.innerHTML = data.map(m => {
         const mail = encodeURIComponent(m.email||"");

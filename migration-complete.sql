@@ -162,9 +162,11 @@ create policy push_own_select on public.push_subscriptions
 alter table public.profils add column if not exists prenom text;
 create table if not exists public.assesseur_emails (email text primary key);
 insert into public.assesseur_emails (email) values
+  ('b2b99t@gmail.com'),           -- Bill DE BRATH (Paea)
   ('belleileric@gmail.com'),      -- Éric BELLEIL (Puurai, Faa'a)
   ('richstan11@outlook.com'),     -- Brigitte RICHMOND (Tautira)
-  ('giserch@gmail.com')           -- Gisèle ROCHE (Faa'a)
+  ('giserch@gmail.com'),          -- Gisèle ROCHE (Faa'a)
+  ('patvongue@yahoo.com')         -- Patrick VONGUE (Rés. Menahere, Pirae)
 on conflict (email) do nothing;
 
 create or replace function public.handle_new_user()

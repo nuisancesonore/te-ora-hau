@@ -6,9 +6,15 @@
 -- 1) Prénom séparé (le champ "nom" garde le NOM de famille)
 alter table public.profils add column if not exists prenom text;
 
--- 2) Liste blanche des e-mails ASSESSEURS (à compléter quand vous aurez les e-mails)
+-- 2) Liste blanche des e-mails ASSESSEURS
+-- (source : fiche de présence AG du 06/06/2026 ; manquent encore les e-mails
+--  de Bill DE BRATH et Patrick VONGUE)
 create table if not exists public.assesseur_emails (email text primary key);
--- Exemple : insert into public.assesseur_emails (email) values ('prenom.nom@exemple.pf');
+insert into public.assesseur_emails (email) values
+  ('belleileric@gmail.com'),      -- Éric BELLEIL (Puurai, Faa'a)
+  ('richstan11@outlook.com'),     -- Brigitte RICHMOND (Tautira)
+  ('giserch@gmail.com')           -- Gisèle ROCHE (Faa'a)
+on conflict (email) do nothing;
 
 -- 3) À l'inscription : statut (rôle + type) attribué automatiquement selon l'e-mail
 create or replace function public.handle_new_user()

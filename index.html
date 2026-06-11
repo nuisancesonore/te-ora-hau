@@ -27,8 +27,16 @@
     }
     .accroche h1 { font-size: 2rem; margin-bottom: 0.4rem; }
     .accroche p { font-size: 1.12rem; opacity: 0.97; margin-bottom: 1.1rem; }
-    .cat h3 { font-size: 1.02rem; }
+    .cat h3 { font-size: 1rem; }
     .cat .ex { color: var(--gris); font-size: 0.9rem; margin-top: 0.25rem; }
+    .accroche .cta { display:flex; gap:0.7rem; justify-content:center; flex-wrap:wrap; }
+    .accroche .btn-ghost { background:rgba(255,255,255,0.12); color:#fff; border:2px solid #fff; }
+    .accroche .btn-ghost:hover { background:rgba(255,255,255,0.22); }
+    .pilier-ico { width:46px; height:46px; margin-bottom:0.7rem; color:var(--bleu-lagon); display:block; }
+    .carte.cat { display:flex; align-items:center; gap:0.85rem; }
+    .num-badge { flex:0 0 auto; width:40px; height:40px; border-radius:50%;
+      background:var(--bleu-fonce); color:#fff; display:flex; align-items:center;
+      justify-content:center; font-weight:800; font-size:1.1rem; }
   </style>
 </head>
 <body>
@@ -37,8 +45,11 @@
   <main>
     <section class="accroche">
       <h1>Ne restez pas seul ! Rejoignez nos rangs !</h1>
-      <p>Te Ora Hau peut vous aider dans vos démarches.</p>
-      <a href="inscription.html" class="btn btn-clair">Rejoindre Te Ora Hau</a>
+      <p>Te Ora Hau peut vous aider dans vos démarches contre les nuisances sonores.</p>
+      <div class="cta">
+        <a href="inscription.html" class="btn btn-clair">Rejoindre Te Ora Hau</a>
+        <a href="signaler.html" class="btn btn-ghost">Signaler une nuisance</a>
+      </div>
     </section>
 
     <h2 class="section-titre">Le bruit, un fléau du quotidien</h2>
@@ -50,16 +61,19 @@
 
     <div class="grille">
       <div class="carte">
+        <svg class="pilier-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 21h12M6 6l-3 6a3 3 0 0 0 6 0L6 6zM18 6l-3 6a3 3 0 0 0 6 0l-3-6zM5 6l7-1.5L19 6"/></svg>
         <h3>Faire appliquer la loi</h3>
         <p>Obtenir le <strong>respect strict</strong> des niveaux de <strong>pression acoustique</strong> réglementés, de jour comme de nuit.</p>
         <a href="le-bruit.html" class="btn btn-clair" style="margin-top:0.6rem">En savoir plus</a>
       </div>
       <div class="carte">
+        <svg class="pilier-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 5.6a5.5 5.5 0 0 0-8.8 1 5.5 5.5 0 0 0-8.8 6.4L12 21l8.8-8a5.5 5.5 0 0 0 0-7.4z"/></svg>
         <h3>Soutenir les victimes</h3>
         <p>Un <strong>soutien technique et moral</strong>, et tous les renseignements utiles pour vos <strong>démarches</strong> auprès des administrations.</p>
         <a href="association.html" class="btn btn-clair" style="margin-top:0.6rem">Nos actions</a>
       </div>
       <div class="carte">
+        <svg class="pilier-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4a1 1 0 0 0 1 1h2l9 5V5L6 10H4a1 1 0 0 0-1 1zM19 9a4 4 0 0 1 0 6"/></svg>
         <h3>Informer &amp; sensibiliser</h3>
         <p>Comprendre le son, l'audition et les <strong>dangers du bruit</strong> pour mieux s'en protéger.</p>
         <a href="comprendre.html" class="btn btn-clair" style="margin-top:0.6rem">Comprendre le son</a>
@@ -69,16 +83,19 @@
     <h2 class="section-titre" style="margin-top:2.5rem">Agir maintenant</h2>
     <div class="grille">
       <div class="carte" style="border-top-color:var(--corail)">
+        <svg class="pilier-ico" style="color:var(--corail)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
         <h3>Signaler une nuisance</h3>
         <p><strong>Localisez un bruit</strong> sur la carte ; votre signalement alimente une <strong>base collective de preuves</strong>.</p>
         <a href="signaler.html" class="btn btn-vert" style="margin-top:0.6rem">Signaler</a>
       </div>
       <div class="carte" style="border-top-color:var(--bleu-lagon)">
+        <svg class="pilier-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>
         <h3>Carte des nuisances</h3>
         <p>Visualisez les <strong>zones de nuisances</strong> signalées par les membres à travers le fenua.</p>
         <a href="carte.html" class="btn btn-clair" style="margin-top:0.6rem">Voir la carte</a>
       </div>
       <div class="carte" style="border-top-color:var(--or)">
+        <svg class="pilier-ico" style="color:var(--or)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
         <h3>Courriers &amp; journal</h3>
         <p>Générez un <strong>courrier de plainte</strong> et tenez un <strong>journal de bruit</strong> pour vos démarches.</p>
         <a href="outils.html" class="btn btn-clair" style="margin-top:0.6rem">Les outils</a>
@@ -96,13 +113,13 @@
     </p>
 
     <div class="grille">
-      <div class="carte cat"><h3>1. Animaux</h3><div class="ex">Chiens, coqs…</div></div>
-      <div class="carte cat"><h3>2. Habitations</h3><div class="ex">Musique forte, bringues, voitures « boum boum »…</div></div>
-      <div class="carte cat"><h3>3. Industries, chantiers, élevages, agriculture</h3><div class="ex">Activités productives bruyantes.</div></div>
-      <div class="carte cat"><h3>4. Artisans, commerces &amp; activités</h3><div class="ex">École de danse, ateliers…</div></div>
-      <div class="carte cat"><h3>5. Établissements recevant du public</h3><div class="ex">Bars, restaurants, salles polyvalentes…</div></div>
-      <div class="carte cat"><h3>6. Sports &amp; loisirs</h3><div class="ex">Groupes de danse, terrains de jeux, salles omnisports…</div></div>
-      <div class="carte cat"><h3>7. Bruits divers</h3><div class="ex">Climatiseurs, groupes électrogènes, débroussailleuses, bricolage bruyant…</div></div>
+      <div class="carte cat"><span class="num-badge">1</span><div><h3>Animaux</h3><div class="ex">Chiens, coqs…</div></div></div>
+      <div class="carte cat"><span class="num-badge">2</span><div><h3>Habitations</h3><div class="ex">Musique forte, bringues, voitures « boum boum »…</div></div></div>
+      <div class="carte cat"><span class="num-badge">3</span><div><h3>Industries, chantiers, élevages, agriculture</h3><div class="ex">Activités productives bruyantes.</div></div></div>
+      <div class="carte cat"><span class="num-badge">4</span><div><h3>Artisans, commerces &amp; activités</h3><div class="ex">École de danse, ateliers…</div></div></div>
+      <div class="carte cat"><span class="num-badge">5</span><div><h3>Établissements recevant du public</h3><div class="ex">Bars, restaurants, salles polyvalentes…</div></div></div>
+      <div class="carte cat"><span class="num-badge">6</span><div><h3>Sports &amp; loisirs</h3><div class="ex">Groupes de danse, terrains de jeux, salles omnisports…</div></div></div>
+      <div class="carte cat"><span class="num-badge">7</span><div><h3>Bruits divers</h3><div class="ex">Climatiseurs, groupes électrogènes, débroussailleuses, bricolage bruyant…</div></div></div>
     </div>
 
     <div class="carte" style="margin-top:2.2rem;text-align:center;border-top-color:var(--corail)">

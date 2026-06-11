@@ -362,3 +362,29 @@ footer.site {
   header.site, #toh-header, .banniere, #nav-mount, footer.site, #footer-mount { display: none !important; }
   body { padding-top: 0 !important; background: #fff !important; }
 }
+
+/* ---------- Finitions (polish) ---------- */
+html { scroll-behavior: smooth; }
+
+/* Les cartes réagissent doucement au survol */
+.carte { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.carte:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(6, 74, 84, 0.16); }
+
+/* Navigation au clavier bien visible (accessibilité) */
+:focus-visible {
+  outline: 3px solid var(--corail);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Couleur de sélection du texte aux couleurs du site */
+::selection { background: var(--bleu-lagon); color: #fff; }
+
+/* Liens et boutons : transitions douces */
+a, .btn, button { transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease; }
+
+/* Respect des préférences "réduire les animations" */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

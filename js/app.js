@@ -277,7 +277,7 @@ async function rendreNav(pageActive) {
   const mount = document.getElementById("nav-mount");
   mount.innerHTML = `
     <section class="banniere">
-      <a href="index.html"><img src="images/bandeau.png"
+      <a href="index.html"><img src="images/bandeau.jpg"
          alt="STOP au bruit — Pour vivre en paix sans nuisances sonores"></a>
     </section>`;
 
@@ -289,7 +289,7 @@ async function rendreNav(pageActive) {
     <header class="site" id="toh-header">
       <div class="nav-inner">
         <a href="index.html" class="brand">
-          <span class="logo"><img src="images/logo%20TOH.PNG" alt="Logo Te Ora Hau"></span>
+          <span class="logo"><img src="images/logo-192.png" alt="Logo Te Ora Hau"></span>
           <span>
             <span class="titre">Te Ora Hau</span>
             <span class="sous">Vivre en paix · Lutte contre le bruit</span>

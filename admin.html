@@ -103,6 +103,10 @@
         <h2 class="section-titre" style="margin-top:2.5rem">Statistiques des adhérents</h2>
         <div id="stats-detail"></div>
 
+        <h2 class="section-titre" style="margin-top:2.5rem">Démarches des adhérents</h2>
+        <p style="color:var(--gris);margin:-0.6rem 0 0.8rem;font-size:0.9rem">Les démarches que les adhérents consignent depuis leurs outils (courrier amiable, mise en demeure, mairie, gendarmerie, plainte…) — pour suivre et appuyer leurs dossiers.</p>
+        <div id="demarches-bureau"><p style="color:var(--gris)">Chargement…</p></div>
+
         <h2 class="section-titre" style="margin-top:2.5rem">Communication aux membres</h2>
         <div id="communication"></div>
 
@@ -115,7 +119,30 @@
       rendreStatsDetail();
       rendreCommunication();
       chargerMessages();
+      chargerDemarchesBureau();
     })();
+
+    /* ----- Démarches des adhérents (suivi des dossiers) ----- */
+    async function chargerDemarchesBureau(){
+      const box = document.getElementById("demarches-bureau");
+      const { data, error } = await sb.from("demarches").select("*")
+        .order("cree_le", { ascending:false }).limit(150);
+      if (error){ box.innerHTML = `<p style="color:var(--gris)">Suivi non activé (déployez <strong>migration-demarches.sql</strong>).</p>`; return; }
+      if (!data || !data.length){ box.innerHTML = `<p style="color:var(--gris)">Aucune démarche enregistrée pour le moment.</p>`; return; }
+      const nomDe = id => { const a = ADH.find(x => x.id === id); return a ? (nomComplet(a) || a.email || "—") : "—"; };
+      const pastille = r => r === "Résolu" ? '<span class="pill ok">Résolu</span>'
+        : r === "Sans réponse" ? '<span class="pill ko">Sans réponse</span>'
+        : echapper(r || "En attente");
+      box.innerHTML = `<div style="overflow-x:auto"><table class="adh">
+        <thead><tr><th>Date</th><th>Adhérent</th><th>Démarche</th><th>Destinataire</th><th>Mode</th><th>Suite</th></tr></thead><tbody>` +
+        data.map(d => `<tr>
+          <td>${d.date_demarche ? new Date(d.date_demarche).toLocaleDateString('fr-FR') : ''}</td>
+          <td>${echapper(nomDe(d.auteur))}</td>
+          <td><strong>${echapper(d.type)}</strong>${d.note ? `<br><span style="color:var(--gris);font-size:0.8rem">${echapper(d.note)}</span>` : ''}</td>
+          <td>${echapper(d.destinataire)||'—'}</td><td>${echapper(d.mode)||'—'}</td>
+          <td>${pastille(d.reponse)}</td>
+        </tr>`).join("") + `</tbody></table></div>`;
+    }
 
     /* ----- Statistiques détaillées des adhérents ----- */
     function compteur(arr, fn){

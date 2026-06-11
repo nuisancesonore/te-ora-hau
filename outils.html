@@ -32,6 +32,7 @@
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <script>
     let PROFIL = null;
+    let DERNIER = null;   // dernier courrier généré { type, objet, email }
     (async function(){
       await initPage("outils");
       const contenu = document.getElementById("contenu");
@@ -48,6 +49,7 @@
         <div class="onglets">
           <button class="actif" data-p="courrier">Générateur de courrier</button>
           <button data-p="journal">Journal de bruit</button>
+          <button data-p="demarches">Mes démarches</button>
         </div>
 
         <section class="panneau actif" id="p-courrier">
@@ -57,6 +59,17 @@
           </div>
           <div class="form-wrap" style="max-width:100%;margin:0 0 1.4rem">
             <p class="intro">Renseignez votre situation : le courrier est rédigé automatiquement, structuré et appuyé sur la réglementation applicable en Polynésie française. Relisez-le, complétez les éléments entre crochets, puis téléchargez ou copiez-le.</p>
+
+            <div class="champ"><label>Où en êtes-vous ? <span style="font-weight:400;color:var(--gris)">— nous choisissons le bon courrier pour vous</span></label>
+              <select id="c-situation">
+                <option value="">— Décrivez votre situation (optionnel) —</option>
+                <option value="amiable">Je n'ai encore rien entrepris</option>
+                <option value="miseendemeure">J'ai déjà fait une démarche amiable, sans effet</option>
+                <option value="mairie">La mise en demeure est restée sans effet</option>
+                <option value="gendarmerie">Le bruit continue, surtout la nuit (tapage)</option>
+                <option value="procureur">Rien n'a abouti : je veux porter plainte</option>
+                <option value="bailleur">L'auteur du bruit est locataire / en copropriété</option>
+              </select></div>
 
             <div class="champ"><label>Type de courrier (étape de la démarche)</label>
               <select id="c-type">
@@ -79,7 +92,8 @@
             </div>
 
             <div class="champ"><label id="c-dest-lbl">Destinataire (nom et adresse)</label>
-              <textarea id="c-dest" rows="2" placeholder="Nom et adresse du destinataire"></textarea></div>
+              <textarea id="c-dest" rows="2" placeholder="Nom et adresse du destinataire"></textarea>
+              <input id="c-dest-mail" type="email" placeholder="E-mail du destinataire (facultatif — pour l'envoi direct)" style="margin-top:0.5rem"></div>
 
             <div class="grille2">
               <div class="champ"><label>Nature du bruit</label><select id="c-bruit"></select></div>
@@ -101,6 +115,7 @@
 
             <button class="btn btn-primaire" onclick="genererCourrier()">Générer le courrier</button>
             <button class="btn btn-vert" onclick="telechargerPDF()">Télécharger (PDF)</button>
+            <button class="btn btn-vert" onclick="envoyerParEmail()">Envoyer par e-mail</button>
             <button class="btn btn-clair" onclick="telechargerLettre()">Télécharger (.txt)</button>
             <button class="btn btn-clair" onclick="copierLettre(this)">Copier le texte</button>
           </div>
@@ -127,6 +142,30 @@
           </div>
           <button class="btn btn-clair" onclick="exportJournal()">Exporter le journal (CSV)</button>
           <div id="liste-jb"></div>
+        </section>
+
+        <section class="panneau" id="p-demarches">
+          <div class="form-wrap" style="max-width:100%;margin:0 0 1rem">
+            <p class="intro">Consignez chaque démarche entreprise (courrier, visite, appel…) : vous gardez le fil de votre dossier et le <strong>bureau de Te Ora Hau en est informé</strong> pour pouvoir vous appuyer. Quand vous générez un courrier, on vous propose de l'enregistrer ici automatiquement.</p>
+            <div id="dmsg" class="message"></div>
+            <form id="form-dem" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.7rem;align-items:end">
+              <div class="champ" style="margin:0"><label>Démarche</label>
+                <select id="d-type">
+                  <option>Courrier amiable</option><option>Mise en demeure</option>
+                  <option>Demande au Maire</option><option>Signalement gendarmerie/police</option>
+                  <option>Plainte au Procureur</option><option>Courrier bailleur/syndic</option>
+                  <option>Appel téléphonique</option><option>Rencontre / visite</option><option>Autre</option>
+                </select></div>
+              <div class="champ" style="margin:0"><label>Date</label><input type="date" id="d-date" required></div>
+              <div class="champ" style="margin:0"><label>Mode</label>
+                <select id="d-mode"><option>Courrier simple</option><option>Recommandé A.R.</option><option>E-mail</option><option>Dépôt en main propre</option><option>Téléphone</option><option>Sur place</option></select></div>
+              <div class="champ" style="margin:0"><label>Destinataire</label><input id="d-dest" placeholder="Ex. M. X, Mairie de Punaauia…"></div>
+              <div class="champ" style="margin:0;grid-column:1/-1"><label>Note (facultatif)</label><input id="d-note" placeholder="Ex. réponse promise sous 8 jours…"></div>
+              <button class="btn btn-vert" type="submit" style="grid-column:1/-1">Ajouter la démarche</button>
+            </form>
+          </div>
+          <div id="suggestion-dem"></div>
+          <div id="liste-dem"></div>
         </section>`;
 
       // Onglets
@@ -142,6 +181,16 @@
       document.getElementById("j-date").value = new Date().toISOString().slice(0,10);
       document.getElementById("form-jb").addEventListener("submit", ajouterEpisode);
       await chargerJournal();
+
+      document.getElementById("d-date").value = new Date().toISOString().slice(0,10);
+      document.getElementById("form-dem").addEventListener("submit", ajouterDemarche);
+      await chargerDemarches();
+      prefillDemarches();
+      // Lien direct vers l'onglet suivi (ex. depuis Mon espace).
+      if (location.hash === "#demarches") {
+        const b = document.querySelector('.onglets button[data-p="demarches"]');
+        if (b) b.click();
+      }
     })();
 
     /* ----- Générateur de courrier ----- */
@@ -172,12 +221,21 @@
     function preparerCourrier(){
       const exp = document.getElementById("c-exp-nom");
       if (!exp || !PROFIL) return;
-      exp.value = PROFIL.nom || "";
+      exp.value = nomComplet(PROFIL);
       document.getElementById("c-exp-adr").value = [PROFIL.adresse, PROFIL.commune].filter(Boolean).join(", ");
+      if (PROFIL.email) document.getElementById("c-exp-mail").value = PROFIL.email;
+      if (PROFIL.telephone) document.getElementById("c-exp-tel").value = PROFIL.telephone;
       document.getElementById("c-bruit").innerHTML = optionsListe(SIG_TYPES, PROFIL.type_nuisance || "");
       const dest = document.getElementById("c-dest");
       dest.addEventListener("input", () => { dest.dataset.auto = ""; });
       document.getElementById("c-type").addEventListener("change", majTypeCourrier);
+      // Le guide "Où en êtes-vous ?" sélectionne le bon courrier.
+      const sit = document.getElementById("c-situation");
+      if (sit) sit.addEventListener("change", () => {
+        if (!sit.value) return;
+        document.getElementById("c-type").value = sit.value;
+        majTypeCourrier();
+      });
       majTypeCourrier();
 
       // Pré-remplissage depuis un signalement récent (bouton « Rédiger un courrier »).
@@ -294,6 +352,12 @@
 
       const lettre =
         `${expBloc}\n\n\n${dest}\n\n\n${lieuDate}\n\n${recommande}Objet : ${objet}\n\n${salut}\n\n${corps}\n\n${politesse}\n\n\n${nom}${pj}`;
+      // Version e-mail (sans les blocs postaux) + infos pour le suivi.
+      DERNIER = {
+        type, objet,
+        email: `${salut}\n\n${corps}\n\n${politesse}\n\n${nom}` +
+               (adr ? `\n${adr}` : "") + (tel ? `\nTél. : ${tel}` : "") + pj,
+      };
       const ap = document.getElementById("apercu");
       ap.textContent = lettre;
       ap.scrollIntoView({ behavior:"smooth", block:"nearest" });
@@ -309,6 +373,17 @@
       const blob = new Blob([lettreActuelle()], { type:"text/plain;charset=utf-8" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
       a.download = "courrier-nuisances.txt"; a.click();
+      proposerSuivi("Courrier simple");
+    }
+
+    // Envoi par e-mail : ouvre la messagerie avec objet + corps prêts à partir.
+    function envoyerParEmail(){
+      lettreActuelle();                       // garantit que DERNIER est à jour
+      if (!DERNIER) return;
+      const destMail = (document.getElementById("c-dest-mail").value || "").trim();
+      location.href = `mailto:${encodeURIComponent(destMail)}` +
+        `?subject=${encodeURIComponent(DERNIER.objet)}&body=${encodeURIComponent(DERNIER.email)}`;
+      setTimeout(() => proposerSuivi("E-mail"), 800);
     }
 
     function telechargerPDF(){
@@ -327,7 +402,9 @@
         html2canvas: { scale:2, useCORS:true, backgroundColor:"#ffffff" },
         jsPDF: { unit:"mm", format:"a4", orientation:"portrait" },
         pagebreak: { mode:["css","legacy"] }
-      }).from(page).save().then(() => page.remove()).catch(() => page.remove());
+      }).from(page).save()
+        .then(() => { page.remove(); proposerSuivi("Courrier (PDF)"); })
+        .catch(() => page.remove());
     }
 
     function copierLettre(btn){
@@ -376,6 +453,119 @@
       const blob = new Blob([en.join(",")+"\n"+l.join("\n")], { type:"text/csv;charset=utf-8" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
       a.download = "journal-de-bruit.csv"; a.click();
+    }
+
+    /* ----- Suivi des démarches (visible par le bureau) ----- */
+    const TYPE_LABELS = { amiable:"Courrier amiable", miseendemeure:"Mise en demeure", mairie:"Demande au Maire",
+                          gendarmerie:"Signalement gendarmerie/police", procureur:"Plainte au Procureur", bailleur:"Courrier bailleur/syndic" };
+    const ORDRE_ETAPES = ["Courrier amiable","Mise en demeure","Demande au Maire","Signalement gendarmerie/police","Plainte au Procureur"];
+    const CLE_TYPE = { "Courrier amiable":"amiable", "Mise en demeure":"miseendemeure", "Demande au Maire":"mairie",
+                       "Signalement gendarmerie/police":"gendarmerie", "Plainte au Procureur":"procureur", "Courrier bailleur/syndic":"bailleur" };
+    let DEM = [];
+
+    // Après chaque génération/envoi : propose d'enregistrer la démarche.
+    async function proposerSuivi(mode){
+      if (!DERNIER) return;
+      if (!confirm("Enregistrer cette démarche dans votre suivi ?\n\nVous gardez le fil de votre dossier, et le bureau de Te Ora Hau en est informé pour pouvoir vous appuyer.")) return;
+      const s = await sessionActive();
+      const dest = (document.getElementById("c-dest").value || "").split("\n")[0].trim();
+      const { error } = await sb.from("demarches").insert({
+        auteur: s.user.id,
+        type: TYPE_LABELS[DERNIER.type] || DERNIER.type,
+        date_demarche: new Date().toISOString().slice(0,10),
+        mode, destinataire: dest, note: DERNIER.objet,
+      });
+      if (error) alert("Suivi non enregistré : " + error.message + "\n(Le bureau doit lancer migration-demarches.sql.)");
+      else { await chargerDemarches(); alert("Démarche enregistrée dans votre suivi ✔ (onglet « Mes démarches »)"); }
+    }
+
+    async function ajouterDemarche(e){
+      e.preventDefault();
+      const s = await sessionActive();
+      const row = {
+        auteur: s.user.id,
+        type: document.getElementById("d-type").value,
+        date_demarche: document.getElementById("d-date").value || null,
+        mode: document.getElementById("d-mode").value,
+        destinataire: document.getElementById("d-dest").value.trim(),
+        note: document.getElementById("d-note").value.trim(),
+      };
+      const { error } = await sb.from("demarches").insert(row);
+      const m = document.getElementById("dmsg");
+      m.className = "message " + (error ? "err" : "ok");
+      m.textContent = error ? "Erreur : " + error.message + " (migration-demarches.sql non lancée ?)" : "Démarche enregistrée ✔";
+      if (!error){ document.getElementById("d-dest").value = ""; document.getElementById("d-note").value = ""; }
+      await chargerDemarches();
+    }
+
+    async function chargerDemarches(){
+      const box = document.getElementById("liste-dem");
+      if (!box) return;
+      const { data, error } = await sb.from("demarches").select("*")
+        .order("date_demarche", { ascending:false }).order("cree_le", { ascending:false });
+      if (error){ box.innerHTML = ""; document.getElementById("suggestion-dem").innerHTML = ""; return; }
+      DEM = data || [];
+      const SUITES = ["En attente","Réponse reçue","Sans réponse","Résolu"];
+      box.innerHTML = DEM.length ? `
+        <table class="jb"><thead><tr><th>Date</th><th>Démarche</th><th>Destinataire</th><th>Mode</th><th>Suite donnée</th><th></th></tr></thead><tbody>` +
+        DEM.map(d => `<tr>
+          <td>${d.date_demarche ? new Date(d.date_demarche).toLocaleDateString('fr-FR') : ''}</td>
+          <td><strong>${echapper(d.type)}</strong>${d.note ? `<br><span style="color:var(--gris);font-size:0.8rem">${echapper(d.note)}</span>` : ''}</td>
+          <td>${echapper(d.destinataire)||'—'}</td><td>${echapper(d.mode)||'—'}</td>
+          <td><select onchange="majSuite('${d.id}', this.value)" style="padding:0.3rem 0.4rem;border:1.5px solid #d6d6cf;border-radius:7px;font-size:0.85rem">${
+            SUITES.map(o => `<option${(d.reponse||'En attente')===o?' selected':''}>${o}</option>`).join("")
+          }</select></td>
+          <td><button class="btn btn-clair" style="padding:0.25rem 0.55rem;font-size:0.8rem" onclick="supprimerDemarche('${d.id}')" title="Supprimer">✕</button></td>
+        </tr>`).join("") + `</tbody></table>`
+        : "<p style='color:var(--gris);margin-top:1rem'>Aucune démarche enregistrée. Ajoutez votre première démarche ci-dessus — ou générez un courrier : on vous proposera de l'enregistrer ici.</p>";
+      rendreSuggestion();
+    }
+
+    // Étape suivante conseillée selon le parcours déjà accompli.
+    function rendreSuggestion(){
+      const el = document.getElementById("suggestion-dem");
+      if (!el) return;
+      if (DEM.some(d => d.reponse === "Résolu")){
+        el.innerHTML = `<div class="message ok" style="display:block;margin:0 0 1rem">Une démarche est marquée <strong>Résolu</strong> — bravo ! Pensez à en informer le <a href="contact.html">bureau</a>.</div>`;
+        return;
+      }
+      const faites = DEM.map(d => d.type);
+      let idx = -1;
+      ORDRE_ETAPES.forEach((t, i) => { if (faites.includes(t)) idx = Math.max(idx, i); });
+      const suivante = ORDRE_ETAPES[idx + 1];
+      if (idx >= 0 && suivante){
+        el.innerHTML = `<div class="message ok" style="display:block;margin:0 0 1rem">Étape suivante conseillée : <strong>${suivante}</strong> —
+          <a href="#" onclick="preparerEtape('${CLE_TYPE[suivante]}');return false;" style="font-weight:700">préparer ce courrier →</a></div>`;
+      } else if (idx === ORDRE_ETAPES.length - 1){
+        el.innerHTML = `<div class="message ok" style="display:block;margin:0 0 1rem">Vous avez parcouru toutes les étapes : le <a href="contact.html">bureau</a> peut vous accompagner pour la suite.</div>`;
+      } else { el.innerHTML = ""; }
+    }
+    function preparerEtape(cle){
+      document.getElementById("c-type").value = cle;
+      majTypeCourrier();
+      const b = document.querySelector('.onglets button[data-p="courrier"]');
+      if (b) b.click();
+      document.getElementById("c-type").scrollIntoView({ behavior:"smooth", block:"center" });
+    }
+    async function majSuite(id, val){
+      const { error } = await sb.from("demarches").update({ reponse: val }).eq("id", id);
+      if (error) alert("Erreur : " + error.message);
+      const d = DEM.find(x => x.id === id); if (d) d.reponse = val;
+      rendreSuggestion();
+    }
+    async function supprimerDemarche(id){
+      if (!confirm("Supprimer cette démarche de votre suivi ?")) return;
+      const { error } = await sb.from("demarches").delete().eq("id", id);
+      if (error) return alert("Erreur : " + error.message);
+      await chargerDemarches();
+    }
+    // Renseigne "Démarches déjà entreprises" du courrier à partir du suivi.
+    function prefillDemarches(){
+      const ta = document.getElementById("c-demarches");
+      if (!ta || ta.value.trim() || !DEM.length) return;
+      ta.value = DEM.slice().reverse().map(d =>
+        `${d.type}${d.date_demarche ? ` le ${new Date(d.date_demarche).toLocaleDateString('fr-FR')}` : ''}` +
+        `${d.reponse && d.reponse !== "En attente" ? ` (${d.reponse.toLowerCase()})` : ''}`).join(" ; ");
     }
   </script>
 </body>

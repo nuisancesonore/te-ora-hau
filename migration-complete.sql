@@ -193,6 +193,26 @@ update public.profils p set
     when lower(p.email) in (select lower(email) from public.assesseur_emails) then 'Assesseur'
     else 'Adhérent' end;
 
+-- ---------- 10) Suivi des démarches des adhérents ----------
+create table if not exists public.demarches (
+  id uuid primary key default gen_random_uuid(),
+  auteur uuid not null references auth.users(id) on delete cascade,
+  type text not null,
+  date_demarche date,
+  mode text,
+  destinataire text,
+  reponse text not null default 'En attente',
+  note text,
+  cree_le timestamptz not null default now()
+);
+alter table public.demarches enable row level security;
+drop policy if exists demarches_own on public.demarches;
+create policy demarches_own on public.demarches
+  for all using (auteur = auth.uid()) with check (auteur = auth.uid());
+drop policy if exists demarches_select_bureau on public.demarches;
+create policy demarches_select_bureau on public.demarches
+  for select using (public.is_bureau());
+
 -- ============================================================
 -- TERMINÉ. Rechargez le site (Ctrl+F5) après exécution.
 -- ============================================================

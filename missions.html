@@ -88,22 +88,21 @@
         rafraichirBadge(PROFIL);
       } catch(_){}
 
+      // Une mission terminée (ou abandonnée) disparaît de l'interface de
+      // l'assesseur ; le bureau en garde la trace dans l'administration.
       const finie = m => m.statut === "Terminée" || m.statut === "Abandonnée";
       const ouvertes = MISSIONS.filter(m => !m.assigne_a && !finie(m));
       const miennes  = MISSIONS.filter(m => m.assigne_a === UID && !finie(m));
-      const passees  = MISSIONS.filter(m => finie(m) && (m.assigne_a === UID || PROFIL.role === "bureau"));
 
       contenu.innerHTML = `
         <h2 class="section-titre">Mes missions</h2>
-        <p style="color:var(--gris);margin-bottom:1rem">Les missions confiées par le bureau de Te Ora Hau. Mettez à jour l'avancement et laissez un commentaire : le bureau suit votre travail en direct. Mauruuru !</p>
+        <p style="color:var(--gris);margin-bottom:1rem">Les missions confiées par le bureau de Te Ora Hau. Mettez à jour l'avancement et laissez un commentaire : le bureau suit votre travail en direct. Une mission marquée « Terminée » disparaît d'ici — le bureau en garde la trace. Mauruuru !</p>
 
         <h3 class="sect-titre">À prendre — ouvertes à tous (${ouvertes.length})</h3>
         ${ouvertes.length ? ouvertes.map(m => carte(m, "ouverte")).join("") : `<p style="color:var(--gris)">Aucune mission ouverte pour le moment.</p>`}
 
         <h3 class="sect-titre">Mes missions en cours (${miennes.length})</h3>
-        ${miennes.length ? miennes.map(m => carte(m, "mienne")).join("") : `<p style="color:var(--gris)">Aucune mission en cours. Prenez-en une ci-dessus !</p>`}
-
-        ${passees.length ? `<h3 class="sect-titre">Terminées (${passees.length})</h3>` + passees.map(m => carte(m, "finie")).join("") : ""}`;
+        ${miennes.length ? miennes.map(m => carte(m, "mienne")).join("") : `<p style="color:var(--gris)">Aucune mission en cours. Prenez-en une ci-dessus !</p>`}`;
     }
 
     function pill(st){

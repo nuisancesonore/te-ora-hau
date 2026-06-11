@@ -34,6 +34,13 @@
     .drow .bar { flex:1; height:7px; background:#eee; border-radius:4px; overflow:hidden; }
     .drow .bar>span { display:block; height:100%; background:var(--bleu-lagon); border-radius:4px; }
     .drow .n { flex:0 0 auto; font-weight:700; color:var(--bleu-fonce); min-width:54px; text-align:right; }
+    .com-etape { font-weight:800; color:var(--bleu-fonce); margin:1.2rem 0 0.2rem; padding-top:1rem; border-top:1px solid #eee; font-size:0.95rem; }
+    .com-etape.premiere { margin-top:0; padding-top:0; border-top:none; }
+    .com-hint { font-size:0.8rem; color:var(--gris); margin:0 0 0.6rem; }
+    details.com-plus { margin-top:0.6rem; }
+    details.com-plus summary { cursor:pointer; font-size:0.85rem; font-weight:600; color:var(--bleu-lagon); list-style:none; }
+    details.com-plus summary::-webkit-details-marker { display:none; }
+    details.com-plus .corps { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.6rem; }
     #tableau { overflow-x:auto; -webkit-overflow-scrolling:touch; }
     table.adh { min-width:720px; }
     .tableau-wrap { position:relative; }
@@ -292,6 +299,8 @@
     function rendreCommunication(){
       document.getElementById("communication").innerHTML = `
         <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
+
+          <p class="com-etape premiere">1 · Écrire le message</p>
           <div class="champ"><label>Audience</label>
             <select id="com-cible">
               <option value="tous">Tous les adhérents</option>
@@ -300,19 +309,32 @@
             </select>
             <p id="com-resume" style="font-size:0.85rem;color:var(--gris);margin-top:0.3rem"></p></div>
           <div class="champ"><label>Titre / objet</label><input id="com-titre" placeholder="Ex. Réunion publique le 12 juillet à 18h"></div>
-          <div class="champ"><label>Message</label><textarea id="com-corps" rows="4" placeholder="Votre message aux membres…"></textarea></div>
-          <div class="champ"><label>Date et heure de l'événement <span style="font-weight:400;color:var(--gris)">— optionnel : l'annonce clignote jusque-là, puis disparaît automatiquement</span></label>
+          <div class="champ" style="margin-bottom:0.4rem"><label>Message</label><textarea id="com-corps" rows="4" placeholder="Votre message aux membres…"></textarea></div>
+
+          <p class="com-etape">2 · Publier sur le site</p>
+          <p class="com-hint">L'annonce s'affiche dans l'espace des membres ciblés, avec notification push et pastille dans le menu. C'est le canal principal.</p>
+          <div class="champ"><label>Date et heure de l'événement <span style="font-weight:400;color:var(--gris)">— optionnel : l'annonce clignote jusque-là, puis disparaît</span></label>
             <input type="datetime-local" id="com-date"></div>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
             <button class="btn btn-vert" id="btn-publier" onclick="publierAnnonce()">Publier l'annonce</button>
             <button class="btn btn-clair" id="btn-annuler-edit" onclick="annulerEdition()" style="display:none">Annuler la modification</button>
-            <button class="btn btn-clair" onclick="envoyerEmailRapide()">E-mail (Cci)</button>
-            <button class="btn btn-clair" onclick="copierEmails(this)">Copier les e-mails</button>
-            <button class="btn btn-clair" onclick="envoyerSMSRapide()">SMS</button>
-            <button class="btn btn-clair" onclick="copierTels(this)">Copier les numéros</button>
-            <button class="btn btn-clair" onclick="envoyerEmailMasse(this)" title="Nécessite le backend Resend déployé (voir COMMUNICATION.md)">Envoi en masse (à activer)</button>
           </div>
-          <p style="font-size:0.8rem;color:var(--gris);margin-top:0.6rem">« Publier l'annonce » l'affiche dans l'espace des membres ciblés <strong>et envoie une notification push</strong> à ceux qui l'ont activée. « E-mail (Cci) » et « SMS » ouvrent votre logiciel mail / votre messagerie (pour joindre tout le monde). L'« envoi en masse » nécessite le backend Resend.</p>
+
+          <p class="com-etape">3 · Doubler l'envoi <span style="font-weight:400;color:var(--gris)">(optionnel)</span></p>
+          <p class="com-hint">Pour joindre aussi les membres en dehors du site : ouvre votre messagerie avec le message déjà prêt. Conseillé pour les convocations (e-mail) et les rappels urgents (SMS).</p>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-clair" onclick="envoyerEmailRapide()">✉️ E-mail (Cci)</button>
+            <button class="btn btn-clair" onclick="envoyerSMSRapide()">📱 SMS</button>
+          </div>
+          <details class="com-plus">
+            <summary>Autres options ▾</summary>
+            <div class="corps">
+              <button class="btn btn-clair" onclick="copierEmails(this)">Copier les e-mails</button>
+              <button class="btn btn-clair" onclick="copierTels(this)">Copier les numéros</button>
+              <button class="btn btn-clair" onclick="envoyerEmailMasse(this)" title="Nécessite le backend Resend déployé (voir COMMUNICATION.md)">Envoi en masse (à activer)</button>
+            </div>
+            <p class="com-hint" style="margin-top:0.4rem">« Copier » récupère la liste des adresses / numéros de l'audience, à coller où vous voulez. L'« envoi en masse » servira quand l'association comptera des centaines de membres.</p>
+          </details>
         </div>
         <h3 style="color:var(--bleu-fonce);margin-bottom:0.6rem">Annonces publiées</h3>
         <div id="annonces-liste"><p style="color:var(--gris)">Chargement…</p></div>`;

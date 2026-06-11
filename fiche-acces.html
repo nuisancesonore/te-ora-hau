@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fiche Accès &amp; comptes · Te Ora Hau</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .feuille {
+      background:#fff; max-width:820px; margin:0 auto; padding:2.2rem 2.4rem;
+      box-shadow:var(--ombre); border-radius:10px; color:#111;
+    }
+    .ent { display:flex; align-items:center; gap:1.2rem; border-bottom:2px solid #c0392b; padding-bottom:1rem; margin-bottom:1.2rem; }
+    .ent img { width:70px; height:auto; }
+    .ent .titre { text-align:center; flex:1; }
+    .ent .titre h1 { font-size:1.35rem; color:#111; margin-bottom:0.2rem; }
+    .ent .titre p { font-size:0.85rem; color:#444; }
+    .feuille h2 { font-size:1.05rem; color:#111; margin:1.4rem 0 0.5rem; border-left:4px solid #c0392b; padding-left:0.6rem; }
+    .feuille p { font-size:0.9rem; line-height:1.55; margin-bottom:0.5rem; }
+    table.fa { width:100%; border-collapse:collapse; margin:0.4rem 0 0.8rem; font-size:0.85rem; }
+    table.fa th, table.fa td { border:1px solid #999; padding:0.45rem 0.6rem; text-align:left; vertical-align:top; }
+    table.fa th { background:#eef2fb; }
+    table.fa td { height:1.6rem; }
+    .note { background:#f7f4ec; border-left:4px solid #c0392b; padding:0.7rem 1rem; border-radius:8px; font-size:0.85rem; margin:0.8rem 0; }
+    .barre-actions { text-align:center; margin:0 0 1.4rem; }
+    @media print {
+      #nav-mount, #footer-mount, .barre-actions, .intro-ecran { display:none !important; }
+      body { background:#fff; }
+      main { padding:0; }
+      .feuille { box-shadow:none; max-width:100%; padding:0; }
+      h2 { page-break-after:avoid; }
+      table.fa { page-break-inside:avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <p class="intro-ecran" style="max-width:820px;margin:0 auto 1rem;color:var(--gris)">
+      Document <strong>interne au bureau</strong> : à imprimer, compléter <strong>à la main</strong> et conserver avec les statuts de l'association (jamais en ligne).
+    </p>
+    <div class="barre-actions">
+      <a href="espace.html" class="btn btn-clair" onclick="if(history.length>1){history.back();return false;}">← Retour</a>
+      <button class="btn btn-primaire" onclick="window.print()">🖨️ Imprimer la fiche</button>
+    </div>
+
+    <div class="feuille">
+      <div class="ent">
+        <img src="images/logo%20TOH.PNG" alt="Logo Te Ora Hau">
+        <div class="titre">
+          <h1>Accès &amp; comptes de l'association</h1>
+          <p><strong>Te Ora Hau</strong> — « Vivre en paix » · Document interne au bureau — mise à jour à chaque renouvellement</p>
+        </div>
+        <div style="width:70px"></div>
+      </div>
+
+      <p><strong>Fiche mise à jour le :</strong> ____ / ____ / ________ &nbsp;&nbsp;&nbsp; <strong>par :</strong> ______________________________</p>
+
+      <h2>1. Site internet (administration)</h2>
+      <p>Adresse : <strong>nuisancesonore.github.io/te-ora-hau</strong> — l'accès Admin est automatique pour les e-mails du bureau enregistrés dans la base (liste blanche). Chaque membre utilise <strong>son propre compte</strong> (e-mail + mot de passe personnel choisi à l'inscription).</p>
+      <table class="fa">
+        <tr><th>Membre du bureau</th><th>Fonction</th><th>E-mail (compte du site)</th></tr>
+        <tr><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td></tr>
+      </table>
+
+      <h2>2. Supabase (base de données du site)</h2>
+      <p>supabase.com — organisation : <strong>nuisancesonore's Org</strong> · projet : <strong>te-ora-hau</strong>. Les accès se gèrent par <strong>invitation</strong> (Organisation → Team) — jamais de partage de mot de passe.</p>
+      <table class="fa">
+        <tr><th>Personne</th><th>E-mail du compte Supabase</th><th>Rôle (Owner / Admin / Developer)</th></tr>
+        <tr><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td></tr>
+      </table>
+
+      <h2>3. GitHub (code du site)</h2>
+      <p>github.com — dépôt : <strong>nuisancesonore/te-ora-hau</strong>. Accès par invitation (Settings → Collaborators).</p>
+      <table class="fa">
+        <tr><th>Personne</th><th>Compte GitHub</th><th>Rôle</th></tr>
+        <tr><td>(propriétaire)</td><td>nuisancesonore</td><td>Owner</td></tr>
+        <tr><td></td><td></td><td></td></tr>
+        <tr><td></td><td></td><td></td></tr>
+      </table>
+
+      <h2>4. Boîte e-mail d'envoi du site</h2>
+      <p>Adresse : <strong>teorahau.pf@gmail.com</strong> — compte <strong>de l'association</strong> (expéditeur des e-mails automatiques du site : confirmations, mots de passe…).</p>
+      <table class="fa">
+        <tr><td style="width:45%"><strong>Mot de passe</strong> (à écrire à la main)</td><td></td></tr>
+        <tr><td><strong>Téléphone lié</strong> (validation 2 étapes)</td><td></td></tr>
+        <tr><td><strong>E-mail de récupération</strong></td><td></td></tr>
+      </table>
+
+      <h2>5. Boîte e-mail de contact</h2>
+      <table class="fa">
+        <tr><td style="width:45%"><strong>Adresse</strong></td><td>contact@teorahau.net</td></tr>
+        <tr><td><strong>Hébergée chez / gérée par</strong></td><td></td></tr>
+        <tr><td><strong>Identifiants conservés par</strong></td><td></td></tr>
+      </table>
+
+      <h2>6. Nom de domaine</h2>
+      <table class="fa">
+        <tr><td style="width:45%"><strong>Domaine</strong></td><td>teorahau.net</td></tr>
+        <tr><td><strong>Registrar (où il est loué)</strong></td><td></td></tr>
+        <tr><td><strong>Compte géré par</strong></td><td></td></tr>
+        <tr><td><strong>Date de renouvellement</strong></td><td></td></tr>
+      </table>
+
+      <div class="note">
+        <strong>Règles de sécurité du bureau</strong><br>
+        • On ne partage <strong>jamais</strong> un mot de passe personnel : on <strong>invite</strong> chacun avec son propre compte.<br>
+        • Les comptes partagés de l'association (Gmail) sont consignés <strong>uniquement sur cette fiche papier</strong>.<br>
+        • Les jetons d'accès (Supabase <em>sbp_…</em>) sont créés au besoin et <strong>révoqués aussitôt après usage</strong>.<br>
+        • À chaque <strong>départ du bureau</strong> : retirer ses accès (Supabase Team, GitHub Collaborators) et changer le mot de passe Gmail.<br>
+        • Sauvegarde : une fois par mois, Admin → <strong>Exporter CSV</strong> (liste des adhérents), conservé par le secrétariat.
+      </div>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>initPage("");</script>
+</body>
+</html>

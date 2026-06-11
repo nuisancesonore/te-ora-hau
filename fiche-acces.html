@@ -24,12 +24,16 @@
     .note { background:#f7f4ec; border-left:4px solid #c0392b; padding:0.7rem 1rem; border-radius:8px; font-size:0.85rem; margin:0.8rem 0; }
     .barre-actions { text-align:center; margin:0 0 1.4rem; }
     @media print {
+      /* Marges gérées par la feuille elle-même : supprime aussi l'en-tête/pied
+         (date, URL) que le navigateur imprime dans les marges. */
+      @page { size: A4; margin: 0; }
       #nav-mount, #footer-mount, .barre-actions, .intro-ecran { display:none !important; }
-      body { background:#fff; }
-      main { padding:0; }
-      .feuille { box-shadow:none; max-width:100%; padding:0; }
+      body { background:#fff; padding-top:0 !important; }
+      main { padding:0; max-width:none; }
+      .feuille { box-shadow:none; max-width:100%; border-radius:0; padding:14mm 16mm; }
       h2 { page-break-after:avoid; }
       table.fa { page-break-inside:avoid; }
+      .saut-page { page-break-before:always; padding-top:10mm; }
     }
   </style>
 </head>
@@ -88,7 +92,7 @@
         <tr><td></td><td></td><td></td></tr>
       </table>
 
-      <h2>4. Boîte e-mail d'envoi du site</h2>
+      <h2 class="saut-page">4. Boîte e-mail d'envoi du site</h2>
       <p>Adresse : <strong>teorahau.pf@gmail.com</strong> — compte <strong>de l'association</strong> (expéditeur des e-mails automatiques du site : confirmations, mots de passe…).</p>
       <table class="fa">
         <tr><td style="width:45%"><strong>Mot de passe</strong> (à écrire à la main)</td><td></td></tr>

@@ -829,8 +829,15 @@
     }
     function relancer(email){
       const e = decodeURIComponent(email);
+      const corps = "Ia ora na,\n\n"+
+        "Votre cotisation à l'association Te Ora Hau arrive à échéance (ou est échue). "+
+        "Merci de penser à la renouveler pour continuer à soutenir notre action contre les nuisances sonores.\n\n"+
+        "Pour cotiser, rendez-vous sur :\n"+
+        "https://nuisancesonore.github.io/te-ora-hau/cotiser.html\n\n"+
+        "(virement, chèque ou espèces — pensez à indiquer vos NOM et PRÉNOM).\n\n"+
+        "Mauruuru,\nLe bureau de Te Ora Hau";
       location.href = `mailto:${e}?subject=${encodeURIComponent("Te Ora Hau — renouvellement de votre cotisation")}`+
-        `&body=${encodeURIComponent("Ia ora na,\n\nVotre cotisation à l'association Te Ora Hau arrive à échéance. Merci de penser à la renouveler pour continuer à soutenir notre action contre les nuisances sonores.\n\nMauruuru,\nLe bureau de Te Ora Hau")}`;
+        `&body=${encodeURIComponent(corps)}`;
     }
     function exportCSV(){
       const en = ["Nom","Prenom","Email","Telephone","Commune","Type adhesion","Type nuisance","Cotisation payee","Echeance","Role"];

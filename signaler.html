@@ -80,9 +80,13 @@
                 <div style="margin-top:0.7rem">
                   <div class="champ"><label>Précision sur les horaires <span style="font-weight:400;color:var(--gris)">— aide les autorités à constater</span></label>
                     <input id="horaire_detail" placeholder="Ex. surtout de 22h à 2h, les vendredis et samedis"></div>
+                  <div class="champ"><label>Auteur présumé du bruit <span style="font-weight:400;color:var(--gris)">— si vous le connaissez (facultatif)</span></label>
+                    <input id="auteur_presume" placeholder="Ex. bar « … », M. X (voisin du dessus), entreprise…"></div>
                   <div class="champ" style="display:flex;align-items:center;gap:0.5rem">
                     <input type="checkbox" id="voisins" style="width:auto">
                     <label for="voisins" style="margin:0">D'autres foyers / voisins sont également gênés</label></div>
+                  <div class="champ"><label>Nombre de personnes gênées dans votre foyer</label>
+                    <input type="number" id="personnes_foyer" min="1" placeholder="Ex. 4"></div>
                   <div class="champ"><label>Preuves dont vous disposez</label>
                     <div style="display:flex;gap:1.2rem;flex-wrap:wrap;font-size:0.92rem">
                       <label style="font-weight:400;display:flex;align-items:center;gap:0.35rem"><input type="checkbox" id="p-enr" style="width:auto"> Enregistrements / photos / vidéos</label>
@@ -208,16 +212,19 @@
           debut: document.getElementById("debut").value || null,
           description: document.getElementById("description").value.trim(),
           horaire_detail: document.getElementById("horaire_detail").value.trim(),
+          auteur_presume: document.getElementById("auteur_presume").value.trim(),
           voisins_genes: document.getElementById("voisins").checked,
+          personnes_foyer: parseInt(document.getElementById("personnes_foyer").value) || null,
           preuves: [document.getElementById("p-enr").checked ? "Enregistrements/photos" : "",
                     document.getElementById("p-att").checked ? "Attestations de témoins" : ""]
                    .filter(Boolean).join(" ; "),
           lat: pt?pt.lat:null, lng: pt?pt.lng:null,
         };
         let { error } = await sb.from("signalements").insert(row);
-        if (error && /column|schema cache|constat|debut|horaire_detail|voisins|preuves/i.test(error.message)) {  // colonnes pas encore ajoutées
+        if (error && /column|schema cache|constat|debut|horaire_detail|voisins|preuves|auteur_presume|personnes_foyer/i.test(error.message)) {  // colonnes pas encore ajoutées
           delete row.constat; delete row.debut;
           delete row.horaire_detail; delete row.voisins_genes; delete row.preuves;
+          delete row.auteur_presume; delete row.personnes_foyer;
           ({ error } = await sb.from("signalements").insert(row));
         }
         if (error){ msg.className="message err"; msg.textContent="Erreur : "+error.message; return; }

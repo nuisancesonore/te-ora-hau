@@ -120,7 +120,7 @@
                 <option value="ok">À jour</option>
                 <option value="ko">En retard</option>
               </select>
-              <button class="btn btn-clair" onclick="exportCSV()">Exporter CSV</button>
+              <button class="btn btn-clair" onclick="exportCSV(this)" title="Fichier Excel : un dossier par signalement (victime + nuisance + démarches)">Exporter (Excel)</button>
               <a class="btn btn-clair" href="fiche-acces.html" title="Document interne : qui a accès à quoi (à imprimer)">Fiche accès</a>
               <a class="btn btn-clair" href="guide-bureau.html" title="Mode d'emploi du bureau">Mode d'emploi</a>
             </div>
@@ -837,14 +837,60 @@
       location.href = `mailto:${e}?subject=${encodeURIComponent("Te Ora Hau — renouvellement de votre cotisation")}`+
         `&body=${encodeURIComponent(corps)}`;
     }
-    function exportCSV(){
-      const en = ["Nom","Prenom","Email","Telephone","Commune","Type adhesion","Type nuisance","Cotisation payee","Echeance","Role"];
-      const lignes = ADH.map(a => [a.nom,a.prenom,a.email,a.telephone,a.commune,a.type_adhesion,a.type_nuisance,a.cotisation_payee,a.cotisation_echeance,a.role]
-        .map(v => `"${String(v==null?'':v).replace(/"/g,'""')}"`).join(","));
-      const csv = en.join(",")+"\n"+lignes.join("\n");
-      const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = "adherents-te-ora-hau.csv"; a.click();
+    // Export « fichier dossiers » : une ligne par signalement, enrichie des
+    // informations de la victime (adhérent) et de l'état de ses démarches.
+    // Ouvrable directement dans Excel (séparateur « ; », accents conservés).
+    async function exportCSV(btn){
+      const lbl = btn ? btn.textContent : ""; if (btn){ btn.disabled = true; btn.textContent = "Génération…"; }
+      try {
+        const { data: sigs } = await sb.from("signalements").select("*").order("cree_le", { ascending:true });
+        const { data: dems } = await sb.from("demarches").select("*");
+        const profMap = {}; ADH.forEach(p => profMap[p.id] = p);
+        // Démarches groupées par adhérent.
+        const demParAuteur = {};
+        (dems || []).forEach(d => { (demParAuteur[d.auteur] = demParAuteur[d.auteur] || []).push(d); });
+
+        const ageDe = d => { if (!d) return ""; const x = new Date(String(d).slice(0,10)+"T00:00:00"); if (isNaN(x)) return ""; const t = new Date(); let a = t.getFullYear()-x.getFullYear(); if (t.getMonth()<x.getMonth() || (t.getMonth()===x.getMonth() && t.getDate()<x.getDate())) a--; return a; };
+        const moisAnnee = v => { if (!v) return ""; const p = String(v).split("-"); const M = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."]; return p.length>=2 ? `${M[(+p[1])-1]||""} ${p[0]}` : ""; };
+        const frd = v => v ? new Date(String(v).slice(0,10)+"T00:00:00").toLocaleDateString("fr-FR") : "";
+
+        const entetes = [
+          "N° dossier","N° adhérent","Nom","Prénom","Téléphone","E-mail","Âge",
+          "Île de résidence","Commune de résidence","Adresse de résidence",
+          "Type de nuisance","Commune du bruit","Quartier du bruit","Adresse / lieu du bruit","Auteur présumé",
+          "Ancienneté (depuis)","Horaire","Précision horaire","Récurrence","Intensité (gêne)",
+          "Autres foyers gênés","Personnes du foyer gênées","Démarche / constat","Preuves disponibles",
+          "Date du signalement","Nb de démarches","Date dépôt plainte","État du dossier","Observations",
+        ];
+        const lignes = (sigs || []).map(s => {
+          const p = profMap[s.auteur] || {};
+          const ds = demParAuteur[s.auteur] || [];
+          const plainte = ds.find(d => /plainte/i.test(d.type||""));
+          const etat = ds.some(d => d.reponse === "Résolu") ? "Résolu"
+                     : ds.length ? "En cours" : "Signalé (aucune démarche)";
+          return [
+            String(s.id||"").slice(0,8).toUpperCase(),
+            String(s.auteur||"").slice(0,8).toUpperCase(),
+            p.nom||"", p.prenom||"", p.telephone||"", p.email||"", ageDe(p.date_naissance),
+            p.ile||"", p.commune||"", p.adresse||"",
+            s.type||"", s.commune||"", s.quartier||"", s.adresse_source||"", s.auteur_presume||"",
+            moisAnnee(s.debut), s.horaire||"", s.horaire_detail||"", s.recurrence||"", s.intensite||"",
+            s.voisins_genes ? "Oui" : "Non", s.personnes_foyer!=null ? s.personnes_foyer : "",
+            s.constat||"", s.preuves||"",
+            frd(s.cree_le), ds.length, plainte ? frd(plainte.date_demarche) : "", etat, s.description||"",
+          ];
+        });
+
+        if (!lignes.length){ alert("Aucun signalement à exporter pour le moment."); return; }
+        const esc = v => `"${String(v==null?'':v).replace(/"/g,'""')}"`;
+        const csv = "﻿" + "sep=;\n" + entetes.map(esc).join(";") + "\n" +
+          lignes.map(l => l.map(esc).join(";")).join("\n");
+        const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "dossiers-nuisances-te-ora-hau.csv"; a.click();
+      } catch(e){ alert("Erreur lors de l'export : " + (e.message || e)); }
+      if (btn){ btn.disabled = false; btn.textContent = lbl; }
     }
   </script>
 </body>

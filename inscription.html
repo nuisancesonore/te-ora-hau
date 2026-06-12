@@ -51,9 +51,20 @@
           <input type="tel" id="telephone" placeholder="Ex. 87 12 34 56">
         </div>
         <div class="champ">
+          <label for="ile">Île de résidence</label>
+          <input id="ile" list="iles-pf" placeholder="Ex. Tahiti" value="Tahiti">
+          <datalist id="iles-pf">
+            <option>Tahiti</option><option>Moorea</option><option>Raiatea</option><option>Taha'a</option>
+            <option>Bora Bora</option><option>Huahine</option><option>Maupiti</option><option>Tubuai</option>
+            <option>Rurutu</option><option>Rapa</option><option>Rimatara</option><option>Raivavae</option>
+            <option>Rangiroa</option><option>Tikehau</option><option>Fakarava</option><option>Manihi</option>
+            <option>Nuku Hiva</option><option>Hiva Oa</option><option>Ua Pou</option><option>Gambier</option>
+          </datalist>
+        </div>
+        <div class="champ">
           <label for="commune">Commune de résidence</label>
           <select id="commune" required></select>
-          <input id="commune_autre" placeholder="Île puis commune (ex. Raiatea, Uturoa)" style="display:none;margin-top:0.5rem">
+          <input id="commune_autre" placeholder="Commune (ex. Uturoa)" style="display:none;margin-top:0.5rem">
         </div>
         <div class="champ pleine">
           <label for="email">Adresse e-mail</label>
@@ -107,8 +118,9 @@
       const mdp2 = document.getElementById("mdp2").value;
       if (mdp !== mdp2) { montrer("err", "Les mots de passe ne correspondent pas."); return; }
       montrer("ok", "Création du compte…");
+      const ile = document.getElementById("ile").value.trim();
       const res = await inscrire(nom, prenom, email, mdp, commune,
-        { date_naissance: naissance || "", adresse: adresse, telephone: telephone });
+        { date_naissance: naissance || "", adresse: adresse, telephone: telephone, ile: ile });
       montrer(res.ok ? "ok" : "err", res.msg);
       if (res.ok) {
         const complement = { date_naissance: naissance, adresse: adresse, telephone: telephone };

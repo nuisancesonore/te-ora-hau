@@ -171,6 +171,8 @@
               <div class="champ"><label>Nom</label><input id="nom" value="${echapper(profil.nom)}" required></div>
               <div class="champ"><label>Prénom</label><input id="prenom" value="${echapper(profil.prenom)}"></div>
               <div class="champ"><label>Date de naissance</label><input type="date" id="date_naissance" value="${echapper(profil.date_naissance)}"></div>
+              <div class="champ"><label>Île de résidence</label><input id="ile" list="iles-pf" value="${echapper(profil.ile)||'Tahiti'}">
+                <datalist id="iles-pf"><option>Tahiti</option><option>Moorea</option><option>Raiatea</option><option>Taha'a</option><option>Bora Bora</option><option>Huahine</option><option>Maupiti</option><option>Tubuai</option><option>Rurutu</option><option>Rangiroa</option><option>Tikehau</option><option>Fakarava</option><option>Nuku Hiva</option><option>Hiva Oa</option><option>Gambier</option></datalist></div>
               <div class="champ"><label>Commune de résidence</label><select id="commune"></select>
                 <input id="commune_autre" placeholder="Île puis commune (ex. Raiatea, Uturoa)" style="display:none;margin-top:0.5rem"></div>
               <div class="champ"><label>Adresse</label><input id="adresse" value="${echapper(profil.adresse)}" placeholder="Quartier, rue, lotissement…"></div>
@@ -269,13 +271,14 @@
           date_naissance: document.getElementById("date_naissance").value || null,
           adresse: document.getElementById("adresse").value.trim(),
           telephone: document.getElementById("telephone").value.trim(),
+          ile: document.getElementById("ile").value.trim(),
         };
         let { error } = await sb.from("profils").update(maj).eq("id", profil.id);
         let partiel = false;
         // Filet de secours : si des colonnes récentes n'existent pas encore,
         // on réessaie sans elles plutôt que d'échouer.
-        if (error && /column|schema cache|date_naissance|adresse|telephone|prenom/i.test(error.message||"")){
-          const maj2 = Object.assign({}, maj); delete maj2.date_naissance; delete maj2.adresse; delete maj2.telephone; delete maj2.prenom;
+        if (error && /column|schema cache|date_naissance|adresse|telephone|prenom|ile/i.test(error.message||"")){
+          const maj2 = Object.assign({}, maj); delete maj2.date_naissance; delete maj2.adresse; delete maj2.telephone; delete maj2.prenom; delete maj2.ile;
           const retry = await sb.from("profils").update(maj2).eq("id", profil.id);
           error = retry.error; partiel = !error;
         }

@@ -98,7 +98,9 @@
           <div><label>Constat / démarche</label><select id="e-constat-${id}">${opts(CONSTATS, data.constat||'Signalement seul')}</select></div>
           <div><label>Début des nuisances</label><input type="month" id="e-debut-${id}" value="${attr(data.debut)}"></div>
           <div><label>Précision horaires <span style="font-weight:400;color:var(--gris)">(ex. 22h–2h, week-ends)</span></label><input id="e-hdetail-${id}" value="${attr(data.horaire_detail)}"></div>
+          <div><label>Auteur présumé <span style="font-weight:400;color:var(--gris)">(si connu)</span></label><input id="e-auteur-${id}" value="${attr(data.auteur_presume)}" placeholder="Ex. bar « … », voisin…"></div>
           <div style="display:flex;align-items:flex-end;padding-bottom:0.4rem"><label style="display:flex;align-items:center;gap:0.4rem;margin:0"><input type="checkbox" id="e-vois-${id}" ${data.voisins_genes?'checked':''} style="width:auto"> Voisins également gênés</label></div>
+          <div><label>Personnes du foyer gênées</label><input type="number" id="e-foyer-${id}" min="1" value="${attr(data.personnes_foyer)}"></div>
           <div class="pleine"><label>Preuves disponibles</label><input id="e-preuves-${id}" value="${attr(data.preuves)}" placeholder="Ex. Enregistrements/photos ; Attestations de témoins"></div>
           <div class="pleine"><label>Adresse de la source du bruit</label><input id="e-source-${id}" value="${attr(data.adresse_source)}"></div>
           <div class="pleine"><label>Votre adresse <span style="font-weight:400;color:var(--gris)">(vous qui subissez)</span></label><input id="e-plaignant-${id}" value="${attr(data.adresse_plaignant)}"></div>
@@ -118,7 +120,9 @@
         horaire: val("e-horaire-"+id), intensite: val("e-intensite-"+id), recurrence: val("e-recurrence-"+id),
         constat: val("e-constat-"+id), debut: val("e-debut-"+id) || null,
         horaire_detail: val("e-hdetail-"+id),
+        auteur_presume: val("e-auteur-"+id),
         voisins_genes: document.getElementById("e-vois-"+id).checked,
+        personnes_foyer: parseInt(document.getElementById("e-foyer-"+id).value) || null,
         preuves: val("e-preuves-"+id),
         adresse_source: val("e-source-"+id), adresse_plaignant: val("e-plaignant-"+id),
         description: val("e-desc-"+id),
@@ -128,9 +132,10 @@
       let partiel = false;
       // Filet de secours : si des colonnes récentes n'existent pas encore
       // dans la base, on réessaie sans elles plutôt que d'échouer.
-      if (error && /column|schema cache|constat|debut|horaire_detail|voisins|preuves/i.test(error.message||"")){
+      if (error && /column|schema cache|constat|debut|horaire_detail|voisins|preuves|auteur_presume|personnes_foyer/i.test(error.message||"")){
         const maj2 = Object.assign({}, maj); delete maj2.constat; delete maj2.debut;
         delete maj2.horaire_detail; delete maj2.voisins_genes; delete maj2.preuves;
+        delete maj2.auteur_presume; delete maj2.personnes_foyer;
         const retry = await sb.from("signalements").update(maj2).eq("id", id);
         error = retry.error; partiel = !error;
       }

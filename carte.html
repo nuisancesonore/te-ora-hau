@@ -147,7 +147,8 @@
             `${echapper(s.commune)||''}${s.quartier?' — '+echapper(s.quartier):''} · ${echapper(s.horaire)||''}${s.horaire_detail?` (${echapper(s.horaire_detail)})`:''}<br>`+
             `Intensité : ${echapper(s.intensite)} · ${echapper(s.recurrence)||''}`+
             (s.debut?`<br>Depuis ${moisAn(s.debut)}`:"")+
-            (s.voisins_genes?`<br>Voisins également gênés`:"")+
+            (s.auteur_presume?`<br>Auteur présumé : ${echapper(s.auteur_presume)}`:"")+
+            (s.voisins_genes?`<br>Voisins également gênés${s.personnes_foyer?` (foyer : ${s.personnes_foyer})`:''}`:"")+
             (s.preuves?`<br>Preuves : ${echapper(s.preuves)}`:"")+
             `<br><strong>${echapper(s.constat||"Signalement seul")}</strong>`+
             (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+

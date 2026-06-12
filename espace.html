@@ -274,13 +274,17 @@
           ile: document.getElementById("ile").value.trim(),
         };
         let { error } = await sb.from("profils").update(maj).eq("id", profil.id);
-        let partiel = false;
-        // Filet de secours : si des colonnes récentes n'existent pas encore,
-        // on réessaie sans elles plutôt que d'échouer.
-        if (error && /column|schema cache|date_naissance|adresse|telephone|prenom|ile/i.test(error.message||"")){
-          const maj2 = Object.assign({}, maj); delete maj2.date_naissance; delete maj2.adresse; delete maj2.telephone; delete maj2.prenom; delete maj2.ile;
-          const retry = await sb.from("profils").update(maj2).eq("id", profil.id);
-          error = retry.error; partiel = !error;
+        let partiel = false, garde = 0;
+        // Filet de secours CIBLÉ : si une colonne récente n'existe pas encore en
+        // base, on retire UNIQUEMENT celle-là (nommée dans l'erreur) et on
+        // réessaie — les autres champs (dont le prénom) sont bien enregistrés.
+        const optionnelles = ["prenom","ile","date_naissance","adresse","telephone","type_nuisance","annuaire_optin"];
+        while (error && /column|schema cache|does not exist/i.test(error.message||"") && garde < 8){
+          const manquante = optionnelles.find(k => (k in maj) && new RegExp("\\b"+k+"\\b","i").test(error.message||""));
+          if (!manquante) break;
+          delete maj[manquante]; partiel = true; garde++;
+          const retry = await sb.from("profils").update(maj).eq("id", profil.id);
+          error = retry.error;
         }
         msg.className = "message " + (error ? "err" : "ok");
         msg.textContent = error ? "Erreur : " + error.message

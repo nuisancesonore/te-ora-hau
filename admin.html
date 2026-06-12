@@ -54,11 +54,7 @@
     table.adh { min-width:820px; }
     .act .lbl { font-size:0.72rem; color:var(--gris); }
     .act input[type=date] { padding:0.25rem 0.4rem; border:1.5px solid #d6d6cf; border-radius:6px; font-size:0.8rem; }
-    details.ajust { flex-basis:100%; margin-top:0.15rem; }
-    details.ajust summary { cursor:pointer; font-size:0.76rem; color:var(--bleu-lagon); font-weight:600; list-style:none; }
-    details.ajust summary::-webkit-details-marker { display:none; }
-    details.ajust summary::before { content:"⚙ "; }
-    .ajust-corps { display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center; margin-top:0.35rem; }
+    td .ech { padding:0.25rem 0.4rem; border:1.5px solid #d6d6cf; border-radius:6px; font-size:0.82rem; }
     .tableau-wrap { position:relative; }
     .hint-scroll { font-size:0.82rem; color:var(--gris); margin:0 0 0.45rem; display:flex; align-items:center; gap:0.35rem; }
     .hint-scroll .fl { color:var(--corail); font-weight:800; }
@@ -781,22 +777,14 @@
           <td>${echapper(a.email)||'—'}</td>
           <td>${echapper(a.commune)||'—'}</td>
           <td>${estAJour(a)?'<span class="pill ok">À jour</span>':'<span class="pill ko">En retard</span>'}</td>
-          <td>${echFr}</td>
+          <td><input type="date" class="ech" id="ech-${a.id}" value="${echISO}" title="Échéance — cliquez pour modifier (enregistré automatiquement)" onchange="majEcheance('${a.id}', this.value)"></td>
           <td>
             <div class="act">
               <span class="lbl">Cotisé le</span>
               <input type="date" id="deb-${a.id}" value="${debISO}" title="Date du paiement de la cotisation">
               <button class="mini vert" onclick="validerCoti('${a.id}')" title="Valide : payée, échéance un an après cette date">Valider</button>
+              <label title="Cotisation réglée"><input type="checkbox" id="pay-${a.id}" ${a.cotisation_payee?'checked':''} onchange="majPayee('${a.id}', this.checked)"> payée</label>
               ${!estAJour(a)?`<button class="mini clair" onclick="relancer('${encodeURIComponent(a.email||'')}')">Relancer</button>`:''}
-              <details class="ajust">
-                <summary>Ajuster</summary>
-                <div class="ajust-corps">
-                  <span class="lbl">Échéance</span>
-                  <input type="date" class="ech" id="ech-${a.id}" value="${echISO}" title="Échéance — ajustable manuellement">
-                  <label><input type="checkbox" id="pay-${a.id}" ${a.cotisation_payee?'checked':''}> payée</label>
-                  <button class="mini clair" onclick="enregistrerCoti('${a.id}')">Enregistrer</button>
-                </div>
-              </details>
             </div>
           </td>
         </tr>`; }).join("");
@@ -804,13 +792,19 @@
         <table class="adh"><thead><tr><th>Nom</th><th>E-mail</th><th>Commune</th><th>Cotisation</th><th>Échéance</th><th>Actions</th></tr></thead>
         <tbody>${lignes||'<tr><td colspan="6" style="text-align:center;color:var(--gris)">Aucun adhérent</td></tr>'}</tbody></table>`;
     }
-    // Enregistre l'échéance saisie (date) et l'état "payée" pour un adhérent.
-    async function enregistrerCoti(id){
-      const echeance = (document.getElementById("ech-"+id).value || "") || null;
-      const paye = document.getElementById("pay-"+id).checked;
-      const { error } = await sb.from("profils").update({ cotisation_payee:paye, cotisation_echeance:echeance }).eq("id", id);
+    // Modifie l'échéance directement depuis la colonne (enregistré aussitôt).
+    async function majEcheance(id, val){
+      const echeance = (val || "").slice(0,10) || null;
+      const { error } = await sb.from("profils").update({ cotisation_echeance:echeance }).eq("id", id);
       if (error) return alert("Erreur : "+error.message);
-      const a = ADH.find(x=>x.id===id); a.cotisation_payee=paye; a.cotisation_echeance=echeance;
+      const a = ADH.find(x=>x.id===id); a.cotisation_echeance=echeance;
+      dessiner();
+    }
+    // Coche/décoche "payée" (enregistré aussitôt).
+    async function majPayee(id, checked){
+      const { error } = await sb.from("profils").update({ cotisation_payee:checked }).eq("id", id);
+      if (error) return alert("Erreur : "+error.message);
+      const a = ADH.find(x=>x.id===id); a.cotisation_payee=checked;
       dessiner();
     }
     // Valide la cotisation : payée + échéance un an après la date de cotisation

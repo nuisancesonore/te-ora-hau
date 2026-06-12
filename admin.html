@@ -507,7 +507,7 @@
       box.innerHTML = `<div style="overflow-x:auto"><table class="adh">
         <thead><tr><th>Date</th><th>Adhérent</th><th>Démarche</th><th>Destinataire</th><th>Mode</th><th>Suite</th></tr></thead><tbody>` +
         data.map(d => `<tr>
-          <td>${d.date_demarche ? new Date(d.date_demarche).toLocaleDateString('fr-FR') : ''}</td>
+          <td>${frDate(d.date_demarche)}</td>
           <td>${echapper(nomDe(d.auteur))}</td>
           <td><strong>${echapper(d.type)}</strong>${d.note ? `<br><span style="color:var(--gris);font-size:0.8rem">${echapper(d.note)}</span>` : ''}</td>
           <td>${echapper(d.destinataire)||'—'}</td><td>${echapper(d.mode)||'—'}</td>

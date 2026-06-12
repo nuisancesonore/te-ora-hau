@@ -181,11 +181,11 @@
 
       preparerCourrier();
 
-      document.getElementById("j-date").value = new Date().toISOString().slice(0,10);
+      document.getElementById("j-date").value = aujLoc();
       document.getElementById("form-jb").addEventListener("submit", ajouterEpisode);
       await chargerJournal();
 
-      document.getElementById("d-date").value = new Date().toISOString().slice(0,10);
+      document.getElementById("d-date").value = aujLoc();
       document.getElementById("form-dem").addEventListener("submit", ajouterDemarche);
       await chargerDemarches();
       prefillDemarches();
@@ -470,6 +470,9 @@
     const CLE_TYPE = { "Courrier amiable":"amiable", "Mise en demeure":"miseendemeure", "Demande au Maire":"mairie",
                        "Signalement gendarmerie/police":"gendarmerie", "Plainte au Procureur":"procureur", "Courrier bailleur/syndic":"bailleur" };
     let DEM = [], EDIT_DEM = null;
+    // Dates « AAAA-MM-JJ » manipulées en texte (aucun fuseau, aucun décalage).
+    function frDateLoc(iso){ const p = String(iso||"").slice(0,10).split("-"); return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : ""; }
+    function aujLoc(){ const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`; }
 
     // Après chaque génération/envoi : propose d'enregistrer la démarche.
     async function proposerSuivi(mode){
@@ -480,7 +483,7 @@
       const { error } = await sb.from("demarches").insert({
         auteur: s.user.id,
         type: TYPE_LABELS[DERNIER.type] || DERNIER.type,
-        date_demarche: new Date().toISOString().slice(0,10),
+        date_demarche: aujLoc(),
         mode, destinataire: dest, note: DERNIER.objet,
       });
       if (error) alert("Suivi non enregistré : " + error.message + "\n(Le bureau doit lancer migration-demarches.sql.)");
@@ -541,7 +544,7 @@
       box.innerHTML = DEM.length ? `
         <table class="jb"><thead><tr><th>Date</th><th>Démarche</th><th>Destinataire</th><th>Mode</th><th>Suite donnée</th><th></th></tr></thead><tbody>` +
         DEM.map(d => `<tr>
-          <td>${d.date_demarche ? new Date(d.date_demarche).toLocaleDateString('fr-FR') : ''}</td>
+          <td>${frDateLoc(d.date_demarche)}</td>
           <td><strong>${echapper(d.type)}</strong>${d.note ? `<br><span style="color:var(--gris);font-size:0.8rem">${echapper(d.note)}</span>` : ''}</td>
           <td>${echapper(d.destinataire)||'—'}</td><td>${echapper(d.mode)||'—'}</td>
           <td><select onchange="majSuite('${d.id}', this.value)" style="padding:0.3rem 0.4rem;border:1.5px solid #d6d6cf;border-radius:7px;font-size:0.85rem">${
@@ -598,7 +601,7 @@
       const ta = document.getElementById("c-demarches");
       if (!ta || ta.value.trim() || !DEM.length) return;
       ta.value = DEM.slice().reverse().map(d =>
-        `${d.type}${d.date_demarche ? ` le ${new Date(d.date_demarche).toLocaleDateString('fr-FR')}` : ''}` +
+        `${d.type}${d.date_demarche ? ` le ${frDateLoc(d.date_demarche)}` : ''}` +
         `${d.reponse && d.reponse !== "En attente" ? ` (${d.reponse.toLowerCase()})` : ''}`).join(" ; ");
     }
   </script>

@@ -276,9 +276,40 @@ alter table public.missions_commentaires enable row level security;
 drop policy if exists mcom_select on public.missions_commentaires;
 create policy mcom_select on public.missions_commentaires
   for select using (public.is_bureau() or public.is_assesseur());
+-- Colonne « pour » : missions destinées aux assesseurs (défaut) ou au bureau.
+alter table public.missions add column if not exists pour text not null default 'assesseurs';
+
+drop policy if exists missions_select on public.missions;
+create policy missions_select on public.missions
+  for select using (public.is_bureau() or (public.is_assesseur() and pour = 'assesseurs'));
+
+drop policy if exists missions_update on public.missions;
+create policy missions_update on public.missions
+  for update using (
+    public.is_bureau()
+    or (public.is_assesseur() and pour = 'assesseurs' and (assigne_a = auth.uid() or assigne_a is null))
+  ) with check (
+    public.is_bureau()
+    or (public.is_assesseur() and pour = 'assesseurs' and assigne_a = auth.uid())
+  );
+
+drop policy if exists mcom_select on public.missions_commentaires;
+create policy mcom_select on public.missions_commentaires
+  for select using (
+    public.is_bureau()
+    or (public.is_assesseur() and exists (
+      select 1 from public.missions m where m.id = mission_id and m.pour = 'assesseurs'))
+  );
+
 drop policy if exists mcom_insert on public.missions_commentaires;
 create policy mcom_insert on public.missions_commentaires
-  for insert with check ((public.is_bureau() or public.is_assesseur()) and auteur = auth.uid());
+  for insert with check (
+    auteur = auth.uid() and (
+      public.is_bureau()
+      or (public.is_assesseur() and exists (
+        select 1 from public.missions m where m.id = mission_id and m.pour = 'assesseurs'))
+    )
+  );
 
 -- ---------- 12) Renforcement du dossier des signalements ----------
 alter table public.signalements add column if not exists horaire_detail text;

@@ -401,6 +401,7 @@
     let MISSIONS_ADM = [], MCOMS = {};
     function rendreMissionsAdmin(){
       const assesseurs = ADH.filter(a => a.type_adhesion === "Assesseur");
+      const bureauM = ADH.filter(a => a.role === "bureau");
       document.getElementById("missions-admin").innerHTML = `
         <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
           <div id="mmsg" class="message"></div>
@@ -412,12 +413,16 @@
             <div class="champ"><label>Confier à</label>
               <select id="m-qui">
                 <option value="">Tous les assesseurs (le premier qui la prend)</option>
-                ${assesseurs.map(a => `<option value="${a.id}">${echapper(nomComplet(a) || a.email)}</option>`).join("")}
+                <optgroup label="Un assesseur précis">
+                  ${assesseurs.map(a => `<option value="${a.id}">${echapper(nomComplet(a) || a.email)}</option>`).join("")}
+                </optgroup>
+                <optgroup label="Au bureau (interne — invisible des assesseurs)">
+                  ${bureauM.map(a => `<option value="${a.id}">${echapper(nomComplet(a) || a.email)}</option>`).join("")}
+                </optgroup>
               </select></div>
             <div class="champ"><label>Échéance (facultatif)</label><input type="date" id="m-ech"></div>
           </div>
           <button class="btn btn-vert" onclick="creerMission()">Confier la mission</button>
-          ${assesseurs.length ? "" : `<p style="font-size:0.82rem;color:var(--gris);margin-top:0.5rem">Aucun assesseur inscrit pour l'instant — les missions « ouvertes à tous » les attendront.</p>`}
         </div>
         <div id="missions-liste"><p style="color:var(--gris)">Chargement…</p></div>`;
       chargerMissionsAdmin();
@@ -441,7 +446,7 @@
         const coms = MCOMS[m.id] || [];
         const dernier = coms.length ? coms[coms.length - 1] : null;
         return `<div class="msg-c" style="border-left-color:${m.statut === "Terminée" ? "#1d6b3f" : m.assigne_a ? "var(--bleu-lagon)" : "var(--corail)"}">
-          <div class="meta">${m.echeance ? `échéance ${new Date(m.echeance).toLocaleDateString("fr-FR")} · ` : ""}${m.assigne_a ? `assignée à <strong>${echapper(nomDe(m.assigne_a))}</strong>` : "<strong>ouverte à tous</strong>"} · ${pl(m.statut)}</div>
+          <div class="meta">${m.pour === "bureau" ? '<span class="pill" style="background:#e8e3f5;color:#534ab7">interne bureau</span> · ' : ""}${m.echeance ? `échéance ${new Date(String(m.echeance).slice(0,10)+"T00:00:00").toLocaleDateString("fr-FR")} · ` : ""}${m.assigne_a ? `assignée à <strong>${echapper(nomDe(m.assigne_a))}</strong>` : "<strong>ouverte à tous</strong>"} · ${pl(m.statut)}</div>
           <div style="font-weight:600;margin:0.2rem 0">${echapper(m.titre)}</div>
           ${m.description ? `<div style="white-space:pre-wrap;font-size:0.9rem">${echapper(m.description)}</div>` : ""}
           ${dernier ? `<div style="background:#f7f4ec;border-radius:8px;padding:0.45rem 0.7rem;margin-top:0.45rem;font-size:0.85rem"><span style="color:var(--gris);font-size:0.75rem">Dernier suivi — ${echapper(dernier.auteur_nom) || "—"} · ${new Date(dernier.cree_le).toLocaleDateString("fr-FR")}</span><br>${echapper(dernier.texte)}</div>` : ""}
@@ -459,12 +464,19 @@
       const ech = document.getElementById("m-ech").value || null;
       const msg = document.getElementById("mmsg");
       if (!titre){ msg.className = "message err"; msg.textContent = "Indiquez un titre."; return; }
-      const { error } = await sb.from("missions").insert({
-        titre, description: desc, assigne_a: qui, echeance: ech,
-        cree_par_nom: MOI ? nomComplet(MOI) : "",
-      });
+      // « pour » = bureau si le destinataire est un membre du bureau, sinon assesseurs.
+      let pour = "assesseurs";
+      if (qui){ const p = ADH.find(x => x.id === qui); if (p && p.role === "bureau") pour = "bureau"; }
+      const row = { titre, description: desc, assigne_a: qui, echeance: ech, pour, cree_par_nom: MOI ? nomComplet(MOI) : "" };
+      let { error } = await sb.from("missions").insert(row);
+      if (error && /column|schema cache|pour/i.test(error.message||"")){  // colonne "pour" pas encore en base
+        const r2 = Object.assign({}, row); delete r2.pour;
+        ({ error } = await sb.from("missions").insert(r2));
+      }
       msg.className = "message " + (error ? "err" : "ok");
-      msg.textContent = error ? "Erreur : " + error.message + " (migration-missions.sql lancée ?)" : "Mission confiée ✔ Elle apparaît sur la page « Mes missions » des assesseurs.";
+      msg.textContent = error ? "Erreur : " + error.message + " (migration-missions.sql lancée ?)"
+        : (pour === "bureau" ? "Mission interne confiée ✔ (visible du bureau uniquement)"
+                             : "Mission confiée ✔ Elle apparaît sur la page « Mes missions » des assesseurs.");
       if (!error){ document.getElementById("m-titre").value = ""; document.getElementById("m-desc").value = ""; document.getElementById("m-ech").value = ""; }
       chargerMissionsAdmin();
     }

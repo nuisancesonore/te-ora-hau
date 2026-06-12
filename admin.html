@@ -777,7 +777,6 @@
           <td>${echapper(a.email)||'—'}</td>
           <td>${echapper(a.commune)||'—'}</td>
           <td>${estAJour(a)?'<span class="pill ok">À jour</span>':'<span class="pill ko">En retard</span>'}</td>
-          <td><input type="date" class="ech" id="ech-${a.id}" value="${echISO}" title="Échéance — cliquez pour modifier (enregistré automatiquement)" onchange="majEcheance('${a.id}', this.value)"></td>
           <td>
             <div class="act">
               <span class="lbl">Cotisé le</span>
@@ -787,9 +786,10 @@
               ${!estAJour(a)?`<button class="mini clair" onclick="relancer('${encodeURIComponent(a.email||'')}')">Relancer</button>`:''}
             </div>
           </td>
+          <td><input type="date" class="ech" id="ech-${a.id}" value="${echISO}" title="Échéance — cliquez pour modifier (enregistré automatiquement)" onchange="majEcheance('${a.id}', this.value)"></td>
         </tr>`; }).join("");
       document.getElementById("tableau").innerHTML = `
-        <table class="adh"><thead><tr><th>Nom</th><th>E-mail</th><th>Commune</th><th>Cotisation</th><th>Échéance</th><th>Actions</th></tr></thead>
+        <table class="adh"><thead><tr><th>Nom</th><th>E-mail</th><th>Commune</th><th>Cotisation</th><th>Actions</th><th>Échéance</th></tr></thead>
         <tbody>${lignes||'<tr><td colspan="6" style="text-align:center;color:var(--gris)">Aucun adhérent</td></tr>'}</tbody></table>`;
     }
     // Modifie l'échéance directement depuis la colonne (enregistré aussitôt).

@@ -56,6 +56,12 @@
     .act .lbl { font-size:0.72rem; color:var(--gris); }
     .act input[type=date] { padding:0.25rem 0.4rem; border:1.5px solid #d6d6cf; border-radius:6px; font-size:0.8rem; }
     td .ech { padding:0.25rem 0.4rem; border:1.5px solid #d6d6cf; border-radius:6px; font-size:0.82rem; }
+    details.dem-aut { background:#fff; border:1px solid #ececec; border-radius:8px; margin-bottom:0.45rem; box-shadow:var(--ombre); }
+    details.dem-aut > summary { cursor:pointer; padding:0.6rem 0.95rem; font-size:0.95rem; color:var(--bleu-fonce); list-style:none; }
+    details.dem-aut > summary::-webkit-details-marker { display:none; }
+    details.dem-aut > summary::before { content:"▸"; color:var(--corail); font-weight:700; margin-right:0.5rem; display:inline-block; transition:transform 0.15s; }
+    details.dem-aut[open] > summary::before { transform:rotate(90deg); }
+    details.dem-aut > div { padding:0 0.95rem 0.8rem; }
     .tableau-wrap { position:relative; }
     .hint-scroll { font-size:0.82rem; color:var(--gris); margin:0 0 0.45rem; display:flex; align-items:center; gap:0.35rem; }
     .hint-scroll .fl { color:var(--corail); font-weight:800; }
@@ -504,15 +510,25 @@
       const pastille = r => r === "Résolu" ? '<span class="pill ok">Résolu</span>'
         : r === "Sans réponse" ? '<span class="pill ko">Sans réponse</span>'
         : echapper(r || "En attente");
-      box.innerHTML = `<div style="overflow-x:auto"><table class="adh">
-        <thead><tr><th>Date</th><th>Adhérent</th><th>Démarche</th><th>Destinataire</th><th>Mode</th><th>Suite</th></tr></thead><tbody>` +
-        data.map(d => `<tr>
+      // Regroupé par adhérent : une ligne dépliable par personne.
+      const parAuteur = {};
+      data.forEach(d => { (parAuteur[d.auteur] = parAuteur[d.auteur] || []).push(d); });
+      const auteurs = Object.keys(parAuteur).sort((a,b) => nomDe(a).localeCompare(nomDe(b), "fr"));
+      box.innerHTML = auteurs.map(uid => {
+        const ds = parAuteur[uid];
+        const resolu = ds.filter(d => d.reponse === "Résolu").length;
+        const lignes = ds.map(d => `<tr>
           <td>${frDate(d.date_demarche)}</td>
-          <td>${echapper(nomDe(d.auteur))}</td>
           <td><strong>${echapper(d.type)}</strong>${d.note ? `<br><span style="color:var(--gris);font-size:0.8rem">${echapper(d.note)}</span>` : ''}</td>
           <td>${echapper(d.destinataire)||'—'}</td><td>${echapper(d.mode)||'—'}</td>
-          <td>${pastille(d.reponse)}</td>
-        </tr>`).join("") + `</tbody></table></div>`;
+          <td>${pastille(d.reponse)}</td></tr>`).join("");
+        return `<details class="dem-aut">
+          <summary><strong>${echapper(nomDe(uid))}</strong> · ${ds.length} démarche${ds.length>1?'s':''}${resolu?` · <span class="pill ok">${resolu} résolu${resolu>1?'s':''}</span>`:''}</summary>
+          <div style="overflow-x:auto;margin-top:0.5rem"><table class="adh" style="min-width:560px">
+            <thead><tr><th>Date</th><th>Démarche</th><th>Destinataire</th><th>Mode</th><th>Suite</th></tr></thead>
+            <tbody>${lignes}</tbody></table></div>
+        </details>`;
+      }).join("");
     }
 
     /* ----- Statistiques détaillées des adhérents ----- */

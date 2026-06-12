@@ -234,8 +234,9 @@ async function rendreNav(pageActive) {
     // n'est pas validée par le bureau (les pages expliquent alors quoi faire).
     const acces = aDroitAcces(profil);
     const lk = acces ? "" : "🔒 ";
-    // "Mes missions" : uniquement pour les assesseurs (et le bureau).
-    const estAssesseur = profil.type_adhesion === "Assesseur" || profil.role === "bureau";
+    // "Mes missions" : uniquement pour les assesseurs (le bureau pilote les
+    // missions depuis l'Administration, il ne les reçoit pas).
+    const estAssesseur = profil.type_adhesion === "Assesseur";
     const dropEspace = `
       <div class="menu-drop">
         <a href="espace.html" id="nav-espace-trigger" class="drop-trigger ${espaceActif}">Mon espace <span class="caret">▾</span></a>
@@ -399,9 +400,10 @@ async function compterNonLus(profil) {
     const vu = parseInt(localStorage.getItem("TOH_vu_forum") || "0", 10);
     forum = (data || []).filter(m => new Date(m.cree_le).getTime() > vu).length;
   } catch (_) {}
-  // Missions : nouvelles missions qui concernent l'assesseur (ou le bureau).
+  // Missions : nouvelles missions qui concernent l'assesseur (le bureau, lui,
+  // pilote les missions depuis l'Administration).
   let missions = 0;
-  if (profil.type_adhesion === "Assesseur" || profil.role === "bureau") try {
+  if (profil.type_adhesion === "Assesseur") try {
     const { data } = await sb.from("missions")
       .select("cree_le, assigne_a, statut").order("cree_le", { ascending: false }).limit(50);
     const vu = parseInt(localStorage.getItem("TOH_vu_missions") || "0", 10);

@@ -51,7 +51,15 @@
           <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
         return;
       }
-      const estAssesseur = PROFIL.type_adhesion === "Assesseur" || PROFIL.role === "bureau";
+      // Le bureau ne « reçoit » pas de missions : il les pilote depuis l'Admin.
+      if (PROFIL.role === "bureau" && PROFIL.type_adhesion !== "Assesseur"){
+        contenu.innerHTML = `<div class="verrou"><div class="ico">🏛️</div>
+          <h2 style="color:var(--bleu-fonce)">Gestion des missions</h2>
+          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">En tant que membre du bureau, vous <strong>créez et suivez</strong> les missions depuis l'Administration — vous ne les recevez pas ici.</p>
+          <a href="admin.html" class="btn btn-primaire">Aller à l'Administration</a></div>`;
+        return;
+      }
+      const estAssesseur = PROFIL.type_adhesion === "Assesseur";
       if (!estAssesseur){
         contenu.innerHTML = `<div class="verrou"><div class="ico">🤝</div>
           <h2 style="color:var(--bleu-fonce)">Réservé aux assesseurs</h2>

@@ -161,7 +161,10 @@
                 <select id="d-mode"><option>Courrier simple</option><option>Recommandé A.R.</option><option>E-mail</option><option>Dépôt en main propre</option><option>Téléphone</option><option>Sur place</option></select></div>
               <div class="champ" style="margin:0"><label>Destinataire</label><input id="d-dest" placeholder="Ex. M. X, Mairie de Punaauia…"></div>
               <div class="champ" style="margin:0;grid-column:1/-1"><label>Note (facultatif)</label><input id="d-note" placeholder="Ex. réponse promise sous 8 jours…"></div>
-              <button class="btn btn-vert" type="submit" style="grid-column:1/-1">Ajouter la démarche</button>
+              <div style="grid-column:1/-1;display:flex;gap:0.5rem;flex-wrap:wrap">
+                <button class="btn btn-vert" type="submit" id="d-submit">Ajouter la démarche</button>
+                <button class="btn btn-clair" type="button" id="d-annuler" onclick="annulerEditDem()" style="display:none">Annuler la modification</button>
+              </div>
             </form>
           </div>
           <div id="suggestion-dem"></div>
@@ -466,7 +469,7 @@
     const ORDRE_ETAPES = ["Courrier amiable","Mise en demeure","Demande au Maire","Signalement gendarmerie/police","Plainte au Procureur"];
     const CLE_TYPE = { "Courrier amiable":"amiable", "Mise en demeure":"miseendemeure", "Demande au Maire":"mairie",
                        "Signalement gendarmerie/police":"gendarmerie", "Plainte au Procureur":"procureur", "Courrier bailleur/syndic":"bailleur" };
-    let DEM = [];
+    let DEM = [], EDIT_DEM = null;
 
     // Après chaque génération/envoi : propose d'enregistrer la démarche.
     async function proposerSuivi(mode){
@@ -487,20 +490,44 @@
     async function ajouterDemarche(e){
       e.preventDefault();
       const s = await sessionActive();
-      const row = {
-        auteur: s.user.id,
+      const champs = {
         type: document.getElementById("d-type").value,
         date_demarche: document.getElementById("d-date").value || null,
         mode: document.getElementById("d-mode").value,
         destinataire: document.getElementById("d-dest").value.trim(),
         note: document.getElementById("d-note").value.trim(),
       };
-      const { error } = await sb.from("demarches").insert(row);
+      let error;
+      if (EDIT_DEM){
+        ({ error } = await sb.from("demarches").update(champs).eq("id", EDIT_DEM));
+      } else {
+        ({ error } = await sb.from("demarches").insert(Object.assign({ auteur: s.user.id }, champs)));
+      }
       const m = document.getElementById("dmsg");
       m.className = "message " + (error ? "err" : "ok");
-      m.textContent = error ? "Erreur : " + error.message + " (migration-demarches.sql non lancée ?)" : "Démarche enregistrée ✔";
-      if (!error){ document.getElementById("d-dest").value = ""; document.getElementById("d-note").value = ""; }
+      m.textContent = error ? "Erreur : " + error.message + " (migration-demarches.sql non lancée ?)"
+        : (EDIT_DEM ? "Démarche corrigée ✔" : "Démarche enregistrée ✔");
+      if (!error){ annulerEditDem(); document.getElementById("d-dest").value = ""; document.getElementById("d-note").value = ""; }
       await chargerDemarches();
+    }
+    // Charge une démarche dans le formulaire pour la corriger.
+    function editerDemarche(id){
+      const d = DEM.find(x => x.id === id); if (!d) return;
+      document.getElementById("d-type").value = d.type || "";
+      document.getElementById("d-date").value = (d.date_demarche || "").slice(0,10);
+      document.getElementById("d-mode").value = d.mode || "Courrier simple";
+      document.getElementById("d-dest").value = d.destinataire || "";
+      document.getElementById("d-note").value = d.note || "";
+      EDIT_DEM = id;
+      document.getElementById("d-submit").textContent = "Enregistrer les modifications";
+      document.getElementById("d-annuler").style.display = "";
+      document.getElementById("form-dem").scrollIntoView({ behavior:"smooth", block:"center" });
+    }
+    function annulerEditDem(){
+      EDIT_DEM = null;
+      document.getElementById("d-submit").textContent = "Ajouter la démarche";
+      document.getElementById("d-annuler").style.display = "none";
+      document.getElementById("d-dest").value = ""; document.getElementById("d-note").value = "";
     }
 
     async function chargerDemarches(){
@@ -520,7 +547,9 @@
           <td><select onchange="majSuite('${d.id}', this.value)" style="padding:0.3rem 0.4rem;border:1.5px solid #d6d6cf;border-radius:7px;font-size:0.85rem">${
             SUITES.map(o => `<option${(d.reponse||'En attente')===o?' selected':''}>${o}</option>`).join("")
           }</select></td>
-          <td><button class="btn btn-clair" style="padding:0.25rem 0.55rem;font-size:0.8rem" onclick="supprimerDemarche('${d.id}')" title="Supprimer">✕</button></td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-clair" style="padding:0.25rem 0.55rem;font-size:0.8rem" onclick="editerDemarche('${d.id}')" title="Corriger">✎</button>
+            <button class="btn btn-clair" style="padding:0.25rem 0.55rem;font-size:0.8rem" onclick="supprimerDemarche('${d.id}')" title="Supprimer">✕</button></td>
         </tr>`).join("") + `</tbody></table>`
         : "<p style='color:var(--gris);margin-top:1rem'>Aucune démarche enregistrée. Ajoutez votre première démarche ci-dessus — ou générez un courrier : on vous proposera de l'enregistrer ici.</p>";
       rendreSuggestion();

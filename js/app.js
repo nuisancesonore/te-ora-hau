@@ -155,7 +155,9 @@ async function monProfil() {
 
 // Statut de cotisation — source de vérité unique (utilisée par Mon espace et Cotiser)
 function statutCotisation(profil) {
-  const ech = profil.cotisation_echeance ? new Date(profil.cotisation_echeance) : null;
+  // Date « AAAA-MM-JJ » lue en heure locale (le suffixe T00:00:00 évite le
+  // décalage d'un jour dû au fuseau UTC — ex. Polynésie -10h).
+  const ech = profil.cotisation_echeance ? new Date(String(profil.cotisation_echeance).slice(0,10) + "T00:00:00") : null;
   const aJour = profil.cotisation_payee && (!ech || ech >= new Date());
   // La cotisation est annuelle : la période débute un an avant l'échéance.
   let debut = null;

@@ -761,7 +761,7 @@
     }
 
     function estAJour(a){
-      return a.cotisation_payee && (!a.cotisation_echeance || new Date(a.cotisation_echeance) >= new Date());
+      return a.cotisation_payee && (!a.cotisation_echeance || new Date(String(a.cotisation_echeance).slice(0,10)+"T23:59:59") >= new Date());
     }
     function dessiner(){
       const q = (document.getElementById("q").value||"").toLowerCase();
@@ -772,10 +772,9 @@
         return m && fo;
       }).map(a => {
         const echISO = (a.cotisation_echeance||"").slice(0,10);
-        const echFr = a.cotisation_echeance ? new Date(a.cotisation_echeance).toLocaleDateString("fr-FR") : "—";
+        const echFr = frDate(echISO);
         // Date de cotisation (paiement) = un an avant l'échéance, pré-remplie.
-        let debISO = "";
-        if (echISO) { const _d = new Date(echISO); _d.setFullYear(_d.getFullYear()-1); debISO = _d.toISOString().slice(0,10); }
+        const debISO = echISO ? isoAnnee(echISO, -1) : "";
         return `
         <tr>
           <td>${echapper(nomComplet(a))||'—'}${a.role==='bureau'?' <span class="pill ok">bureau</span>':''}</td>
@@ -816,12 +815,16 @@
     }
     // Valide la cotisation : payée + échéance un an après la date de cotisation
     // saisie (« Cotisé le »). Si la date est vide, on prend aujourd'hui.
+    // Dates « AAAA-MM-JJ » manipulées comme du texte (aucun fuseau horaire,
+    // donc aucun décalage d'un jour).
+    function frDate(iso){ const p = String(iso||"").slice(0,10).split("-"); return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : "—"; }
+    function isoAnnee(iso, delta){ const p = String(iso||"").slice(0,10).split("-"); return p.length===3 ? `${(+p[0]+delta)}-${p[1]}-${p[2]}` : ""; }
+    function aujourdHuiISO(){ const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`; }
+
     async function validerCoti(id){
-      const deb = (document.getElementById("deb-"+id).value || "").trim();
-      const base = deb ? new Date(deb) : new Date();
-      if (isNaN(base)) return alert("Date de cotisation invalide.");
-      base.setFullYear(base.getFullYear()+1);
-      const echeance = base.toISOString().slice(0,10);
+      const deb = (document.getElementById("deb-"+id).value || "").trim() || aujourdHuiISO();
+      const echeance = isoAnnee(deb, 1);
+      if (!echeance) return alert("Date de cotisation invalide.");
       const { error } = await sb.from("profils").update({ cotisation_payee:true, cotisation_echeance:echeance }).eq("id", id);
       if (error) return alert("Erreur : "+error.message);
       const a = ADH.find(x=>x.id===id); a.cotisation_payee=true; a.cotisation_echeance=echeance;

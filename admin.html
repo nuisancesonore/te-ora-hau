@@ -51,7 +51,8 @@
     details.com-plus summary::-webkit-details-marker { display:none; }
     details.com-plus .corps { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.6rem; }
     #tableau { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    table.adh { min-width:720px; }
+    table.adh { min-width:820px; }
+    .act .lbl { font-size:0.72rem; color:var(--gris); margin-left:0.25rem; }
     .tableau-wrap { position:relative; }
     .hint-scroll { font-size:0.82rem; color:var(--gris); margin:0 0 0.45rem; display:flex; align-items:center; gap:0.35rem; }
     .hint-scroll .fl { color:var(--corail); font-weight:800; }
@@ -766,6 +767,9 @@
       }).map(a => {
         const echISO = (a.cotisation_echeance||"").slice(0,10);
         const echFr = a.cotisation_echeance ? new Date(a.cotisation_echeance).toLocaleDateString("fr-FR") : "—";
+        // Date de cotisation (paiement) = un an avant l'échéance, pré-remplie.
+        let debISO = "";
+        if (echISO) { const _d = new Date(echISO); _d.setFullYear(_d.getFullYear()-1); debISO = _d.toISOString().slice(0,10); }
         return `
         <tr>
           <td>${echapper(nomComplet(a))||'—'}${a.role==='bureau'?' <span class="pill ok">bureau</span>':''}</td>
@@ -775,10 +779,13 @@
           <td>${echFr}</td>
           <td>
             <div class="act">
-              <input type="date" class="ech" id="ech-${a.id}" value="${echISO}" title="Date d'échéance">
+              <span class="lbl">Cotisé le</span>
+              <input type="date" id="deb-${a.id}" value="${debISO}" title="Date du paiement de la cotisation">
+              <button class="mini vert" onclick="validerCoti('${a.id}')" title="Valide : payée, échéance un an après cette date">Valider</button>
+              <span class="lbl">Échéance</span>
+              <input type="date" class="ech" id="ech-${a.id}" value="${echISO}" title="Échéance — ajustable manuellement">
               <label><input type="checkbox" id="pay-${a.id}" ${a.cotisation_payee?'checked':''}> payée</label>
-              <button class="mini vert" onclick="enregistrerCoti('${a.id}')">Enregistrer</button>
-              <button class="mini clair" onclick="payerUnAn('${a.id}')" title="Marque payé, échéance dans 1 an">+1 an</button>
+              <button class="mini clair" onclick="enregistrerCoti('${a.id}')">Enregistrer</button>
               ${!estAJour(a)?`<button class="mini clair" onclick="relancer('${encodeURIComponent(a.email||'')}')">Relancer</button>`:''}
             </div>
           </td>
@@ -796,10 +803,14 @@
       const a = ADH.find(x=>x.id===id); a.cotisation_payee=paye; a.cotisation_echeance=echeance;
       dessiner();
     }
-    // Raccourci : marque payé, échéance dans un an à compter d'aujourd'hui.
-    async function payerUnAn(id){
-      const ech = new Date(); ech.setFullYear(ech.getFullYear()+1);
-      const echeance = ech.toISOString().slice(0,10);
+    // Valide la cotisation : payée + échéance un an après la date de cotisation
+    // saisie (« Cotisé le »). Si la date est vide, on prend aujourd'hui.
+    async function validerCoti(id){
+      const deb = (document.getElementById("deb-"+id).value || "").trim();
+      const base = deb ? new Date(deb) : new Date();
+      if (isNaN(base)) return alert("Date de cotisation invalide.");
+      base.setFullYear(base.getFullYear()+1);
+      const echeance = base.toISOString().slice(0,10);
       const { error } = await sb.from("profils").update({ cotisation_payee:true, cotisation_echeance:echeance }).eq("id", id);
       if (error) return alert("Erreur : "+error.message);
       const a = ADH.find(x=>x.id===id); a.cotisation_payee=true; a.cotisation_echeance=echeance;

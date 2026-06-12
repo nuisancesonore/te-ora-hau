@@ -96,7 +96,7 @@
 
       contenu.innerHTML = `
         <h2 class="section-titre">Mes missions</h2>
-        <p style="color:var(--gris);margin-bottom:1rem">Les missions confiées par le bureau de Te Ora Hau. Mettez à jour l'avancement et laissez un commentaire : le bureau suit votre travail en direct. Une mission marquée « Terminée » disparaît d'ici — le bureau en garde la trace. Mauruuru !</p>
+        <p style="color:var(--gris);margin-bottom:1rem">Les missions confiées par le bureau de Te Ora Hau. Mettez à jour l'avancement et laissez un commentaire : le bureau suit votre travail en direct. Une mission marquée « Terminée » disparaît d'ici — le bureau en garde la trace. Mauruuru ! <a href="guide-assesseur.html">Mode d'emploi de l'assesseur →</a></p>
 
         <h3 class="sect-titre">À prendre — ouvertes à tous (${ouvertes.length})</h3>
         ${ouvertes.length ? ouvertes.map(m => carte(m, "ouverte")).join("") : `<p style="color:var(--gris)">Aucune mission ouverte pour le moment.</p>`}

@@ -19,7 +19,8 @@
     .pill.ok{ background:#e3f5ea; color:#1d6b3f; } .pill.ko{ background:#fce6e1; color:#b2381f; }
     .mini { padding:0.3rem 0.6rem; font-size:0.8rem; border-radius:7px; border:none; cursor:pointer; }
     .mini.vert{ background:var(--vert-paix); color:#fff; } .mini.clair{ background:#eee; }
-    .act { display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center; }
+    .act { display:flex; flex-wrap:nowrap; gap:0.35rem; align-items:center; white-space:nowrap; }
+    .act > * { flex:0 0 auto; }
     .act .ech { padding:0.25rem 0.4rem; border:1.5px solid #d6d6cf; border-radius:6px; font-size:0.8rem; }
     .act label { font-size:0.78rem; color:var(--gris); display:inline-flex; align-items:center; gap:0.2rem; cursor:pointer; }
     .msg-c { background:#fff; border-radius:10px; box-shadow:var(--ombre); padding:0.9rem 1.1rem; margin-bottom:0.8rem; border-left:4px solid var(--corail); font-size:0.9rem; }

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mode d'emploi des membres · Te Ora Hau</title>
+  <meta name="description" content="Guide d'utilisation du site Te Ora Hau pour les adhérents et assesseurs : inscription, cotisation, signalement, outils et missions.">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .feuille { background:#fff; max-width:840px; margin:0 auto; padding:2rem 2.4rem; box-shadow:var(--ombre); border-radius:10px; color:#111; }
+    .ent { display:flex; align-items:center; gap:1.2rem; border-bottom:3px solid #c0392b; padding-bottom:1rem; margin-bottom:1.2rem; }
+    .ent img { width:72px; height:auto; }
+    .ent .titre { flex:1; text-align:center; }
+    .ent .titre h1 { font-size:1.45rem; color:#111; margin-bottom:0.2rem; }
+    .ent .titre p { font-size:0.9rem; color:#444; }
+    .feuille h2 { font-size:1.12rem; color:#c0392b; margin:1.5rem 0 0.5rem; border-left:4px solid #c0392b; padding-left:0.6rem; }
+    .feuille h2 .n { background:#064a54; color:#fff; border-radius:50%; display:inline-flex; width:1.5rem; height:1.5rem; align-items:center; justify-content:center; font-size:0.85rem; margin-right:0.4rem; vertical-align:middle; }
+    .feuille h3 { font-size:0.98rem; color:#064a54; margin:0.9rem 0 0.3rem; }
+    .feuille p, .feuille li { font-size:0.92rem; line-height:1.55; }
+    .feuille ol, .feuille ul { margin:0.3rem 0 0.6rem 1.3rem; }
+    .feuille li { margin-bottom:0.25rem; }
+    .astuce { background:#e3f5ea; border-left:4px solid #1d6b3f; padding:0.6rem 1rem; border-radius:8px; font-size:0.88rem; margin:0.7rem 0; }
+    .attention { background:#fff4ec; border-left:4px solid #c0392b; padding:0.6rem 1rem; border-radius:8px; font-size:0.88rem; margin:0.7rem 0; }
+    .profils { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.7rem; margin:0.6rem 0; }
+    .profil { border:1px solid #ddd; border-radius:8px; padding:0.7rem 0.9rem; }
+    .profil b { color:#064a54; }
+    .barre-actions { text-align:center; margin:0 0 1.4rem; }
+    .intro-ecran { max-width:840px; margin:0 auto 1rem; color:var(--gris); }
+    @media print {
+      @page { size:A4; margin:0; }
+      #nav-mount, #footer-mount, .barre-actions, .intro-ecran { display:none !important; }
+      body { background:#fff; padding-top:0 !important; }
+      main { padding:0; max-width:none; }
+      .feuille { box-shadow:none; max-width:100%; border-radius:0; padding:13mm 15mm; }
+      h2, h3 { page-break-after:avoid; }
+      .saut { page-break-before:always; padding-top:8mm; }
+      .profils { grid-template-columns:1fr 1fr 1fr; }
+    }
+    @media (max-width:620px){ .profils { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <p class="intro-ecran">Guide à lire en ligne ou à imprimer. Pour la version PDF&nbsp;: bouton ci-dessous.</p>
+    <div class="barre-actions">
+      <a href="index.html" class="btn btn-clair">← Accueil</a>
+      <button class="btn btn-primaire" onclick="window.print()">🖨️ Imprimer / PDF</button>
+    </div>
+
+    <div class="feuille">
+      <div class="ent">
+        <img src="images/logo-192.png" alt="Logo Te Ora Hau">
+        <div class="titre">
+          <h1>Mode d'emploi du site</h1>
+          <p><strong>Te Ora Hau</strong> — « Vivre en paix » · Guide des adhérents &amp; assesseurs</p>
+        </div>
+        <div style="width:72px"></div>
+      </div>
+
+      <p>Ia ora na&nbsp;! Ce guide explique, pas à pas, comment utiliser le site de l'association pour <strong>signaler les nuisances sonores</strong>, <strong>mener vos démarches</strong> et <strong>vous entraider</strong>. Gardez-le sous la main.</p>
+      <p style="margin-top:0.3rem"><strong>Adresse du site&nbsp;:</strong> nuisancesonore.github.io/te-ora-hau</p>
+
+      <h3>Les trois profils</h3>
+      <p>Votre profil est <strong>reconnu automatiquement</strong> d'après votre adresse e-mail&nbsp;:</p>
+      <div class="profils">
+        <div class="profil"><b>Adhérent</b><br>Vous subissez ou combattez le bruit. Accès complet une fois la cotisation validée.</div>
+        <div class="profil"><b>Assesseur</b><br>Adhérent engagé qui épaule l'association. En plus&nbsp;: la page «&nbsp;Mes missions&nbsp;».</div>
+        <div class="profil"><b>Membre du bureau</b><br>Élu, il gère l'association via un espace d'administration dédié.</div>
+      </div>
+
+      <h2><span class="n">1</span>Créer mon compte</h2>
+      <ol>
+        <li>Sur le site, cliquez sur <strong>«&nbsp;Adhérer&nbsp;»</strong> (ou le bouton «&nbsp;Rejoindre Te Ora Hau&nbsp;»).</li>
+        <li>Renseignez&nbsp;: <strong>Nom</strong>, <strong>Prénom</strong>, date de naissance, adresse, téléphone, commune, e-mail et mot de passe.</li>
+        <li>Commune «&nbsp;Autre&nbsp;»&nbsp;: indiquez <strong>l'île puis la commune</strong> (ex. Raiatea, Uturoa).</li>
+        <li>Cliquez sur <strong>«&nbsp;Créer mon compte&nbsp;»</strong>.</li>
+      </ol>
+      <div class="astuce"><strong>Le mot de passe est personnel&nbsp;:</strong> vous le choisissez vous-même, il vous servira à vous reconnecter à votre espace. Notez-le bien&nbsp;!</div>
+
+      <h2><span class="n">2</span>Confirmer mon e-mail et me connecter</h2>
+      <ol>
+        <li>Vous recevez un e-mail de <strong>«&nbsp;Te Ora Hau&nbsp;»</strong> &rarr; cliquez sur <strong>«&nbsp;Confirmer mon adresse e-mail&nbsp;»</strong>.</li>
+        <li>Revenez sur le site &rarr; <strong>«&nbsp;Connexion&nbsp;»</strong> &rarr; saisissez votre e-mail et votre mot de passe.</li>
+      </ol>
+      <div class="attention"><strong>Vous ne trouvez pas l'e-mail&nbsp;?</strong> Regardez dans les courriers indésirables (spam). <strong>Mot de passe oublié&nbsp;?</strong> Cliquez «&nbsp;Mot de passe oublié&nbsp;» sur la page de connexion&nbsp;: un lien vous est envoyé.</div>
+
+      <h2><span class="n">3</span>Cotiser pour débloquer l'accès complet</h2>
+      <p>L'inscription seule ne suffit pas&nbsp;: l'accès complet s'ouvre une fois votre <strong>cotisation versée et validée par le bureau</strong>.</p>
+      <ul>
+        <li><strong>Montant&nbsp;:</strong> 3&nbsp;000&nbsp;XPF par an et par foyer.</li>
+        <li><strong>Comment&nbsp;:</strong> page «&nbsp;Cotiser&nbsp;» &rarr; virement, chèque ou espèces. Indiquez vos <strong>NOM et PRÉNOM</strong> (et votre n° d'adhérent si vous le connaissez).</li>
+        <li><strong>En attendant la validation&nbsp;:</strong> vous voyez «&nbsp;Mon espace&nbsp;» et «&nbsp;Cotiser&nbsp;». Les autres fonctions affichent un cadenas.</li>
+      </ul>
+      <div class="astuce">Dès que le bureau valide votre paiement, tout se débloque automatiquement&nbsp;: signalement, carte détaillée, outils, annuaire et forum.</div>
+
+      <h2><span class="n">4</span>Compléter mon profil</h2>
+      <p>Dans <strong>«&nbsp;Mon espace&nbsp;» &rarr; «&nbsp;Mon profil&nbsp;»</strong>&nbsp;: vos coordonnées sont déjà reprises de l'inscription. Il reste à indiquer le <strong>type de nuisance que vous subissez</strong>, et — si vous le souhaitez — à cocher pour apparaître dans l'<strong>annuaire des adhérents</strong> (entraide entre voisins).</p>
+
+      <h2><span class="n">5</span>Signaler une nuisance <span style="font-size:0.8rem;color:#666">(le geste clé)</span></h2>
+      <ol>
+        <li>Menu <strong>«&nbsp;Mon espace &rarr; Signaler une nuisance&nbsp;»</strong> (ou le bouton «&nbsp;Signaler&nbsp;»).</li>
+        <li>Placez le <strong>point sur la carte</strong> à l'endroit du bruit (ou laissez votre adresse).</li>
+        <li>Renseignez&nbsp;: <strong>type de bruit</strong>, commune/quartier, <strong>horaire</strong>, intensité, récurrence, depuis quand.</li>
+        <li>Dépliez <strong>«&nbsp;➕ Renforcer le dossier&nbsp;»</strong> (facultatif mais précieux)&nbsp;: horaires précis, voisins également gênés, preuves (enregistrements, attestations).</li>
+        <li>Cliquez <strong>«&nbsp;Envoyer le signalement&nbsp;»</strong>.</li>
+      </ol>
+      <div class="astuce"><strong>Plus vous êtes précis, plus votre dossier pèse</strong> face à la mairie, la gendarmerie ou le procureur. Chaque détail compte.</div>
+
+      <h2><span class="n">6</span>Construire mes preuves</h2>
+      <p>Dans «&nbsp;Mon espace &rarr; Courriers &amp; journal&nbsp;», onglet <strong>«&nbsp;Journal de bruit&nbsp;»</strong>&nbsp;: notez chaque épisode (date, heure, durée, intensité). C'est <strong>la preuve la plus solide</strong>. Vous pouvez exporter le journal pour le joindre à un courrier.</p>
+
+      <h2><span class="n">7</span>Mes outils de démarche</h2>
+      <h3>Générateur de courrier</h3>
+      <p>Choisissez votre situation («&nbsp;Où en êtes-vous&nbsp;?&nbsp;») et le bon courrier est rédigé automatiquement&nbsp;: démarche <strong>amiable</strong>, <strong>mise en demeure</strong>, demande au <strong>Maire</strong>, <strong>gendarmerie</strong>, <strong>procureur</strong>, ou <strong>bailleur</strong>. Vous pouvez le <strong>télécharger en PDF</strong> ou l'<strong>envoyer par e-mail</strong>.</p>
+      <h3>Suivi de mes démarches</h3>
+      <p>Enregistrez chaque action entreprise. Le <strong>bureau en est informé</strong> et peut vous appuyer&nbsp;; le site vous propose même l'<strong>étape suivante</strong> à mener.</p>
+
+      <h2><span class="n">8</span>Carte, annuaire et forum</h2>
+      <ul>
+        <li><strong>Carte des nuisances&nbsp;:</strong> visualisez les zones touchées à travers le fenua.</li>
+        <li><strong>Annuaire des adhérents&nbsp;:</strong> retrouvez les membres de votre commune (qui ont accepté d'être visibles) pour vous entraider.</li>
+        <li><strong>Forum&nbsp;:</strong> échangez, posez vos questions, partagez vos démarches avec les autres membres.</li>
+      </ul>
+
+      <h2><span class="n">9</span>Les notifications</h2>
+      <p>Dans «&nbsp;Mon espace &rarr; Notifications&nbsp;», activez-les pour être prévenu (annonce du bureau, etc.), avec un <strong>chiffre sur l'icône</strong> comme une appli.</p>
+      <div class="astuce"><strong>Sur téléphone&nbsp;:</strong> ouvrez le site puis «&nbsp;Ajouter à l'écran d'accueil&nbsp;»&nbsp;→ vous retrouvez Te Ora Hau comme une application.</div>
+
+      <h2><span class="n">10</span>Spécial assesseurs&nbsp;: «&nbsp;Mes missions&nbsp;»</h2>
+      <p>Si vous êtes assesseur, vous disposez en plus de <strong>«&nbsp;Mon espace &rarr; Mes missions&nbsp;»</strong>&nbsp;:</p>
+      <ul>
+        <li><strong>«&nbsp;À prendre&nbsp;»</strong>&nbsp;: missions ouvertes à tous &rarr; cliquez <strong>«&nbsp;Je prends cette mission&nbsp;»</strong>.</li>
+        <li><strong>«&nbsp;Mes missions en cours&nbsp;»</strong>&nbsp;: mettez à jour l'avancement et laissez un <strong>commentaire</strong> pour rendre compte au bureau.</li>
+        <li>Une mission marquée <strong>«&nbsp;Terminée&nbsp;»</strong> disparaît de votre liste — le bureau en garde la trace.</li>
+      </ul>
+
+      <h2 style="border:none;color:#064a54"><span class="n">?</span>Besoin d'aide&nbsp;?</h2>
+      <p>Une question, une difficulté&nbsp;? Utilisez la page <strong>«&nbsp;Contact&nbsp;»</strong> du site, ou écrivez à <strong>contact@teorahau.net</strong>. Le bureau vous répond rapidement. <strong>Mauruuru</strong> pour votre engagement&nbsp;— ensemble, vivons en paix&nbsp;!</p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>initPage("");</script>
+</body>
+</html>

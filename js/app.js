@@ -455,6 +455,7 @@ function rendreFooter() {
           <p><a href="outils.html">Courriers &amp; journal de bruit</a></p>
           <p><a href="carte.html">Carte des nuisances</a></p>
           <p><a href="inscription.html">Adhérer</a></p>
+          <p><a href="guide-membre.html">Mode d'emploi</a></p>
         </div>
         <div>
           <h4>Contact</h4>

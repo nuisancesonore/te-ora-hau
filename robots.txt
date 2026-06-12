@@ -4,6 +4,5 @@ Disallow: /admin.html
 Disallow: /espace.html
 Disallow: /missions.html
 Disallow: /mes-signalements.html
-Disallow: /fiche-acces.html
 
 Sitemap: https://nuisancesonore.github.io/te-ora-hau/sitemap.xml

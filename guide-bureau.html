@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mode d'emploi du bureau · Te Ora Hau</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .feuille { background:#fff; max-width:840px; margin:0 auto; padding:2rem 2.4rem; box-shadow:var(--ombre); border-radius:10px; color:#111; }
+    .ent { display:flex; align-items:center; gap:1.2rem; border-bottom:3px solid #064a54; padding-bottom:1rem; margin-bottom:1.2rem; }
+    .ent img { width:72px; height:auto; }
+    .ent .titre { flex:1; text-align:center; }
+    .ent .titre h1 { font-size:1.45rem; color:#111; margin-bottom:0.2rem; }
+    .ent .titre p { font-size:0.9rem; color:#444; }
+    .feuille h2 { font-size:1.12rem; color:#064a54; margin:1.5rem 0 0.5rem; border-left:4px solid #064a54; padding-left:0.6rem; }
+    .feuille h2 .n { background:#c0392b; color:#fff; border-radius:50%; display:inline-flex; width:1.5rem; height:1.5rem; align-items:center; justify-content:center; font-size:0.85rem; margin-right:0.4rem; vertical-align:middle; }
+    .feuille h3 { font-size:0.98rem; color:#c0392b; margin:0.9rem 0 0.3rem; }
+    .feuille p, .feuille li { font-size:0.92rem; line-height:1.55; }
+    .feuille ol, .feuille ul { margin:0.3rem 0 0.6rem 1.3rem; }
+    .feuille li { margin-bottom:0.25rem; }
+    .astuce { background:#e3f5ea; border-left:4px solid #1d6b3f; padding:0.6rem 1rem; border-radius:8px; font-size:0.88rem; margin:0.7rem 0; }
+    .attention { background:#fff4ec; border-left:4px solid #c0392b; padding:0.6rem 1rem; border-radius:8px; font-size:0.88rem; margin:0.7rem 0; }
+    .barre-actions { text-align:center; margin:0 0 1.4rem; }
+    .intro-ecran { max-width:840px; margin:0 auto 1rem; color:var(--gris); }
+    @media print {
+      @page { size:A4; margin:0; }
+      #nav-mount, #footer-mount, .barre-actions, .intro-ecran { display:none !important; }
+      body { background:#fff; padding-top:0 !important; }
+      main { padding:0; max-width:none; }
+      .feuille { box-shadow:none; max-width:100%; border-radius:0; padding:13mm 15mm; }
+      h2, h3 { page-break-after:avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <p class="intro-ecran">Document réservé aux membres du bureau. À lire en ligne ou à imprimer (bouton ci-dessous).</p>
+    <div class="barre-actions">
+      <a href="admin.html" class="btn btn-clair">← Administration</a>
+      <button class="btn btn-primaire" onclick="window.print()">🖨️ Imprimer / PDF</button>
+    </div>
+
+    <div class="feuille">
+      <div class="ent">
+        <img src="images/logo-192.png" alt="Logo Te Ora Hau">
+        <div class="titre">
+          <h1>Mode d'emploi du bureau</h1>
+          <p><strong>Te Ora Hau</strong> — « Vivre en paix » · Guide d'administration (réservé au bureau)</p>
+        </div>
+        <div style="width:72px"></div>
+      </div>
+
+      <p>Ce guide explique comment <strong>gérer l'association</strong> depuis l'espace <strong>Administration</strong>&nbsp;: valider les cotisations, communiquer, piloter les assesseurs et produire les dossiers pour les autorités.</p>
+
+      <h2><span class="n">0</span>Accéder à l'administration</h2>
+      <p>Connectez-vous avec <strong>votre adresse e-mail de membre du bureau</strong> (reconnue automatiquement). Le menu fait alors apparaître l'entrée <strong>«&nbsp;Administration&nbsp;»</strong>. La page est organisée en <strong>sections repliables</strong> (clic sur le titre pour ouvrir/fermer), avec des compteurs indiquant l'activité.</p>
+      <div class="attention"><strong>Sécurité&nbsp;:</strong> seuls les e-mails de la liste blanche du bureau ont accès à l'administration. Ne partagez jamais votre mot de passe — chaque membre utilise son propre compte.</div>
+
+      <h2><span class="n">1</span>Adhérents — valider les cotisations</h2>
+      <p>C'est l'action la plus fréquente. La cotisation d'un adhérent ne lui ouvre l'accès complet qu'une fois <strong>validée par le bureau</strong>.</p>
+      <ol>
+        <li>Section <strong>«&nbsp;Adhérents — cotisations &amp; validation&nbsp;»</strong> (ouverte par défaut).</li>
+        <li>Recherchez l'adhérent (nom / e-mail) ou filtrez (à jour / en retard).</li>
+        <li>Sur sa ligne&nbsp;: saisissez la <strong>date d'échéance</strong>, cochez <strong>«&nbsp;payée&nbsp;»</strong>, puis <strong>«&nbsp;Enregistrer&nbsp;»</strong>. Le bouton <strong>«&nbsp;+1&nbsp;an&nbsp;»</strong> fait tout d'un coup (échéance à un an, payée).</li>
+      </ol>
+      <div class="astuce">Dès validation, l'adhérent obtient l'accès complet (signalement, carte, outils, forum, annuaire).</div>
+      <h3>Exporter &amp; documents</h3>
+      <ul>
+        <li><strong>«&nbsp;Exporter CSV&nbsp;»</strong>&nbsp;: télécharge la liste complète des adhérents — à faire <strong>une fois par mois</strong> comme sauvegarde.</li>
+        <li><strong>«&nbsp;Fiche accès&nbsp;»</strong>&nbsp;: le document interne «&nbsp;Accès &amp; comptes&nbsp;» à compléter à la main.</li>
+      </ul>
+
+      <h2><span class="n">2</span>Statistiques &amp; démarches</h2>
+      <ul>
+        <li><strong>Statistiques des adhérents&nbsp;:</strong> répartition par type, nuisance, commune, âge, cotisation.</li>
+        <li><strong>Démarches des adhérents&nbsp;:</strong> suivez ce que les adhérents entreprennent (courriers, plaintes…) et où ça en est, pour les appuyer.</li>
+      </ul>
+
+      <h2><span class="n">3</span>Confier des missions aux assesseurs</h2>
+      <ol>
+        <li>Section <strong>«&nbsp;Missions des assesseurs&nbsp;»</strong> &rarr; renseignez un <strong>titre</strong>, des <strong>consignes</strong>, une <strong>échéance</strong> (facultative).</li>
+        <li>Choisissez <strong>«&nbsp;Confier à&nbsp;»</strong>&nbsp;: un assesseur précis, ou <strong>«&nbsp;Tous&nbsp;»</strong> (le premier qui la prend se l'attribue).</li>
+        <li><strong>«&nbsp;Confier la mission&nbsp;»</strong>. Vous suivez ensuite l'avancement et le dernier compte-rendu&nbsp;; vous pouvez <strong>clôturer</strong> ou <strong>supprimer</strong>.</li>
+      </ol>
+
+      <h2><span class="n">4</span>Communiquer avec les membres</h2>
+      <p>Le panneau «&nbsp;Communication&nbsp;» suit <strong>3 étapes</strong>&nbsp;:</p>
+      <ol>
+        <li><strong>Écrire&nbsp;:</strong> choisissez l'<strong>audience</strong> (tous / à jour / non à jour), le titre et le message.</li>
+        <li><strong>Publier sur le site&nbsp;:</strong> «&nbsp;Publier l'annonce&nbsp;» l'affiche dans l'espace des membres ciblés <strong>et envoie une notification push</strong>. C'est le canal principal. Une date d'événement (facultative) la fait clignoter jusque-là.</li>
+        <li><strong>Doubler l'envoi&nbsp;:</strong> <strong>E-mail (Cci)</strong> pour les convocations, <strong>SMS</strong> pour les rappels urgents — ouvrent votre messagerie avec le message prêt.</li>
+      </ol>
+      <div class="astuce">Réflexe&nbsp;: toujours «&nbsp;Publier l'annonce&nbsp;» (trace + notification), et doubler par e-mail ou SMS selon l'urgence.</div>
+
+      <h2><span class="n">5</span>Messages de contact</h2>
+      <p>Ce sont les messages envoyés par le public via la page «&nbsp;Contact&nbsp;» — souvent un futur adhérent en demande d'aide. Pour chacun&nbsp;: <strong>«&nbsp;Répondre&nbsp;»</strong> (ouvre votre messagerie) et <strong>«&nbsp;Marquer traité&nbsp;»</strong>. À consulter régulièrement.</p>
+
+      <h2><span class="n">6</span>Dossier pour les autorités</h2>
+      <p>Transforme les signalements en <strong>rapport PDF prêt à remettre</strong> (données anonymisées).</p>
+      <ol>
+        <li>Section <strong>«&nbsp;Dossier pour les autorités&nbsp;»</strong> &rarr; choisissez le <strong>destinataire</strong> et la <strong>commune</strong>.</li>
+        <li><strong>«&nbsp;Générer le rapport (PDF)&nbsp;»</strong>.</li>
+      </ol>
+      <ul>
+        <li><strong>Mairie&nbsp;:</strong> demande d'intervention (tranquillité publique, police municipale).</li>
+        <li><strong>Gendarmerie&nbsp;:</strong> demande de constatations (tapage nocturne).</li>
+        <li><strong>Procureur&nbsp;:</strong> éléments factuels (persistance, constats, plaintes).</li>
+        <li><strong>Global&nbsp;:</strong> chiffres clés pour la presse / le public (sans liste nominative).</li>
+      </ul>
+      <div class="astuce">La force de ces rapports dépend de la qualité des signalements&nbsp;: encouragez les adhérents à bien renseigner quartier, horaire, ancienneté et preuves.</div>
+
+      <h2><span class="n">7</span>Bonnes pratiques du bureau</h2>
+      <ul>
+        <li><strong>Sauvegarde mensuelle&nbsp;:</strong> Admin &rarr; «&nbsp;Exporter CSV&nbsp;», conservé par le secrétariat.</li>
+        <li><strong>Sécurité des accès&nbsp;:</strong> on n'ouvre jamais un accès qu'on ne partage&nbsp;; tenez la <strong>fiche «&nbsp;Accès &amp; comptes&nbsp;»</strong> à jour à chaque renouvellement du bureau.</li>
+        <li><strong>E-mails du site&nbsp;:</strong> ils partent de <strong>teorahau.pf@gmail.com</strong> (compte de l'association).</li>
+        <li><strong>Une question technique&nbsp;?</strong> contact@teorahau.net. <strong>Mauruuru</strong> pour votre engagement&nbsp;!</li>
+      </ul>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>initPage("");</script>
+</body>
+</html>

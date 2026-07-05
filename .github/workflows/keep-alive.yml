@@ -1,0 +1,33 @@
+# Ping quotidien des bases Supabase pour empêcher leur mise en pause
+# (plan gratuit : Supabase suspend un projet après ~1 semaine sans requête).
+# Pingue les DEUX projets du compte : te-ora-hau et vaitarua.
+# Les clés ci-dessous sont les clés PUBLIQUES (publishable) déjà visibles
+# dans le code des sites — rien de secret ici.
+name: Keep Supabase alive
+
+on:
+  schedule:
+    - cron: "0 17 * * *" # tous les jours à 17h00 UTC (7h00 à Tahiti)
+  workflow_dispatch: {} # déclenchable à la main depuis l'onglet Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping te-ora-hau
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://alaesbkvfprgpngrowbt.supabase.co/rest/v1/bureau_emails?select=email&limit=1" \
+            -H "apikey: sb_publishable_R0hXlownDkPs0aCMvGMNaw_qU5gGkcB" \
+            -H "Authorization: Bearer sb_publishable_R0hXlownDkPs0aCMvGMNaw_qU5gGkcB")
+          echo "te-ora-hau : HTTP $code"
+          test "$code" = "200"
+      - name: Ping vaitarua
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://bkywdexmqvjypogmubts.supabase.co/rest/v1/public_blocked?select=start_date&limit=1" \
+            -H "apikey: sb_publishable_KovtDlDpp-Hk3Ga1CbaJCA_QIAu6eK1" \
+            -H "Authorization: Bearer sb_publishable_KovtDlDpp-Hk3Ga1CbaJCA_QIAu6eK1")
+          echo "vaitarua : HTTP $code"
+          test "$code" = "200"
+

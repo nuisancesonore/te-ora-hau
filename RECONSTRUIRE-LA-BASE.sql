@@ -4,11 +4,23 @@
 --
 --  A QUOI CA SERT
 --  Recreer d'un seul coup toute la STRUCTURE de la base sur un projet Supabase
---  neuf, apres la disparition du projet d'origine (alaesbkvfprgpngrowbt).
+--  neuf. Sert aussi de RATTRAPAGE sur une base existante : tout est idempotent.
 --
 --  CE QUE CA NE FAIT PAS
 --  Cela ne restaure AUCUNE donnee : adherents, cotisations, signalements et
 --  messages du forum ne sont pas dans ce fichier. Seule la structure revient.
+--
+--  ORDRE DES ETAPES — NE PAS LE MODIFIER
+--  Plusieurs fichiers redefinissent les MEMES objets. Le dernier gagne, donc
+--  l'ordre porte du sens :
+--    * le declencheur handle_new_user doit finir par la version de
+--      migration-dossiers.sql (celle qui enregistre prenom, ile, telephone,
+--      adresse et type_adhesion a l'inscription) ;
+--    * les politiques des missions doivent finir par celles de
+--      migration-missions-bureau.sql (seules a filtrer sur la colonne « pour »,
+--      qui empeche un assesseur de voir les missions internes au bureau).
+--  migration-complete.sql contient des versions plus ANCIENNES de ces deux
+--  objets : il est donc place AVANT eux, jamais en dernier.
 --
 --  MODE D'EMPLOI
 --   1. Supabase -> votre projet -> SQL Editor -> New query
@@ -26,8 +38,7 @@
 --  aucun TRUNCATE. Tables et colonnes sont creees "if not exists" ; policies
 --  et triggers sont supprimes puis recrees a l'identique.
 --
---  Genere le 23/08/2026 a partir des 17 fichiers du depot, dans l'ordre chronologique
---  de leur creation (dependances respectees).
+--  Genere le 23/08/2026 a partir des 17 fichiers du depot.
 -- ============================================================================
 
 
@@ -646,188 +657,7 @@ create policy mcom_insert on public.missions_commentaires
   for insert with check ((public.is_bureau() or public.is_assesseur()) and auteur = auth.uid());
 
 -- ============================================================================
--- ETAPE 13/17 — Separation nom / prenom et roles
--- (source : migration-noms-roles.sql)
--- ============================================================================
-
--- ============================================================
--- Te Ora Hau — Nom/prénom séparés + statut par e-mail
--- À coller dans Supabase → SQL Editor → Run. Sans risque.
--- ============================================================
-
--- 1) Prénom séparé (le champ "nom" garde le NOM de famille)
-alter table public.profils add column if not exists prenom text;
-
--- 2) Liste blanche des e-mails ASSESSEURS (liste complète)
-create table if not exists public.assesseur_emails (email text primary key);
-insert into public.assesseur_emails (email) values
-  ('b2b99t@gmail.com'),           -- Bill DE BRATH (Paea)
-  ('belleileric@gmail.com'),      -- Éric BELLEIL (Puurai, Faa'a)
-  ('richstan11@outlook.com'),     -- Brigitte RICHMOND (Tautira)
-  ('giserch@gmail.com'),          -- Gisèle ROCHE (Faa'a)
-  ('patvongue@yahoo.com')         -- Patrick VONGUE (Rés. Menahere, Pirae)
-on conflict (email) do nothing;
-
--- 3) À l'inscription : statut (rôle + type) attribué automatiquement selon l'e-mail
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
-declare v_role text; v_type text;
-begin
-  if exists (select 1 from public.bureau_emails b where lower(b.email) = lower(new.email)) then
-    v_role := 'bureau'; v_type := 'Bureau';
-  elsif exists (select 1 from public.assesseur_emails a where lower(a.email) = lower(new.email)) then
-    v_role := 'membre'; v_type := 'Assesseur';
-  else
-    v_role := 'membre'; v_type := 'Adhérent';
-  end if;
-  insert into public.profils (id, nom, prenom, email, commune, role, type_adhesion,
-                              date_naissance, adresse, telephone)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'nom', ''),
-    coalesce(new.raw_user_meta_data->>'prenom', ''),
-    new.email,
-    coalesce(new.raw_user_meta_data->>'commune', ''),
-    v_role, v_type,
-    nullif(new.raw_user_meta_data->>'date_naissance', '')::date,
-    coalesce(new.raw_user_meta_data->>'adresse', ''),
-    coalesce(new.raw_user_meta_data->>'telephone', '')
-  );
-  return new;
-end;
-$$;
-
--- 4) Met à jour les comptes existants (rôle + type selon les listes blanches)
-update public.profils p set
-  role = case when lower(p.email) in (select lower(email) from public.bureau_emails) then 'bureau' else 'membre' end,
-  type_adhesion = case
-    when lower(p.email) in (select lower(email) from public.bureau_emails) then 'Bureau'
-    when lower(p.email) in (select lower(email) from public.assesseur_emails) then 'Assesseur'
-    else 'Adhérent' end;
-
--- ============================================================================
--- ETAPE 14/17 — Preuves jointes aux signalements
--- (source : migration-preuves.sql)
--- ============================================================================
-
--- ============================================================
--- Te Ora Hau — Renforcement du dossier des signalements
--- Précision horaire (pour les passages gendarmerie), voisins également
--- gênés (trouble collectif), preuves disponibles (crédibilité du dossier).
--- À coller dans Supabase → SQL Editor → Run. Sans risque.
--- ============================================================
-alter table public.signalements add column if not exists horaire_detail text;
-alter table public.signalements add column if not exists voisins_genes boolean not null default false;
-alter table public.signalements add column if not exists preuves text;
-
--- La précision horaire est aussi utile aux membres sur la carte :
--- on l'ajoute à la vue publique (en fin de liste, sans données perso).
-create or replace view public.signalements_publics as
-select
-  id, type, commune, quartier, intensite, horaire, recurrence,
-  constat, debut, adresse_source, description, lat, lng, cree_le,
-  horaire_detail
-from public.signalements;
-grant select on public.signalements_publics to anon, authenticated;
-
--- ============================================================================
--- ETAPE 15/17 — Dossiers des adherents
--- (source : migration-dossiers.sql)
--- ============================================================================
-
--- ============================================================
--- Te Ora Hau — Champs « fichier dossiers » (export Excel enrichi)
--- Auteur présumé du bruit, nombre de personnes du foyer gênées,
--- île de résidence. À coller dans Supabase → SQL Editor → Run.
--- ============================================================
-alter table public.signalements add column if not exists auteur_presume text;
-alter table public.signalements add column if not exists personnes_foyer int;
-alter table public.profils add column if not exists ile text;
-
--- L'inscription crée le profil avec l'île également.
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
-declare v_role text; v_type text;
-begin
-  if exists (select 1 from public.bureau_emails b where lower(b.email) = lower(new.email)) then
-    v_role := 'bureau'; v_type := 'Bureau';
-  elsif exists (select 1 from public.assesseur_emails a where lower(a.email) = lower(new.email)) then
-    v_role := 'membre'; v_type := 'Assesseur';
-  else
-    v_role := 'membre'; v_type := 'Adhérent';
-  end if;
-  insert into public.profils (id, nom, prenom, email, commune, role, type_adhesion,
-                              date_naissance, adresse, telephone, ile)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'nom', ''),
-    coalesce(new.raw_user_meta_data->>'prenom', ''),
-    new.email,
-    coalesce(new.raw_user_meta_data->>'commune', ''),
-    v_role, v_type,
-    nullif(new.raw_user_meta_data->>'date_naissance', '')::date,
-    coalesce(new.raw_user_meta_data->>'adresse', ''),
-    coalesce(new.raw_user_meta_data->>'telephone', ''),
-    coalesce(new.raw_user_meta_data->>'ile', '')
-  );
-  return new;
-end;
-$$;
-
--- ============================================================================
--- ETAPE 16/17 — Missions internes au bureau
--- (source : migration-missions-bureau.sql)
--- ============================================================================
-
--- ============================================================
--- Te Ora Hau — Missions internes au bureau
--- Une mission peut viser les assesseurs (défaut) ou le bureau (interne).
--- Les assesseurs ne voient JAMAIS les missions « bureau ».
--- À coller dans Supabase → SQL Editor → Run.
--- ============================================================
-alter table public.missions add column if not exists pour text not null default 'assesseurs';
-
--- Lecture : le bureau voit tout ; un assesseur ne voit que les missions « assesseurs ».
-drop policy if exists missions_select on public.missions;
-create policy missions_select on public.missions
-  for select using (
-    public.is_bureau()
-    or (public.is_assesseur() and pour = 'assesseurs')
-  );
-
--- Mise à jour : bureau = tout ; assesseur = prendre/MAJ une mission « assesseurs »
--- ouverte ou qui lui est assignée.
-drop policy if exists missions_update on public.missions;
-create policy missions_update on public.missions
-  for update using (
-    public.is_bureau()
-    or (public.is_assesseur() and pour = 'assesseurs' and (assigne_a = auth.uid() or assigne_a is null))
-  ) with check (
-    public.is_bureau()
-    or (public.is_assesseur() and pour = 'assesseurs' and assigne_a = auth.uid())
-  );
-
--- Commentaires : un assesseur ne peut lire/écrire que sur les missions « assesseurs ».
-drop policy if exists mcom_select on public.missions_commentaires;
-create policy mcom_select on public.missions_commentaires
-  for select using (
-    public.is_bureau()
-    or (public.is_assesseur() and exists (
-      select 1 from public.missions m where m.id = mission_id and m.pour = 'assesseurs'))
-  );
-
-drop policy if exists mcom_insert on public.missions_commentaires;
-create policy mcom_insert on public.missions_commentaires
-  for insert with check (
-    auteur = auth.uid() and (
-      public.is_bureau()
-      or (public.is_assesseur() and exists (
-        select 1 from public.missions m where m.id = mission_id and m.pour = 'assesseurs'))
-    )
-  );
-
--- ============================================================================
--- ETAPE 17/17 — Regroupement final (idempotent, rattrape tout ce qui manquerait)
+-- ETAPE 13/17 — Rattrapage general (idempotent) — AVANT les fichiers qui affinent
 -- (source : migration-complete.sql)
 -- ============================================================================
 
@@ -1194,3 +1024,184 @@ $$;
 -- ============================================================
 -- TERMINÉ. Rechargez le site (Ctrl+F5) après exécution.
 -- ============================================================
+
+-- ============================================================================
+-- ETAPE 14/17 — Separation nom / prenom et roles
+-- (source : migration-noms-roles.sql)
+-- ============================================================================
+
+-- ============================================================
+-- Te Ora Hau — Nom/prénom séparés + statut par e-mail
+-- À coller dans Supabase → SQL Editor → Run. Sans risque.
+-- ============================================================
+
+-- 1) Prénom séparé (le champ "nom" garde le NOM de famille)
+alter table public.profils add column if not exists prenom text;
+
+-- 2) Liste blanche des e-mails ASSESSEURS (liste complète)
+create table if not exists public.assesseur_emails (email text primary key);
+insert into public.assesseur_emails (email) values
+  ('b2b99t@gmail.com'),           -- Bill DE BRATH (Paea)
+  ('belleileric@gmail.com'),      -- Éric BELLEIL (Puurai, Faa'a)
+  ('richstan11@outlook.com'),     -- Brigitte RICHMOND (Tautira)
+  ('giserch@gmail.com'),          -- Gisèle ROCHE (Faa'a)
+  ('patvongue@yahoo.com')         -- Patrick VONGUE (Rés. Menahere, Pirae)
+on conflict (email) do nothing;
+
+-- 3) À l'inscription : statut (rôle + type) attribué automatiquement selon l'e-mail
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare v_role text; v_type text;
+begin
+  if exists (select 1 from public.bureau_emails b where lower(b.email) = lower(new.email)) then
+    v_role := 'bureau'; v_type := 'Bureau';
+  elsif exists (select 1 from public.assesseur_emails a where lower(a.email) = lower(new.email)) then
+    v_role := 'membre'; v_type := 'Assesseur';
+  else
+    v_role := 'membre'; v_type := 'Adhérent';
+  end if;
+  insert into public.profils (id, nom, prenom, email, commune, role, type_adhesion,
+                              date_naissance, adresse, telephone)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'nom', ''),
+    coalesce(new.raw_user_meta_data->>'prenom', ''),
+    new.email,
+    coalesce(new.raw_user_meta_data->>'commune', ''),
+    v_role, v_type,
+    nullif(new.raw_user_meta_data->>'date_naissance', '')::date,
+    coalesce(new.raw_user_meta_data->>'adresse', ''),
+    coalesce(new.raw_user_meta_data->>'telephone', '')
+  );
+  return new;
+end;
+$$;
+
+-- 4) Met à jour les comptes existants (rôle + type selon les listes blanches)
+update public.profils p set
+  role = case when lower(p.email) in (select lower(email) from public.bureau_emails) then 'bureau' else 'membre' end,
+  type_adhesion = case
+    when lower(p.email) in (select lower(email) from public.bureau_emails) then 'Bureau'
+    when lower(p.email) in (select lower(email) from public.assesseur_emails) then 'Assesseur'
+    else 'Adhérent' end;
+
+-- ============================================================================
+-- ETAPE 15/17 — Preuves jointes aux signalements
+-- (source : migration-preuves.sql)
+-- ============================================================================
+
+-- ============================================================
+-- Te Ora Hau — Renforcement du dossier des signalements
+-- Précision horaire (pour les passages gendarmerie), voisins également
+-- gênés (trouble collectif), preuves disponibles (crédibilité du dossier).
+-- À coller dans Supabase → SQL Editor → Run. Sans risque.
+-- ============================================================
+alter table public.signalements add column if not exists horaire_detail text;
+alter table public.signalements add column if not exists voisins_genes boolean not null default false;
+alter table public.signalements add column if not exists preuves text;
+
+-- La précision horaire est aussi utile aux membres sur la carte :
+-- on l'ajoute à la vue publique (en fin de liste, sans données perso).
+create or replace view public.signalements_publics as
+select
+  id, type, commune, quartier, intensite, horaire, recurrence,
+  constat, debut, adresse_source, description, lat, lng, cree_le,
+  horaire_detail
+from public.signalements;
+grant select on public.signalements_publics to anon, authenticated;
+
+-- ============================================================================
+-- ETAPE 16/17 — Auteur presume, personnes du foyer, ile + declencheur d'inscription COMPLET
+-- (source : migration-dossiers.sql)
+-- ============================================================================
+
+-- ============================================================
+-- Te Ora Hau — Champs « fichier dossiers » (export Excel enrichi)
+-- Auteur présumé du bruit, nombre de personnes du foyer gênées,
+-- île de résidence. À coller dans Supabase → SQL Editor → Run.
+-- ============================================================
+alter table public.signalements add column if not exists auteur_presume text;
+alter table public.signalements add column if not exists personnes_foyer int;
+alter table public.profils add column if not exists ile text;
+
+-- L'inscription crée le profil avec l'île également.
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare v_role text; v_type text;
+begin
+  if exists (select 1 from public.bureau_emails b where lower(b.email) = lower(new.email)) then
+    v_role := 'bureau'; v_type := 'Bureau';
+  elsif exists (select 1 from public.assesseur_emails a where lower(a.email) = lower(new.email)) then
+    v_role := 'membre'; v_type := 'Assesseur';
+  else
+    v_role := 'membre'; v_type := 'Adhérent';
+  end if;
+  insert into public.profils (id, nom, prenom, email, commune, role, type_adhesion,
+                              date_naissance, adresse, telephone, ile)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'nom', ''),
+    coalesce(new.raw_user_meta_data->>'prenom', ''),
+    new.email,
+    coalesce(new.raw_user_meta_data->>'commune', ''),
+    v_role, v_type,
+    nullif(new.raw_user_meta_data->>'date_naissance', '')::date,
+    coalesce(new.raw_user_meta_data->>'adresse', ''),
+    coalesce(new.raw_user_meta_data->>'telephone', ''),
+    coalesce(new.raw_user_meta_data->>'ile', '')
+  );
+  return new;
+end;
+$$;
+
+-- ============================================================================
+-- ETAPE 17/17 — Missions internes au bureau — politiques finales (filtre « pour »)
+-- (source : migration-missions-bureau.sql)
+-- ============================================================================
+
+-- ============================================================
+-- Te Ora Hau — Missions internes au bureau
+-- Une mission peut viser les assesseurs (défaut) ou le bureau (interne).
+-- Les assesseurs ne voient JAMAIS les missions « bureau ».
+-- À coller dans Supabase → SQL Editor → Run.
+-- ============================================================
+alter table public.missions add column if not exists pour text not null default 'assesseurs';
+
+-- Lecture : le bureau voit tout ; un assesseur ne voit que les missions « assesseurs ».
+drop policy if exists missions_select on public.missions;
+create policy missions_select on public.missions
+  for select using (
+    public.is_bureau()
+    or (public.is_assesseur() and pour = 'assesseurs')
+  );
+
+-- Mise à jour : bureau = tout ; assesseur = prendre/MAJ une mission « assesseurs »
+-- ouverte ou qui lui est assignée.
+drop policy if exists missions_update on public.missions;
+create policy missions_update on public.missions
+  for update using (
+    public.is_bureau()
+    or (public.is_assesseur() and pour = 'assesseurs' and (assigne_a = auth.uid() or assigne_a is null))
+  ) with check (
+    public.is_bureau()
+    or (public.is_assesseur() and pour = 'assesseurs' and assigne_a = auth.uid())
+  );
+
+-- Commentaires : un assesseur ne peut lire/écrire que sur les missions « assesseurs ».
+drop policy if exists mcom_select on public.missions_commentaires;
+create policy mcom_select on public.missions_commentaires
+  for select using (
+    public.is_bureau()
+    or (public.is_assesseur() and exists (
+      select 1 from public.missions m where m.id = mission_id and m.pour = 'assesseurs'))
+  );
+
+drop policy if exists mcom_insert on public.missions_commentaires;
+create policy mcom_insert on public.missions_commentaires
+  for insert with check (
+    auteur = auth.uid() and (
+      public.is_bureau()
+      or (public.is_assesseur() and exists (
+        select 1 from public.missions m where m.id = mission_id and m.pour = 'assesseurs'))
+    )
+  );

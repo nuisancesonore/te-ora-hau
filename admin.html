@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administration · Te Ora Hau</title>
+  <!-- Page réservée aux membres : aucun intérêt dans les résultats de recherche. -->
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.6rem; }
@@ -99,7 +103,7 @@
       }
 
       const { data, error } = await sb.from("profils").select("*").order("cree_le", { ascending:false });
-      if (error) { contenu.innerHTML = `<p style="color:#b2381f">Erreur : ${error.message}</p>`; return; }
+      if (error) { contenu.innerHTML = `<p style="color:#b2381f">Erreur : ${echapper(messageErreur(error))}</p>`; return; }
       ADH = data || [];
 
       const total = ADH.length;
@@ -394,7 +398,7 @@
         }).from(page).save();
         page.remove();
       } catch(e){
-        alert("Erreur lors de la génération : " + (e.message || e));
+        alert("Génération impossible. " + messageErreur(e));
       }
       btn.disabled = false; btn.textContent = lbl;
     }
@@ -480,7 +484,7 @@
         ({ error } = await sb.from("missions").insert(r2));
       }
       msg.className = "message " + (error ? "err" : "ok");
-      msg.textContent = error ? "Erreur : " + error.message + " (migration-missions.sql lancée ?)"
+      msg.textContent = error ? messageErreur(error, "prévenez le bureau : migration-missions.sql reste à lancer")
         : (pour === "bureau" ? "Mission interne confiée ✔ (visible du bureau uniquement)"
                              : "Mission confiée ✔ Elle apparaît sur la page « Mes missions » des assesseurs.");
       if (!error){ document.getElementById("m-titre").value = ""; document.getElementById("m-desc").value = ""; document.getElementById("m-ech").value = ""; }
@@ -488,13 +492,13 @@
     }
     async function cloreMission(id){
       const { error } = await sb.from("missions").update({ statut: "Terminée" }).eq("id", id);
-      if (error) return alert("Erreur : " + error.message);
+      if (error) return alert(messageErreur(error));
       chargerMissionsAdmin();
     }
     async function supprimerMission(id){
       if (!confirm("Supprimer cette mission ?")) return;
       const { error } = await sb.from("missions").delete().eq("id", id);
-      if (error) return alert("Erreur : " + error.message);
+      if (error) return alert(messageErreur(error));
       chargerMissionsAdmin();
     }
 
@@ -711,7 +715,7 @@
           ? await sb.from("annonces").update(p2).eq("id", EDIT_ID)
           : await sb.from("annonces").insert(Object.assign({ auteur_nom: MOI ? MOI.nom : "" }, p2));
       }
-      if (res.error) return alert("Erreur : "+res.error.message+"\n(Avez-vous déployé migration-communication.sql ?)");
+      if (res.error) return alert(messageErreur(res.error, "prévenez le bureau : migration-communication.sql reste à lancer"));
       // Notification push automatique (uniquement pour une NOUVELLE annonce ;
       // une simple modification ne renvoie pas de notification).
       let infoPush = "";
@@ -752,7 +756,7 @@
     async function supprimerAnnonce(id){
       if (!confirm("Supprimer cette annonce ?")) return;
       const { error } = await sb.from("annonces").delete().eq("id", id);
-      if (error) return alert("Erreur : "+error.message);
+      if (error) return alert(messageErreur(error));
       chargerAnnonces();
     }
 
@@ -780,7 +784,7 @@
     }
     async function marquerTraite(id){
       const { error } = await sb.from("messages_contact").update({ traite:true }).eq("id", id);
-      if (error) return alert("Erreur : "+error.message);
+      if (error) return alert(messageErreur(error));
       chargerMessages();
     }
 
@@ -824,14 +828,14 @@
     async function majEcheance(id, val){
       const echeance = (val || "").slice(0,10) || null;
       const { error } = await sb.from("profils").update({ cotisation_echeance:echeance }).eq("id", id);
-      if (error) return alert("Erreur : "+error.message);
+      if (error) return alert(messageErreur(error));
       const a = ADH.find(x=>x.id===id); a.cotisation_echeance=echeance;
       dessiner();
     }
     // Coche/décoche "payée" (enregistré aussitôt).
     async function majPayee(id, checked){
       const { error } = await sb.from("profils").update({ cotisation_payee:checked }).eq("id", id);
-      if (error) return alert("Erreur : "+error.message);
+      if (error) return alert(messageErreur(error));
       const a = ADH.find(x=>x.id===id); a.cotisation_payee=checked;
       dessiner();
     }
@@ -848,7 +852,7 @@
       const echeance = isoAnnee(deb, 1);
       if (!echeance) return alert("Date de cotisation invalide.");
       const { error } = await sb.from("profils").update({ cotisation_payee:true, cotisation_echeance:echeance }).eq("id", id);
-      if (error) return alert("Erreur : "+error.message);
+      if (error) return alert(messageErreur(error));
       const a = ADH.find(x=>x.id===id); a.cotisation_payee=true; a.cotisation_echeance=echeance;
       dessiner();
     }
@@ -916,7 +920,7 @@
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = "dossiers-nuisances-te-ora-hau.csv"; a.click();
-      } catch(e){ alert("Erreur lors de l'export : " + (e.message || e)); }
+      } catch(e){ alert("Export impossible. " + messageErreur(e)); }
       if (btn){ btn.disabled = false; btn.textContent = lbl; }
     }
   </script>

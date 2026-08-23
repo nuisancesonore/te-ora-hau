@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Signaler une nuisance · Te Ora Hau</title>
+  <!-- Page réservée aux membres : aucun intérêt dans les résultats de recherche. -->
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>#map{ height:340px; border-radius:12px; box-shadow:var(--ombre); margin-bottom:0.4rem; cursor:crosshair; }
@@ -43,7 +47,7 @@
             <p class="aide" id="coord" style="font-weight:600">⚠️ Aucun point placé — recherchez, cliquez sur la carte, ou utilisez le GPS.</p>
           </div>
           <div class="form-wrap" style="max-width:100%;margin:0">
-            <div id="msg" class="message"></div>
+            <div id="msg" class="message" role="status" aria-live="polite"></div>
             <form id="form-sig">
               <div class="champ"><label>Type de nuisance</label>
                 <select id="type" required>${optionsListe(SIG_TYPES, "", "— Choisir —")}</select></div>
@@ -95,7 +99,7 @@
                 </div>
               </details>
 
-              <button type="submit" class="btn btn-primaire btn-bloc">Envoyer le signalement</button>
+              <button type="submit" id="btn-sig" class="btn btn-primaire btn-bloc">Envoyer le signalement</button>
             </form>
           </div>
         </div>`;
@@ -191,12 +195,15 @@
       const msg = document.getElementById("msg");
       document.getElementById("form-sig").addEventListener("submit", async function(e){
         e.preventDefault();
+        if (envoiEnCours(e.target)) return;   // envoi déjà en cours
         if (!pt){
           msg.className = "message err";
           msg.textContent = "Veuillez d'abord placer un point précis sur la carte (recherche d'adresse, clic, ou position GPS) — sinon le signalement n'apparaîtra pas sur la carte.";
           document.getElementById("map").scrollIntoView({ behavior:"smooth", block:"center" });
           return;
         }
+        // Bouton verrouillé pendant l'envoi : plus de signalement en double.
+        const rendre = boutonOccupe(document.getElementById("btn-sig"), "Envoi en cours…");
         const s = await sessionActive();
         const row = {
           auteur: s.user.id,
@@ -227,13 +234,14 @@
           delete row.auteur_presume; delete row.personnes_foyer;
           ({ error } = await sb.from("signalements").insert(row));
         }
-        if (error){ msg.className="message err"; msg.textContent="Erreur : "+error.message; return; }
+        if (error){ rendre(); msg.className="message err"; msg.textContent = messageErreur(error); msg.scrollIntoView({ behavior:"smooth", block:"center" }); return; }
         // Mémorise le signalement pour pré-remplir un courrier (outils.html).
         try { localStorage.setItem("TOH_signalement", JSON.stringify({
           type: row.type, commune: row.commune, quartier: row.quartier,
           adresse_source: row.adresse_source, horaire: row.horaire,
           recurrence: row.recurrence, debut: row.debut, description: row.description
         })); } catch(_){}
+        rendre();
         msg.className="message ok";
         msg.innerHTML = `Merci&nbsp;! Votre signalement a été enregistré. Prochaine étape&nbsp;?
           <span style="display:inline-flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.7rem">

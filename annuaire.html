@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Annuaire des adhérents · Te Ora Hau</title>
+  <!-- Page réservée aux membres : aucun intérêt dans les résultats de recherche. -->
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .filtre-bar{ display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; margin:0.4rem 0 1.2rem; }
@@ -49,7 +53,7 @@
 
       if (error){
         contenu.innerHTML = `<h2 class="section-titre">Annuaire des adhérents</h2>
-          <div class="message err" style="display:block">Erreur : ${echapper(error.message)}</div>`;
+          <div class="message err" style="display:block">Erreur : ${echapper(messageErreur(error))}</div>`;
         return;
       }
 

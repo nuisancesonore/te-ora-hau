@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mon espace · Te Ora Hau</title>
+  <!-- Page réservée aux membres : aucun intérêt dans les résultats de recherche. -->
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .layout { display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; align-items:start; }
@@ -165,7 +169,7 @@
           <div class="form-wrap" style="max-width:100%;margin:0">
             <h2 style="color:var(--bleu-fonce)">Mon profil</h2>
             <p class="intro">Vos coordonnées sont reprises de votre inscription : rien à retaper. Il reste à indiquer le type de nuisance que vous subissez.</p>
-            <div id="msg" class="message"></div>
+            <div id="msg" class="message" role="status" aria-live="polite"></div>
             <form id="form-profil">
               <p class="grp-titre">Mes coordonnées</p>
               <div class="champ"><label>Nom</label><input id="nom" value="${echapper(profil.nom)}" required></div>
@@ -262,6 +266,9 @@
       const msg = document.getElementById("msg");
       document.getElementById("form-profil").addEventListener("submit", async function(e) {
         e.preventDefault();
+        if (envoiEnCours(e.target)) return;   // envoi déjà en cours
+        // Bouton verrouillé pendant l'enregistrement (plus de double envoi).
+        const rendre = boutonOccupe(boutonForm(e.target), "Enregistrement…");
         const maj = {
           nom: document.getElementById("nom").value.trim(),
           prenom: document.getElementById("prenom").value.trim(),
@@ -286,8 +293,9 @@
           const retry = await sb.from("profils").update(maj).eq("id", profil.id);
           error = retry.error;
         }
+        rendre();
         msg.className = "message " + (error ? "err" : "ok");
-        msg.textContent = error ? "Erreur : " + error.message
+        msg.textContent = error ? messageErreur(error, "prévenez le bureau : une mise à jour de la base est nécessaire")
           : (partiel
               ? "Profil enregistré ✔ (certaines infos seront prises en compte une fois la base mise à jour)"
               : "Profil enregistré ✔");

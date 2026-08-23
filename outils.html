@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Outils · Te Ora Hau</title>
+  <!-- Page réservée aux membres : aucun intérêt dans les résultats de recherche. -->
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .onglets{ display:flex; gap:0.5rem; margin-bottom:1.4rem; flex-wrap:wrap; }
@@ -129,7 +133,7 @@
         <section class="panneau" id="p-journal">
           <div class="form-wrap" style="max-width:100%;margin:0 0 1rem">
             <p class="intro">Consignez chaque épisode de bruit : ce journal constitue une preuve précieuse pour vos démarches.</p>
-            <div id="jmsg" class="message"></div>
+            <div id="jmsg" class="message" role="status" aria-live="polite"></div>
             <form id="form-jb" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0.7rem;align-items:end">
               <div class="champ" style="margin:0"><label>Date</label><input type="date" id="j-date" required></div>
               <div class="champ" style="margin:0"><label>Heure</label><input type="time" id="j-heure"></div>
@@ -147,7 +151,7 @@
         <section class="panneau" id="p-demarches">
           <div class="form-wrap" style="max-width:100%;margin:0 0 1rem">
             <p class="intro">Consignez chaque démarche entreprise (courrier, visite, appel…) : vous gardez le fil de votre dossier et le <strong>bureau de Te Ora Hau en est informé</strong> pour pouvoir vous appuyer. Quand vous générez un courrier, on vous propose de l'enregistrer ici automatiquement.</p>
-            <div id="dmsg" class="message"></div>
+            <div id="dmsg" class="message" role="status" aria-live="polite"></div>
             <form id="form-dem" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.7rem;align-items:end">
               <div class="champ" style="margin:0"><label>Démarche</label>
                 <select id="d-type">
@@ -427,6 +431,9 @@
     /* ----- Journal de bruit (Supabase) ----- */
     async function ajouterEpisode(e){
       e.preventDefault();
+      if (envoiEnCours(e.target)) return;   // envoi déjà en cours
+      // Bouton verrouillé pendant l'envoi : plus d'épisode enregistré en double.
+      const rendre = boutonOccupe(boutonForm(e.target), "Ajout…");
       const s = await sessionActive();
       const row = {
         auteur: s.user.id,
@@ -437,9 +444,11 @@
         note: document.getElementById("j-note").value.trim(),
       };
       const { error } = await sb.from("journal_bruit").insert(row);
+      rendre();
       const m = document.getElementById("jmsg");
       m.className = "message " + (error?"err":"ok");
-      m.textContent = error ? "Erreur : "+error.message : "Épisode ajouté ✔";
+      m.textContent = error ? messageErreur(error) : "Épisode ajouté ✔";
+      if (error) return;                       // la saisie reste à l'écran : rien n'est perdu
       document.getElementById("j-note").value = "";
       await chargerJournal();
     }
@@ -486,12 +495,15 @@
         date_demarche: aujLoc(),
         mode, destinataire: dest, note: DERNIER.objet,
       });
-      if (error) alert("Suivi non enregistré : " + error.message + "\n(Le bureau doit lancer migration-demarches.sql.)");
+      if (error) alert("Suivi non enregistré. " + messageErreur(error, "prévenez le bureau : migration-demarches.sql reste à lancer"));
       else { await chargerDemarches(); alert("Démarche enregistrée dans votre suivi ✔ (onglet « Mes démarches »)"); }
     }
 
     async function ajouterDemarche(e){
       e.preventDefault();
+      if (envoiEnCours(e.target)) return;   // envoi déjà en cours
+      // Bouton verrouillé pendant l'envoi : plus de démarche enregistrée en double.
+      const rendre = boutonOccupe(boutonForm(e.target), "Enregistrement…");
       const s = await sessionActive();
       const champs = {
         type: document.getElementById("d-type").value,
@@ -506,9 +518,10 @@
       } else {
         ({ error } = await sb.from("demarches").insert(Object.assign({ auteur: s.user.id }, champs)));
       }
+      rendre();
       const m = document.getElementById("dmsg");
       m.className = "message " + (error ? "err" : "ok");
-      m.textContent = error ? "Erreur : " + error.message + " (migration-demarches.sql non lancée ?)"
+      m.textContent = error ? messageErreur(error, "prévenez le bureau : migration-demarches.sql reste à lancer")
         : (EDIT_DEM ? "Démarche corrigée ✔" : "Démarche enregistrée ✔");
       if (!error){ annulerEditDem(); document.getElementById("d-dest").value = ""; document.getElementById("d-note").value = ""; }
       await chargerDemarches();
@@ -586,14 +599,14 @@
     }
     async function majSuite(id, val){
       const { error } = await sb.from("demarches").update({ reponse: val }).eq("id", id);
-      if (error) alert("Erreur : " + error.message);
+      if (error) alert(messageErreur(error));
       const d = DEM.find(x => x.id === id); if (d) d.reponse = val;
       rendreSuggestion();
     }
     async function supprimerDemarche(id){
       if (!confirm("Supprimer cette démarche de votre suivi ?")) return;
       const { error } = await sb.from("demarches").delete().eq("id", id);
-      if (error) return alert("Erreur : " + error.message);
+      if (error) return alert(messageErreur(error));
       await chargerDemarches();
     }
     // Renseigne "Démarches déjà entreprises" du courrier à partir du suivi.

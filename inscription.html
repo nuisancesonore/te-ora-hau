@@ -28,7 +28,7 @@
     <div class="form-wrap form-large">
       <h2>Adhérer à Te Ora Hau</h2>
       <p class="intro">Rejoignez la lutte contre les nuisances sonores : créez votre compte, puis soutenez l'association par la cotisation.</p>
-      <div id="msg" class="message"></div>
+      <div id="msg" class="message" role="status" aria-live="polite"></div>
       <form id="form-inscription" class="form-grid">
         <div class="champ">
           <label for="nom">Nom</label>
@@ -68,18 +68,21 @@
         </div>
         <div class="champ pleine">
           <label for="email">Adresse e-mail</label>
-          <input type="email" id="email" required placeholder="vous@exemple.pf">
+          <input type="email" id="email" required autocomplete="email"
+                 autocapitalize="none" spellcheck="false" inputmode="email"
+                 placeholder="vous@exemple.pf">
         </div>
         <div class="champ">
           <label for="mdp">Mot de passe</label>
-          <input type="password" id="mdp" required minlength="6" placeholder="6 caractères minimum">
+          <input type="password" id="mdp" required minlength="6" autocomplete="new-password"
+                 placeholder="6 caractères minimum">
         </div>
         <div class="champ">
           <label for="mdp2">Confirmer le mot de passe</label>
-          <input type="password" id="mdp2" required minlength="6">
+          <input type="password" id="mdp2" required minlength="6" autocomplete="new-password">
         </div>
         <p class="aide-mdp pleine">🔒 Vous choisissez vous-même ce mot de passe&nbsp;: il vous servira à <strong>vous reconnecter à votre espace personnel</strong> (signaler, forum, renouveler votre cotisation…). Chaque adhérent a le sien.</p>
-        <button type="submit" class="btn btn-primaire btn-bloc pleine">Créer mon compte</button>
+        <button type="submit" id="btn-inscription" class="btn btn-primaire btn-bloc pleine">Créer mon compte</button>
       </form>
       <p class="form-foot">Déjà adhérent ? <a href="connexion.html">Se connecter</a> — le renouvellement de cotisation se fait dans <strong>Mon espace</strong>.</p>
       <p class="form-foot" style="margin-top:0.5rem">
@@ -100,13 +103,19 @@
   <script src="js/app.js"></script>
   <script>
     initPage("inscription");
+    // Œil « afficher / masquer » + jauge de robustesse et contrôle de concordance.
+    oeilMotDePasse(document.getElementById("mdp"));
+    oeilMotDePasse(document.getElementById("mdp2"));
+    jaugeMotDePasse(document.getElementById("mdp"), document.getElementById("mdp2"));
+    const btnInscription = document.getElementById("btn-inscription");
     document.getElementById("commune").innerHTML = optionsCommunes("");
     const valCommune = brancherCommuneAutre(document.getElementById("commune"), document.getElementById("commune_autre"));
 
     const msg = document.getElementById("msg");
     document.getElementById("form-inscription").addEventListener("submit", async function(e) {
       e.preventDefault();
-      if (!TOH_PRET) { montrer("err", "Supabase n'est pas configuré (voir SETUP.md)."); return; }
+      if (envoiEnCours(e.target)) return;   // envoi déjà en cours (double clic / touche Entrée)
+      if (!TOH_PRET) { montrer("err", "Le service est momentanément indisponible. Réessayez plus tard."); return; }
       const nom = document.getElementById("nom").value.trim();
       const prenom = document.getElementById("prenom").value.trim();
       const naissance = document.getElementById("naissance").value || null;
@@ -116,11 +125,15 @@
       const email = document.getElementById("email").value.trim();
       const mdp = document.getElementById("mdp").value;
       const mdp2 = document.getElementById("mdp2").value;
-      if (mdp !== mdp2) { montrer("err", "Les mots de passe ne correspondent pas."); return; }
-      montrer("ok", "Création du compte…");
+      if (mdp.length < 6) { montrer("err", "Le mot de passe doit contenir au moins 6 caractères."); document.getElementById("mdp").focus(); return; }
+      if (mdp !== mdp2) { montrer("err", "Les deux mots de passe saisis ne sont pas identiques."); document.getElementById("mdp2").focus(); return; }
+      // Bouton verrouillé pendant l'appel : évite de créer deux fois le même compte.
+      const rendre = boutonOccupe(btnInscription, "Création du compte…");
+      montrer("info", "Création du compte…");
       const ile = document.getElementById("ile").value.trim();
       const res = await inscrire(nom, prenom, email, mdp, commune,
         { date_naissance: naissance || "", adresse: adresse, telephone: telephone, ile: ile });
+      if (!res.ok) rendre();
       montrer(res.ok ? "ok" : "err", res.msg);
       if (res.ok) {
         const complement = { date_naissance: naissance, adresse: adresse, telephone: telephone };

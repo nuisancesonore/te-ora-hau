@@ -24,7 +24,7 @@
         Directement&nbsp;: <a href="mailto:contact@teorahau.net">contact@teorahau.net</a> ·
         <a href="tel:+68987721687">87 72 16 87</a>
       </p>
-      <div id="msg" class="message"></div>
+      <div id="msg" class="message" role="status" aria-live="polite"></div>
       <form id="form-contact">
         <div class="champ">
           <label for="nom">Nom</label>
@@ -68,13 +68,17 @@
     const champ = id => (document.getElementById(id).value || "").trim();
     document.getElementById("form-contact").addEventListener("submit", async function(e) {
       e.preventDefault();
+      if (envoiEnCours(e.target)) return;   // envoi déjà en cours (double clic / touche Entrée)
       const row = {
         nom: champ("nom"), prenom: champ("prenom"), commune: valCommune(),
         email: champ("email"), sujet: champ("sujet"), message: champ("message"),
       };
       let envoye = false;
-      try { const { error } = await sb.from("messages_contact").insert(row); envoye = !error; }
-      catch (_) { envoye = false; }
+      // Bouton verrouillé pendant l'envoi : le bureau ne reçoit plus le message en double.
+      await soumettre(e.target, "Envoi en cours…", async () => {
+        try { const { error } = await sb.from("messages_contact").insert(row); envoye = !error; }
+        catch (_) { envoye = false; }
+      });
 
       if (envoye) {
         msg.className = "message ok";

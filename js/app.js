@@ -202,9 +202,20 @@ function verrouAcces(profil) {
 }
 
 function traduireErreur(m) {
+  m = String(m || "");
   if (/already registered/i.test(m)) return "Un compte existe déjà avec cet e-mail.";
   if (/Invalid login/i.test(m)) return "E-mail ou mot de passe incorrect.";
-  if (/at least 6/i.test(m)) return "Le mot de passe doit contenir au moins 6 caractères.";
+  if (/at least (\d+)/i.test(m)) return "Le mot de passe doit contenir au moins " + m.match(/at least (\d+)/i)[1] + " caractères.";
+  if (/Email not confirmed/i.test(m)) return "Votre adresse e-mail n'a pas encore été confirmée : ouvrez le message reçu lors de votre inscription.";
+  // Limitation anti-abus de Supabase : « you can only request this after N seconds ».
+  const attente = m.match(/after (\d+) seconds?/i);
+  if (attente) return "Trop de demandes rapprochées. Merci de patienter " + attente[1] + " secondes avant de réessayer.";
+  if (/rate limit/i.test(m)) return "Trop de demandes d'e-mail en peu de temps. Réessayez dans quelques minutes.";
+  if (/New password should be different/i.test(m)) return "Le nouveau mot de passe doit être différent de l'ancien.";
+  if (/Auth session missing|session_not_found|invalid claim|JWT/i.test(m)) return "Votre lien n'est plus valable. Redemandez un lien de réinitialisation.";
+  if (/expired|otp_expired/i.test(m)) return "Ce lien a expiré. Redemandez un lien de réinitialisation.";
+  if (/Failed to fetch|NetworkError|network/i.test(m)) return "Connexion au serveur impossible. Vérifiez votre connexion Internet, puis réessayez.";
+  if (/User not found/i.test(m)) return "Aucun compte ne correspond à cette adresse e-mail.";
   return m;
 }
 
@@ -583,4 +594,159 @@ async function reverseGeocode(lat, lng) {
       adresse: d.display_name || "",
     };
   } catch (_) { return null; }
+}
+
+/* ============================================================
+   Champs « mot de passe » — briques partagées
+   (utilisées par connexion.html, inscription.html, mot-de-passe.html)
+   ============================================================ */
+
+/* Ajoute un œil « Afficher / Masquer » à droite d'un champ mot de passe.
+   Indispensable sur téléphone : on tape à l'aveugle sinon. */
+function oeilMotDePasse(input) {
+  if (!input || input.dataset.oeil) return;
+  input.dataset.oeil = "1";
+  const boite = document.createElement("div");
+  boite.className = "champ-mdp";
+  input.parentNode.insertBefore(boite, input);
+  boite.appendChild(input);
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "oeil";
+  b.setAttribute("aria-label", "Afficher le mot de passe");
+  b.textContent = "👁";
+  b.addEventListener("click", () => {
+    const visible = input.type === "password";
+    input.type = visible ? "text" : "password";
+    b.classList.toggle("actif", visible);
+    b.setAttribute("aria-label", visible ? "Masquer le mot de passe" : "Afficher le mot de passe");
+    input.focus();
+  });
+  boite.appendChild(b);
+}
+
+/* Note de robustesse d'un mot de passe : 0 (vide) à 4 (solide). */
+function forceMotDePasse(v) {
+  v = v || "";
+  if (!v) return 0;
+  let n = 0;
+  if (v.length >= 8) n++;
+  if (v.length >= 12) n++;
+  if (/[a-z]/.test(v) && /[A-Z]/.test(v)) n++;
+  if (/[0-9]/.test(v) && /[^A-Za-z0-9]/.test(v)) n++;
+  else if (/[0-9]/.test(v) || /[^A-Za-z0-9]/.test(v)) n += 0.5;
+  if (v.length < 8) n = Math.min(n, 1);
+  return Math.max(1, Math.min(4, Math.round(n)));
+}
+
+/* Jauge visuelle sous un champ mot de passe + contrôle de concordance
+   avec le champ de confirmation (mis à jour à chaque frappe). */
+function jaugeMotDePasse(input, confirmation) {
+  if (!input || input.dataset.jauge) return;
+  input.dataset.jauge = "1";
+  const NIVEAUX = ["", "Trop faible", "Correct", "Bon", "Solide"];
+  const bloc = document.createElement("div");
+  bloc.className = "jauge-bloc";
+  bloc.innerHTML = `<div class="jauge"><span></span></div><p class="jauge-txt"></p>`;
+  (input.closest(".champ-mdp") || input).insertAdjacentElement("afterend", bloc);
+  const barre = bloc.querySelector("span");
+  const txt = bloc.querySelector(".jauge-txt");
+
+  function maj() {
+    const n = forceMotDePasse(input.value);
+    bloc.className = "jauge-bloc n" + n;
+    barre.style.width = (n * 25) + "%";
+    let t = input.value ? NIVEAUX[n] : "";
+    if (input.value && n <= 1) t += " — visez 8 caractères minimum, avec chiffres et majuscules";
+    if (confirmation && confirmation.value) {
+      t += (t ? " · " : "") + (confirmation.value === input.value
+        ? "les deux saisies correspondent ✔"
+        : "les deux saisies diffèrent ✘");
+      confirmation.classList.toggle("champ-ko", confirmation.value !== input.value);
+    }
+    txt.textContent = t;
+  }
+  input.addEventListener("input", maj);
+  if (confirmation) confirmation.addEventListener("input", maj);
+  maj();
+}
+
+/* Un envoi est-il déjà en cours pour ce formulaire ?
+   À tester en TÊTE de chaque gestionnaire « submit » : désactiver le bouton
+   n'empêche PAS la touche Entrée de soumettre le formulaire une seconde fois. */
+function envoiEnCours(form) {
+  return !!(form && form.dataset && form.dataset.envoiEnCours === "1");
+}
+
+/* Verrouille un bouton pendant un envoi (évite les doubles soumissions).
+   Renvoie la fonction à appeler pour le rendre à son état initial. */
+function boutonOccupe(btn, texte) {
+  if (!btn) return () => {};
+  const form = btn.form || btn.closest("form");
+  // Déjà verrouillé : on ne re-verrouille pas, sinon le libellé d'attente
+  // (« Envoi… ») deviendrait le libellé définitif du bouton.
+  if (btn.dataset.occupe === "1") return () => {};
+
+  const initial = btn.textContent;
+  btn.dataset.occupe = "1";
+  btn.disabled = true;
+  btn.classList.add("occupe");
+  if (texte) btn.textContent = texte;
+  if (form) form.dataset.envoiEnCours = "1";
+
+  return () => {
+    delete btn.dataset.occupe;
+    btn.disabled = false;
+    btn.classList.remove("occupe");
+    btn.textContent = initial;
+    if (form) delete form.dataset.envoiEnCours;
+  };
+}
+
+/* Compte à rebours sur un bouton (anti-renvoi en rafale des e-mails). */
+function boutonAttente(btn, secondes, gabarit) {
+  if (!btn) return;
+  const initial = btn.dataset.libelle || btn.textContent;
+  btn.dataset.libelle = initial;
+  let reste = secondes;
+  btn.disabled = true;
+  btn.classList.add("occupe");
+  const tic = () => {
+    btn.textContent = (gabarit || "Réessayer dans %s s").replace("%s", reste);
+    if (reste-- <= 0) {
+      clearInterval(minuteur);
+      btn.disabled = false;
+      btn.classList.remove("occupe");
+      btn.textContent = initial;
+    }
+  };
+  tic();
+  const minuteur = setInterval(tic, 1000);
+}
+
+/* ---------- Soumission de formulaire — comportement unique du site ----------
+   Verrouille le bouton pendant l'appel réseau (fin des doubles envois),
+   puis le rend quoi qu'il arrive. Utilisé par tous les formulaires. */
+function boutonForm(form) {
+  return form ? form.querySelector('button[type="submit"], button:not([type])') : null;
+}
+async function soumettre(form, texteAttente, action) {
+  if (envoiEnCours(form)) return undefined;
+  const rendre = boutonOccupe(boutonForm(form), texteAttente);
+  try { return await action(); }
+  finally { rendre(); }
+}
+
+/* Message d'erreur destiné à un adhérent : jamais d'anglais brut, jamais de
+   jargon SQL. "indice" ajoute une précision réservée au bureau (nom de
+   migration à lancer, par exemple). */
+function messageErreur(error, indice) {
+  if (!error) return "";
+  const brut = error.message || String(error);
+  const traduit = traduireErreur(brut);
+  // Erreurs techniques de la base : on n'expose pas le détail à l'adhérent.
+  if (traduit === brut && /column|schema cache|does not exist|relation|violates|PGRST|permission denied|row-level security/i.test(brut)) {
+    return "Enregistrement impossible pour le moment." +
+      (indice ? " (" + indice + ")" : " Réessayez, et prévenez le bureau si cela persiste.");
+  }
+  return traduit;
 }

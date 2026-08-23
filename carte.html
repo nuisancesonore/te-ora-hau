@@ -107,7 +107,7 @@
       }
       if (error){
         etat.innerHTML = `<div class="message ${profil?'err':'ok'}" style="display:block">${
-          profil ? "Erreur : " + echapper(error.message)
+          profil ? echapper(messageErreur(error))
                  : "La carte publique sera bientôt disponible. En attendant, <a href=\"connexion.html\">connectez-vous</a> pour consulter les signalements."
         }</div>`;
         data = [];

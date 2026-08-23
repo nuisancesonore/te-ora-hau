@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mes signalements · Te Ora Hau</title>
+  <!-- Page réservée aux membres : aucun intérêt dans les résultats de recherche. -->
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .sig { background:#fff; border-radius:var(--radius); box-shadow:var(--ombre); padding:1.1rem 1.3rem; margin-bottom:1rem; border-left:4px solid var(--bleu-lagon); }
@@ -51,7 +55,7 @@
     async function charger(){
       const contenu = document.getElementById("contenu");
       const { data, error } = await sb.from("signalements").select("*").eq("auteur", UID).order("cree_le",{ascending:false});
-      if (error){ contenu.innerHTML = `<p style="color:#b2381f">Erreur : ${error.message}</p>`; return; }
+      if (error){ contenu.innerHTML = `<p style="color:#b2381f">Erreur : ${echapper(messageErreur(error))}</p>`; return; }
       let html = `<h2 class="section-titre">Mes signalements</h2>
         <p style="color:var(--gris);margin-bottom:1.4rem">${data.length} signalement(s). Vous pouvez les modifier ou les supprimer.
         <a href="signaler.html">+ Nouveau signalement</a></p>`;
@@ -139,7 +143,7 @@
         const retry = await sb.from("signalements").update(maj2).eq("id", id);
         error = retry.error; partiel = !error;
       }
-      if (error){ m.className="message err"; m.textContent="Erreur : "+error.message; return; }
+      if (error){ m.className="message err"; m.textContent=messageErreur(error); return; }
       m.className = "message ok";
       m.textContent = partiel
         ? "Enregistré ✔ (la « démarche » et le « début » seront pris en compte une fois la base mise à jour)"
@@ -151,7 +155,7 @@
     async function supprimer(id){
       if (!confirm("Supprimer définitivement ce signalement ?")) return;
       const { error } = await sb.from("signalements").delete().eq("id", id);
-      if (error){ alert("Erreur : "+error.message); return; }
+      if (error){ alert(messageErreur(error)); return; }
       const el = document.getElementById("sig-"+id); if (el) el.remove();
     }
 

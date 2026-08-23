@@ -302,6 +302,44 @@ main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.2rem; }
 }
 .message.ok { background: #e3f5ea; color: #1d6b3f; border: 1px solid #b6e2c6; display: block; }
 .message.err { background: #fce6e1; color: #b2381f; border: 1px solid #f3c2b6; display: block; }
+.message.info { background: #e6f2f4; color: #064a54; border: 1px solid #b9dde2; display: block; }
+
+/* Bouton en cours d'envoi / en attente : plus de double clic possible */
+.btn:disabled, .btn.occupe {
+  opacity: 0.6; cursor: not-allowed; transform: none;
+  pointer-events: none;
+}
+
+/* ---------- Champs mot de passe (œil + jauge de robustesse) ---------- */
+.champ-mdp { position: relative; }
+.champ-mdp input { padding-right: 3.2rem; }
+.oeil {
+  position: absolute; top: 50%; right: 0.35rem; transform: translateY(-50%);
+  width: 2.5rem; height: 2.5rem;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: none; cursor: pointer;
+  font-size: 1.05rem; line-height: 1; opacity: 0.45;
+  border-radius: 8px;
+}
+.oeil:hover { opacity: 0.8; background: #f1efe7; }
+.oeil.actif { opacity: 1; }
+.oeil:focus-visible { outline: 2px solid var(--bleu-lagon); outline-offset: 1px; }
+
+.jauge-bloc { margin: -0.6rem 0 1rem; }
+.jauge {
+  height: 5px; border-radius: 4px; background: #e6e3d9; overflow: hidden;
+}
+.jauge span {
+  display: block; height: 100%; width: 0;
+  border-radius: 4px; background: var(--gris);
+  transition: width 0.25s ease, background 0.25s ease;
+}
+.jauge-txt { font-size: 0.78rem; color: var(--gris); margin-top: 0.3rem; min-height: 1.05rem; }
+.jauge-bloc.n1 .jauge span { background: #b2381f; }
+.jauge-bloc.n2 .jauge span { background: var(--or); }
+.jauge-bloc.n3 .jauge span { background: #6aa84f; }
+.jauge-bloc.n4 .jauge span { background: var(--vert-paix); }
+.champ input.champ-ko { border-color: #d98a76; background: #fdf3f0; }
 
 /* ---------- Agenda ---------- */
 .evt {

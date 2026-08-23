@@ -3,8 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mot de passe · Te Ora Hau</title>
+  <title>Mot de passe oublié · Te Ora Hau</title>
+  <meta name="description" content="Réinitialisez le mot de passe de votre espace adhérent Te Ora Hau : recevez un lien par e-mail et choisissez un nouveau mot de passe.">
+  <!-- Page utilitaire : utile aux membres, sans intérêt dans les résultats de recherche. -->
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .etapes { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; padding: 0; }
+    .etapes li {
+      flex: 1; list-style: none; font-size: 0.74rem; color: var(--gris);
+      text-align: center; padding-top: 0.45rem;
+      border-top: 3px solid #e6e3d9;
+    }
+    .etapes li.actif { color: var(--bleu-fonce); font-weight: 600; border-top-color: var(--bleu-lagon); }
+    .aide { font-size: 0.82rem; color: var(--gris); line-height: 1.5; margin-top: 1.2rem;
+            border-top: 1px solid #eceadf; padding-top: 0.9rem; }
+    .aide strong { color: var(--bleu-fonce); }
+  </style>
 </head>
 <body>
   <div id="nav-mount"></div>
@@ -13,29 +30,46 @@
     <div class="form-wrap">
       <h2 id="titre">Mot de passe oublié</h2>
       <p class="intro" id="intro">Indiquez votre e-mail : un lien de réinitialisation vous sera envoyé.</p>
-      <div id="msg" class="message"></div>
+
+      <ol class="etapes" aria-label="Étapes de la réinitialisation">
+        <li id="etape1" class="actif">1 · Demander le lien</li>
+        <li id="etape2">2 · Nouveau mot de passe</li>
+      </ol>
+
+      <!-- Les messages sont annoncés aux lecteurs d'écran. -->
+      <div id="msg" class="message" role="status" aria-live="polite"></div>
 
       <!-- Étape 1 : demander le lien de réinitialisation -->
-      <form id="form-mdp">
+      <form id="form-mdp" novalidate>
         <div class="champ">
           <label for="email">Adresse e-mail</label>
-          <input type="email" id="email" required placeholder="vous@exemple.pf">
+          <input type="email" id="email" required autocomplete="username"
+                 autocapitalize="none" spellcheck="false" inputmode="email"
+                 placeholder="vous@exemple.pf">
         </div>
-        <button type="submit" class="btn btn-primaire btn-bloc">Réinitialiser</button>
+        <button type="submit" id="btn-envoyer" class="btn btn-primaire btn-bloc">Recevoir le lien</button>
       </form>
 
       <!-- Étape 2 : choisir un nouveau mot de passe (après clic sur le lien reçu) -->
-      <form id="form-nouveau" style="display:none">
+      <form id="form-nouveau" style="display:none" novalidate>
         <div class="champ">
           <label for="np">Nouveau mot de passe</label>
-          <input type="password" id="np" required minlength="6" placeholder="6 caractères minimum">
+          <input type="password" id="np" required minlength="6" autocomplete="new-password"
+                 placeholder="6 caractères minimum">
         </div>
         <div class="champ">
           <label for="np2">Confirmer le mot de passe</label>
-          <input type="password" id="np2" required minlength="6">
+          <input type="password" id="np2" required minlength="6" autocomplete="new-password">
         </div>
-        <button type="submit" class="btn btn-primaire btn-bloc">Enregistrer le nouveau mot de passe</button>
+        <button type="submit" id="btn-enregistrer" class="btn btn-primaire btn-bloc">Enregistrer le nouveau mot de passe</button>
       </form>
+
+      <p class="aide" id="aide-boite">
+        <strong>Vous ne recevez rien&nbsp;?</strong> Le message arrive en général en moins de 2&nbsp;minutes.
+        Pensez à regarder dans les <strong>courriers indésirables / spam</strong>, et vérifiez que
+        l'adresse saisie est bien celle de votre adhésion. Le lien reste valable <strong>1&nbsp;heure</strong>.
+        En cas de blocage, écrivez à <a href="mailto:contact@teorahau.net">contact@teorahau.net</a>.
+      </p>
 
       <p class="form-foot"><a href="connexion.html">Retour à la connexion</a></p>
     </div>
@@ -47,50 +81,137 @@
   <script src="js/app.js"></script>
   <script>
     initPage("");
-    const msg = document.getElementById("msg");
-    const formDemande = document.getElementById("form-mdp");
-    const formNouveau = document.getElementById("form-nouveau");
-    function montrer(type, texte){ msg.className = "message " + type; msg.textContent = texte; }
 
-    // Affiche le formulaire "nouveau mot de passe" quand on arrive depuis le lien reçu.
+    const msg            = document.getElementById("msg");
+    const formDemande    = document.getElementById("form-mdp");
+    const formNouveau    = document.getElementById("form-nouveau");
+    const btnEnvoyer     = document.getElementById("btn-envoyer");
+    const btnEnregistrer = document.getElementById("btn-enregistrer");
+    const champEmail     = document.getElementById("email");
+    const np             = document.getElementById("np");
+    const np2            = document.getElementById("np2");
+
+    function montrer(type, texte) { msg.className = "message " + type; msg.textContent = texte; }
+
+    // Confort de saisie : œil « afficher / masquer » + jauge de robustesse.
+    oeilMotDePasse(np);
+    oeilMotDePasse(np2);
+    jaugeMotDePasse(np, np2);
+
+    /* ---------- Étape 2 : formulaire « nouveau mot de passe » ---------- */
     let recoveryAffiche = false;
-    function passerEnRecovery(){
+    function passerEnRecovery() {
       if (recoveryAffiche) return;
       recoveryAffiche = true;
       document.getElementById("titre").textContent = "Choisir un nouveau mot de passe";
-      document.getElementById("intro").textContent = "Saisissez votre nouveau mot de passe ci-dessous.";
+      document.getElementById("intro").textContent = "Dernière étape : saisissez votre nouveau mot de passe.";
+      document.getElementById("etape1").classList.remove("actif");
+      document.getElementById("etape2").classList.add("actif");
+      document.getElementById("aide-boite").style.display = "none";
       formDemande.style.display = "none";
       formNouveau.style.display = "block";
+      np.focus();
     }
-    // Le lien de réinitialisation contient "type=recovery" dans l'URL
-    // (ou ?recovery=1 après redirection depuis une autre page)…
-    if (location.search.includes("recovery=1") || location.hash.includes("type=recovery")) passerEnRecovery();
-    // …et/ou déclenche l'événement PASSWORD_RECOVERY de Supabase.
+
+    // Retour à l'étape 1 lorsque le lien reçu n'est plus exploitable.
+    function revenirEtape1(texte) {
+      recoveryAffiche = false;
+      document.getElementById("titre").textContent = "Mot de passe oublié";
+      document.getElementById("intro").textContent = "Indiquez votre e-mail : un lien de réinitialisation vous sera envoyé.";
+      document.getElementById("etape2").classList.remove("actif");
+      document.getElementById("etape1").classList.add("actif");
+      document.getElementById("aide-boite").style.display = "";
+      formNouveau.style.display = "none";
+      formDemande.style.display = "block";
+      montrer("err", texte);
+      champEmail.focus();
+    }
+
+    /* ---------- Lecture de l'URL d'arrivée ----------
+       Supabase renvoie soit le jeton (#type=recovery… ou ?code=…),
+       soit une erreur explicite (#error=access_denied&error_code=otp_expired). */
+    const params = new URLSearchParams(location.search);
+    const hash   = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const erreurLien = hash.get("error_description") || hash.get("error")
+                    || params.get("error_description") || params.get("error");
+
+    if (erreurLien) {
+      const code = (hash.get("error_code") || params.get("error_code") || "") + " " + erreurLien;
+      montrer("err", /expired/i.test(code)
+        ? "Ce lien de réinitialisation a expiré (il est valable 1 heure). Demandez-en un nouveau ci-dessous."
+        : "Ce lien de réinitialisation n'est plus valable. Demandez-en un nouveau ci-dessous.");
+      history.replaceState(null, "", location.pathname);
+    } else if (params.get("recovery") === "1" || location.hash.includes("type=recovery") || params.get("code")) {
+      passerEnRecovery();
+    }
+
+    // Supabase peut aussi signaler l'événement une fois le jeton consommé.
     if (TOH_PRET) {
       sb.auth.onAuthStateChange((event) => {
         if (event === "PASSWORD_RECOVERY") passerEnRecovery();
       });
     }
 
-    // Étape 1 : envoyer le lien
-    formDemande.addEventListener("submit", async function(e) {
+    /* ---------- Étape 1 : envoyer le lien ---------- */
+    formDemande.addEventListener("submit", async function (e) {
       e.preventDefault();
-      const email = document.getElementById("email").value.trim();
-      if (TOH_PRET) await reinitMotDePasse(email);
-      montrer("ok", "Si un compte est associé à cet e-mail, un lien de réinitialisation vient d'être envoyé. Ouvrez-le pour choisir un nouveau mot de passe.");
+      if (envoiEnCours(e.target)) return;   // envoi déjà en cours
+      const email = champEmail.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        montrer("err", "Merci de saisir une adresse e-mail valide.");
+        champEmail.focus();
+        return;
+      }
+      if (!TOH_PRET) {
+        montrer("err", "Le service est momentanément indisponible. Réessayez plus tard, ou écrivez à contact@teorahau.net.");
+        return;
+      }
+
+      const rendre = boutonOccupe(btnEnvoyer, "Envoi en cours…");
+      const res = await reinitMotDePasse(email);
+      rendre();
+
+      // Les erreurs techniques (débit limité, réseau) sont dites franchement.
+      // En revanche on ne révèle jamais si l'adresse existe ou non dans la base.
+      if (!res.ok && /patienter|Trop de demandes|Internet/i.test(res.msg)) {
+        montrer("err", res.msg);
+        const s = (res.msg.match(/(\d+) secondes/) || [])[1];
+        if (s) boutonAttente(btnEnvoyer, parseInt(s, 10), "Réessayer dans %s s");
+        return;
+      }
+
+      montrer("ok", "Si un compte est associé à « " + email + " », un lien de réinitialisation vient d'être envoyé. Ouvrez-le pour choisir un nouveau mot de passe.");
+      boutonAttente(btnEnvoyer, 60, "Renvoyer le lien dans %s s");
     });
 
-    // Étape 2 : enregistrer le nouveau mot de passe
-    formNouveau.addEventListener("submit", async function(e) {
+    /* ---------- Étape 2 : enregistrer le nouveau mot de passe ---------- */
+    formNouveau.addEventListener("submit", async function (e) {
       e.preventDefault();
-      const p1 = document.getElementById("np").value;
-      const p2 = document.getElementById("np2").value;
-      if (p1 !== p2) { montrer("err", "Les mots de passe ne correspondent pas."); return; }
-      if (!TOH_PRET) { montrer("err", "Service indisponible."); return; }
+      if (envoiEnCours(e.target)) return;   // envoi déjà en cours
+      const p1 = np.value, p2 = np2.value;
+
+      if (p1.length < 6) { montrer("err", "Le mot de passe doit contenir au moins 6 caractères."); np.focus(); return; }
+      if (p1 !== p2)     { montrer("err", "Les deux mots de passe saisis ne sont pas identiques."); np2.focus(); return; }
+      if (!TOH_PRET)     { montrer("err", "Le service est momentanément indisponible. Réessayez plus tard."); return; }
+
+      const rendre = boutonOccupe(btnEnregistrer, "Enregistrement…");
+
+      // Sans session valide, le lien a expiré ou a déjà servi : on le dit
+      // clairement plutôt que de laisser remonter une erreur en anglais.
+      const session = await sessionActive();
+      if (!session) {
+        rendre();
+        revenirEtape1("Votre lien de réinitialisation a expiré ou a déjà été utilisé. Demandez-en un nouveau ci-dessous.");
+        return;
+      }
+
       const { error } = await sb.auth.updateUser({ password: p1 });
+      rendre();
       if (error) { montrer("err", traduireErreur(error.message)); return; }
-      montrer("ok", "Mot de passe modifié ✔ Redirection vers la connexion…");
-      setTimeout(() => location.href = "connexion.html", 1600);
+
+      montrer("ok", "Mot de passe modifié ✔ Vous êtes connecté : ouverture de votre espace…");
+      history.replaceState(null, "", location.pathname);
+      setTimeout(() => location.href = "espace.html", 1600);
     });
   </script>
 </body>

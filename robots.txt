@@ -1,8 +1,10 @@
 User-agent: *
 Allow: /
-Disallow: /admin.html
-Disallow: /espace.html
-Disallow: /missions.html
-Disallow: /mes-signalements.html
+
+# Les pages réservées aux membres et au bureau (Mon espace, Admin, Forum,
+# Annuaire, Signaler, Mes signalements, Outils, Mes missions, Mot de passe)
+# portent la balise <meta name="robots" content="noindex, follow">.
+# On ne les bloque PAS ici : un « Disallow » empêcherait les moteurs de lire
+# cette balise, et l'URL resterait affichée dans les résultats de recherche.
 
 Sitemap: https://nuisancesonore.github.io/te-ora-hau/sitemap.xml

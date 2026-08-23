@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mes missions · Te Ora Hau</title>
+  <!-- Page réservée aux membres : aucun intérêt dans les résultats de recherche. -->
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .sect-titre { color:var(--bleu-fonce); font-size:1.15rem; margin:1.6rem 0 0.7rem; }
@@ -148,12 +152,12 @@
     async function prendre(id){
       const { error } = await sb.from("missions")
         .update({ assigne_a: UID, statut: "En cours" }).eq("id", id).is("assigne_a", null);
-      if (error) return alert("Erreur : " + error.message);
+      if (error) return alert(messageErreur(error));
       await charger();
     }
     async function majStatut(id, val){
       const { error } = await sb.from("missions").update({ statut: val }).eq("id", id);
-      if (error) return alert("Erreur : " + error.message);
+      if (error) return alert(messageErreur(error));
       await charger();
     }
     async function commenter(id){
@@ -162,7 +166,7 @@
       if (!texte) return;
       const { error } = await sb.from("missions_commentaires")
         .insert({ mission_id: id, auteur: UID, auteur_nom: nomComplet(PROFIL), texte });
-      if (error) return alert("Erreur : " + error.message);
+      if (error) return alert(messageErreur(error));
       await charger();
     }
   </script>

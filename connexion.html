@@ -16,17 +16,19 @@
     <div class="form-wrap">
       <h2>Connexion membre</h2>
       <p class="intro">Accédez à votre espace, au forum et aux outils.</p>
-      <div id="msg" class="message"></div>
+      <div id="msg" class="message" role="status" aria-live="polite"></div>
       <form id="form-connexion">
         <div class="champ">
           <label for="email">Adresse e-mail</label>
-          <input type="email" id="email" required placeholder="vous@exemple.pf">
+          <input type="email" id="email" required autocomplete="username"
+                 autocapitalize="none" spellcheck="false" inputmode="email"
+                 placeholder="vous@exemple.pf">
         </div>
         <div class="champ">
           <label for="mdp">Mot de passe</label>
-          <input type="password" id="mdp" required>
+          <input type="password" id="mdp" required autocomplete="current-password">
         </div>
-        <button type="submit" class="btn btn-primaire btn-bloc">Se connecter</button>
+        <button type="submit" id="btn-connexion" class="btn btn-primaire btn-bloc">Se connecter</button>
       </form>
       <p class="form-foot">
         <a href="mot-de-passe.html">Mot de passe oublié ?</a><br>
@@ -42,13 +44,23 @@
   <script>
     initPage("connexion");
     const msg = document.getElementById("msg");
+    const btnConnexion = document.getElementById("btn-connexion");
+    // Œil « afficher / masquer » : on tape à l'aveugle sur téléphone sinon.
+    oeilMotDePasse(document.getElementById("mdp"));
+
     document.getElementById("form-connexion").addEventListener("submit", async function(e) {
       e.preventDefault();
-      if (!TOH_PRET) { montrer("err", "Supabase n'est pas configuré (voir SETUP.md)."); return; }
+      if (envoiEnCours(e.target)) return;   // envoi déjà en cours (double clic / touche Entrée)
+      if (!TOH_PRET) { montrer("err", "Le service est momentanément indisponible. Réessayez plus tard."); return; }
       const email = document.getElementById("email").value.trim();
       const mdp = document.getElementById("mdp").value;
-      montrer("ok", "Connexion…");
+      if (!email || !mdp) { montrer("err", "Merci de renseigner votre e-mail et votre mot de passe."); return; }
+
+      // Bouton verrouillé pendant l'appel : plus de double soumission possible.
+      const rendre = boutonOccupe(btnConnexion, "Connexion…");
+      montrer("info", "Connexion…");
       const res = await connecter(email, mdp);
+      rendre();
       montrer(res.ok ? "ok" : "err", res.msg);
       if (res.ok) setTimeout(() => location.href = "espace.html", 700);
     });

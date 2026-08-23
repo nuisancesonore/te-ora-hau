@@ -82,7 +82,7 @@
         <div class="meta" style="margin-top:0.3rem">${geo} · ${new Date(sg.cree_le).toLocaleDateString('fr-FR')}</div>
         <div class="actions">
           <button class="mini vert" onclick="editer('${sg.id}')">✏️ Modifier</button>
-          <button class="mini rouge" onclick="supprimer('${sg.id}')">🗑️ Supprimer</button>
+          <button class="mini rouge" onclick="supprimer('${sg.id}', this)">🗑️ Supprimer</button>
         </div>`;
     }
 
@@ -112,51 +112,55 @@
         </div>
         <div id="emsg-${id}" class="message"></div>
         <div class="actions">
-          <button class="mini vert" onclick="enregistrer('${id}')">💾 Enregistrer</button>
+          <button class="mini vert" onclick="enregistrer('${id}', this)">💾 Enregistrer</button>
           <button class="mini clair" onclick="annuler('${id}')">Annuler</button>
         </div>`;
     }
     function annuler(id){ document.getElementById("sig-"+id).innerHTML = vue(CACHE[id]); }
 
-    async function enregistrer(id){
-      const maj = {
-        type: val("e-type-"+id), commune: val("e-commune-"+id), quartier: val("e-quartier-"+id),
-        horaire: val("e-horaire-"+id), intensite: val("e-intensite-"+id), recurrence: val("e-recurrence-"+id),
-        constat: val("e-constat-"+id), debut: val("e-debut-"+id) || null,
-        horaire_detail: val("e-hdetail-"+id),
-        auteur_presume: val("e-auteur-"+id),
-        voisins_genes: document.getElementById("e-vois-"+id).checked,
-        personnes_foyer: parseInt(document.getElementById("e-foyer-"+id).value) || null,
-        preuves: val("e-preuves-"+id),
-        adresse_source: val("e-source-"+id), adresse_plaignant: val("e-plaignant-"+id),
-        description: val("e-desc-"+id),
-      };
-      const m = document.getElementById("emsg-"+id);
-      let { error } = await sb.from("signalements").update(maj).eq("id", id);
-      let partiel = false;
-      // Filet de secours : si des colonnes récentes n'existent pas encore
-      // dans la base, on réessaie sans elles plutôt que d'échouer.
-      if (error && /column|schema cache|constat|debut|horaire_detail|voisins|preuves|auteur_presume|personnes_foyer/i.test(error.message||"")){
-        const maj2 = Object.assign({}, maj); delete maj2.constat; delete maj2.debut;
-        delete maj2.horaire_detail; delete maj2.voisins_genes; delete maj2.preuves;
-        delete maj2.auteur_presume; delete maj2.personnes_foyer;
-        const retry = await sb.from("signalements").update(maj2).eq("id", id);
-        error = retry.error; partiel = !error;
-      }
-      if (error){ m.className="message err"; m.textContent=messageErreur(error); return; }
-      m.className = "message ok";
-      m.textContent = partiel
-        ? "Enregistré ✔ (la « démarche » et le « début » seront pris en compte une fois la base mise à jour)"
-        : "Enregistré ✔";
-      const { data } = await sb.from("signalements").select("*").eq("id", id).single();
-      setTimeout(() => { const b = document.getElementById("sig-"+id); if (b) b.innerHTML = vue(data); }, partiel ? 2200 : 600);
+    async function enregistrer(id, btn){
+      return actionBouton(btn, "Enregistrement…", async () => {
+        const maj = {
+          type: val("e-type-"+id), commune: val("e-commune-"+id), quartier: val("e-quartier-"+id),
+          horaire: val("e-horaire-"+id), intensite: val("e-intensite-"+id), recurrence: val("e-recurrence-"+id),
+          constat: val("e-constat-"+id), debut: val("e-debut-"+id) || null,
+          horaire_detail: val("e-hdetail-"+id),
+          auteur_presume: val("e-auteur-"+id),
+          voisins_genes: document.getElementById("e-vois-"+id).checked,
+          personnes_foyer: parseInt(document.getElementById("e-foyer-"+id).value) || null,
+          preuves: val("e-preuves-"+id),
+          adresse_source: val("e-source-"+id), adresse_plaignant: val("e-plaignant-"+id),
+          description: val("e-desc-"+id),
+        };
+        const m = document.getElementById("emsg-"+id);
+        let { error } = await sb.from("signalements").update(maj).eq("id", id);
+        let partiel = false;
+        // Filet de secours : si des colonnes récentes n'existent pas encore
+        // dans la base, on réessaie sans elles plutôt que d'échouer.
+        if (error && /column|schema cache|constat|debut|horaire_detail|voisins|preuves|auteur_presume|personnes_foyer/i.test(error.message||"")){
+          const maj2 = Object.assign({}, maj); delete maj2.constat; delete maj2.debut;
+          delete maj2.horaire_detail; delete maj2.voisins_genes; delete maj2.preuves;
+          delete maj2.auteur_presume; delete maj2.personnes_foyer;
+          const retry = await sb.from("signalements").update(maj2).eq("id", id);
+          error = retry.error; partiel = !error;
+        }
+        if (error){ m.className="message err"; m.textContent=messageErreur(error); return; }
+        m.className = "message ok";
+        m.textContent = partiel
+          ? "Enregistré ✔ (la « démarche » et le « début » seront pris en compte une fois la base mise à jour)"
+          : "Enregistré ✔";
+        const { data } = await sb.from("signalements").select("*").eq("id", id).single();
+        setTimeout(() => { const b = document.getElementById("sig-"+id); if (b) b.innerHTML = vue(data); }, partiel ? 2200 : 600);
+      });
     }
 
-    async function supprimer(id){
-      if (!confirm("Supprimer définitivement ce signalement ?")) return;
-      const { error } = await sb.from("signalements").delete().eq("id", id);
-      if (error){ alert(messageErreur(error)); return; }
-      const el = document.getElementById("sig-"+id); if (el) el.remove();
+    async function supprimer(id, btn){
+      return actionBouton(btn, "…", async () => {
+        if (!confirm("Supprimer définitivement ce signalement ?")) return;
+        const { error } = await sb.from("signalements").delete().eq("id", id);
+        if (error){ alert(messageErreur(error)); return; }
+        const el = document.getElementById("sig-"+id); if (el) el.remove();
+      });
     }
 
     function val(id){ return (document.getElementById(id).value||"").trim(); }

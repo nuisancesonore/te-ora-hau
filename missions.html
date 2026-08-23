@@ -131,7 +131,7 @@
           ${coms.map(c => `<div class="com-item"><div class="qui">${echapper(c.auteur_nom) || "—"} · ${new Date(c.cree_le).toLocaleString("fr-FR")}</div>${echapper(c.texte)}</div>`).join("")}
           <div class="com-form">
             <input id="com-${m.id}" placeholder="Rendre compte au bureau… (ex. mairie contactée, réponse sous 8 jours)">
-            <button class="btn btn-vert" style="padding:0.45rem 0.9rem" onclick="commenter('${m.id}')">Envoyer</button>
+            <button class="btn btn-vert" style="padding:0.45rem 0.9rem" onclick="commenter('${m.id}', this)">Envoyer</button>
           </div>
         </details>`;
       return `<div class="mission ${mode === "ouverte" ? "ouverte" : ""} ${mode === "finie" ? "finie" : ""}">
@@ -139,7 +139,7 @@
         <div class="meta">${pill(m.statut)}${m.echeance ? ` · échéance <span class="${proche ? "echeance-proche" : ""}">${new Date(m.echeance).toLocaleDateString("fr-FR")}</span>` : ""}${m.cree_par_nom ? ` · confiée par ${echapper(m.cree_par_nom)}` : ""}</div>
         ${m.description ? `<div class="desc">${echapper(m.description)}</div>` : ""}
         <div class="m-actions">
-          ${mode === "ouverte" ? `<button class="btn btn-vert" onclick="prendre('${m.id}')">Je prends cette mission</button>` : ""}
+          ${mode === "ouverte" ? `<button class="btn btn-vert" onclick="prendre('${m.id}', this)">Je prends cette mission</button>` : ""}
           ${mode === "mienne" ? `<label style="font-size:0.85rem;color:var(--gris)">Avancement :</label>
             <select onchange="majStatut('${m.id}', this.value)">
               ${["À faire","En cours","Terminée","Abandonnée"].map(o => `<option${m.statut === o ? " selected" : ""}>${o}</option>`).join("")}
@@ -149,25 +149,29 @@
       </div>`;
     }
 
-    async function prendre(id){
-      const { error } = await sb.from("missions")
-        .update({ assigne_a: UID, statut: "En cours" }).eq("id", id).is("assigne_a", null);
-      if (error) return alert(messageErreur(error));
-      await charger();
+    async function prendre(id, btn){
+      return actionBouton(btn, "…", async () => {
+        const { error } = await sb.from("missions")
+          .update({ assigne_a: UID, statut: "En cours" }).eq("id", id).is("assigne_a", null);
+        if (error) return alert(messageErreur(error));
+        await charger();
+      });
     }
     async function majStatut(id, val){
       const { error } = await sb.from("missions").update({ statut: val }).eq("id", id);
       if (error) return alert(messageErreur(error));
       await charger();
     }
-    async function commenter(id){
-      const inp = document.getElementById("com-" + id);
-      const texte = (inp.value || "").trim();
-      if (!texte) return;
-      const { error } = await sb.from("missions_commentaires")
-        .insert({ mission_id: id, auteur: UID, auteur_nom: nomComplet(PROFIL), texte });
-      if (error) return alert(messageErreur(error));
-      await charger();
+    async function commenter(id, btn){
+      return actionBouton(btn, "Envoi…", async () => {
+        const inp = document.getElementById("com-" + id);
+        const texte = (inp.value || "").trim();
+        if (!texte) return;
+        const { error } = await sb.from("missions_commentaires")
+          .insert({ mission_id: id, auteur: UID, auteur_nom: nomComplet(PROFIL), texte });
+        if (error) return alert(messageErreur(error));
+        await charger();
+      });
     }
   </script>
 </body>

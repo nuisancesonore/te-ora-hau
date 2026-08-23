@@ -304,8 +304,11 @@ main { max-width: 1100px; margin: 0 auto; padding: 2.5rem 1.2rem; }
 .message.err { background: #fce6e1; color: #b2381f; border: 1px solid #f3c2b6; display: block; }
 .message.info { background: #e6f2f4; color: #064a54; border: 1px solid #b9dde2; display: block; }
 
-/* Bouton en cours d'envoi / en attente : plus de double clic possible */
-.btn:disabled, .btn.occupe {
+/* Bouton en cours d'envoi / en attente : plus de double clic possible.
+   Vaut aussi pour les petits boutons d'action du bureau (.mini) et pour tout
+   bouton verrouille par boutonOccupe(), qui n'ont pas la classe .btn. */
+.btn:disabled, .btn.occupe,
+button:disabled, button.occupe {
   opacity: 0.6; cursor: not-allowed; transform: none;
   pointer-events: none;
 }

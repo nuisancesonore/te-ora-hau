@@ -752,3 +752,19 @@ function messageErreur(error, indice) {
   }
   return traduit;
 }
+
+/* ---------- Action declenchee par un bouton (hors formulaire) ----------
+   Meme protection que pour les formulaires, mais pour les boutons d'action
+   du bureau : valider une cotisation, publier une annonce, supprimer une
+   mission... Un double clic ne doit pas creer de doublon en base.
+
+   Usage :  <button onclick="validerCoti('id', this)">Valider</button>
+            async function validerCoti(id, btn){
+              return actionBouton(btn, "…", async () => { ... });
+            }                                                              */
+async function actionBouton(btn, texte, action) {
+  if (btn && btn.dataset && btn.dataset.occupe === "1") return undefined;
+  const rendre = boutonOccupe(btn, texte);
+  try { return await action(); }
+  finally { rendre(); }
+}

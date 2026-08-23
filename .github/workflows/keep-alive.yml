@@ -29,12 +29,13 @@ jobs:
           # Un projet par ligne : nom|url|clé publique|table à interroger
           # Pour retirer un projet, commentez sa ligne avec un '#'.
           projets=$(cat <<'LISTE'
+          te-ora-hau|https://alaesbkvfprgpngrowbt.supabase.co|sb_publishable_R0hXlownDkPs0aCMvGMNaw_qU5gGkcB|bureau_emails
           vaitarua|https://bkywdexmqvjypogmubts.supabase.co|sb_publishable_KovtDlDpp-Hk3Ga1CbaJCA_QIAu6eK1|public_blocked
           LISTE
           )
-          # te-ora-hau : projet supprimé côté Supabase (l'hôte ne résout plus).
-          # Remettre une ligne ici dès qu'un nouveau projet est créé, au format
-          # ci-dessus, sinon la base retombera en pause au bout d'une semaine.
+          # te-ora-hau a été mis en pause par Supabase le 06/08/2026 puis restauré
+          # le 23/08/2026, données intactes. Le ping ci-dessus doit rester actif :
+          # sur le plan gratuit, une semaine sans requête suffit à remettre en pause.
 
           echecs=0
           while IFS='|' read -r nom url cle table; do

@@ -293,7 +293,7 @@ async function rendreNav(pageActive) {
   const mount = document.getElementById("nav-mount");
   mount.innerHTML = `
     <section class="banniere">
-      <a href="index.html"><img src="images/bandeau.jpg"
+      <a href="index.html"><img src="images/bandeau.jpg" width="1536" height="364"
          alt="STOP au bruit — Pour vivre en paix sans nuisances sonores"></a>
     </section>`;
 
@@ -305,7 +305,7 @@ async function rendreNav(pageActive) {
     <header class="site" id="toh-header">
       <div class="nav-inner">
         <a href="index.html" class="brand">
-          <span class="logo"><img src="images/logo-192.png" alt="Logo Te Ora Hau"></span>
+          <span class="logo"><img src="images/logo-192.png" width="192" height="181" alt="Logo Te Ora Hau"></span>
           <span>
             <span class="titre">Te Ora Hau</span>
             <span class="sous">Vivre en paix · Lutte contre le bruit</span>
@@ -463,11 +463,11 @@ function rendreFooter() {
     <footer class="site">
       <div class="foot-inner">
         <div>
-          <h4>Te Ora Hau</h4>
+          <h2 class="foot-titre">Te Ora Hau</h2>
           <p>« Vivre en paix » — association polynésienne de lutte contre les nuisances sonores, fondée en 1998.</p>
         </div>
         <div>
-          <h4>Agir</h4>
+          <h2 class="foot-titre">Agir</h2>
           <p><a href="signaler.html">Signaler une nuisance</a></p>
           <p><a href="outils.html">Courriers &amp; journal de bruit</a></p>
           <p><a href="carte.html">Carte des nuisances</a></p>
@@ -475,7 +475,7 @@ function rendreFooter() {
           <p><a href="guide-membre.html">Mode d'emploi</a></p>
         </div>
         <div>
-          <h4>Contact</h4>
+          <h2 class="foot-titre">Contact</h2>
           <p>BP 2524, 98713 Papeete — Tahiti</p>
           <p><a href="mailto:contact@teorahau.net">contact@teorahau.net</a></p>
           <p><a href="tel:+68987721687">87 72 16 87</a> · <a href="tel:+68989750415">89 75 04 15</a></p>

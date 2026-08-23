@@ -382,7 +382,7 @@ footer.site {
   max-width: 1100px; margin: 0 auto; padding: 2.2rem 1.2rem 1.2rem;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;
 }
-.foot-inner h4 { color: var(--or); margin-bottom: 0.6rem; font-size: 1rem; }
+.foot-inner .foot-titre { color: var(--or); margin-bottom: 0.6rem; font-size: 1rem; }
 .foot-inner a { color: rgba(255,255,255,0.8); }
 .foot-inner p { font-size: 0.88rem; margin-bottom: 0.3rem; }
 .foot-bas {
@@ -425,4 +425,22 @@ a, .btn, button { transition: background 0.15s ease, color 0.15s ease, opacity 0
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------- Titre principal de page (un seul <h1> par page) ---------- */
+/* .section-titre fixe deja la taille : un h1 portant cette classe est
+   visuellement identique a un h2. La correction est semantique, pas visuelle. */
+.form-wrap h1 { color: var(--bleu-fonce); margin-bottom: 0.3rem; font-size: 1.5rem; }
+
+/* ---------- Tableaux ---------- */
+/* Sur petit ecran, un tableau plus large que l'ecran defile dans son propre
+   cadre au lieu de pousser toute la page vers la droite. */
+@media (max-width: 700px) {
+  main table,
+  main table[class] {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

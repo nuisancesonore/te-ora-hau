@@ -178,7 +178,7 @@
               <div class="champ"><label>Île de résidence</label><input id="ile" list="iles-pf" value="${echapper(profil.ile)||'Tahiti'}">
                 <datalist id="iles-pf"><option>Tahiti</option><option>Moorea</option><option>Raiatea</option><option>Taha'a</option><option>Bora Bora</option><option>Huahine</option><option>Maupiti</option><option>Tubuai</option><option>Rurutu</option><option>Rangiroa</option><option>Tikehau</option><option>Fakarava</option><option>Nuku Hiva</option><option>Hiva Oa</option><option>Gambier</option></datalist></div>
               <div class="champ"><label>Commune de résidence</label><select id="commune"></select>
-                <input id="commune_autre" placeholder="Île puis commune (ex. Raiatea, Uturoa)" style="display:none;margin-top:0.5rem"></div>
+                <input id="commune_autre" aria-label="Préciser la commune" placeholder="Île puis commune (ex. Raiatea, Uturoa)" style="display:none;margin-top:0.5rem"></div>
               <div class="champ"><label>Adresse</label><input id="adresse" value="${echapper(profil.adresse)}" placeholder="Quartier, rue, lotissement…"></div>
               <div class="champ"><label>Téléphone <span style="font-weight:400;color:var(--gris)">— pour les SMS de l'association</span></label><input id="telephone" type="tel" value="${echapper(profil.telephone)}" placeholder="Ex. 87 12 34 56"></div>
 

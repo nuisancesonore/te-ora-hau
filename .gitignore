@@ -14,3 +14,8 @@ Desktop.ini
 
 # Fichier source non utilisé par le site (original non rogné de la bannière)
 images/image bandeau.png
+
+# Secrets : ne JAMAIS publier (la clé VAPID privée sert à signer les push).
+# La clé PUBLIQUE, elle, vit dans js/config.js et peut être publiée.
+vapid-keys-*.txt
+ID.txt

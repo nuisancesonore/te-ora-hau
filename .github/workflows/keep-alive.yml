@@ -1,18 +1,27 @@
-# Ping quotidien des bases Supabase pour empêcher leur mise en pause
-# (plan gratuit : Supabase suspend un projet après ~1 semaine sans requête).
+# Maintien en vie des bases Supabase + alerte si l'une devient injoignable.
 #
-# IMPORTANT — leçon d'une panne réelle (août 2026) :
-# l'ancienne version enchaînait les pings dans des étapes successives se
-# terminant par « test "$code" = "200" ». Quand le projet te-ora-hau a disparu,
-# la PREMIÈRE étape a échoué, le job s'est arrêté, et le ping de vaitarua n'a
-# PLUS JAMAIS été exécuté — le projet encore vivant a donc cessé d'être
-# maintenu éveillé, sans que personne s'en aperçoive.
-# Désormais : chaque projet est pingué indépendamment, on additionne les
-# échecs, et le job n'échoue qu'à la toute fin. Un projet en panne ne peut
-# plus entraîner les autres dans sa chute.
+# TROIS PROTECTIONS, apprises de la panne d'août 2026 :
 #
-# Les clés ci-dessous sont les clés PUBLIQUES (publishable) déjà visibles
-# dans le code des sites — rien de secret ici.
+# 1) Un projet en panne n'entraîne plus les autres. Avant, les pings étaient des
+#    étapes successives terminées par « test "$code" = "200" » : la chute de
+#    te-ora-hau arrêtait le job, et vaitarua n'a plus été pingué pendant 16 jours
+#    sans que rien ne le signale.
+#
+# 2) Une panne ouvre un TICKET (issue) sur le dépôt, refermé automatiquement dès
+#    le retour à la normale. Un e-mail « Run failed » se noie dans une boîte de
+#    réception ; un ticket ouvert reste visible sur la page d'accueil du dépôt.
+#
+# 3) Un « battement de cœur » mensuel empêche GitHub de désactiver ce workflow.
+#    GitHub coupe silencieusement les workflows planifiés après 60 jours sans
+#    activité sur le dépôt. Un site qui ne bouge pas pendant deux mois perdrait
+#    donc sa protection — c'est le piège le plus sournois de tous.
+#
+# À SAVOIR : le ping empêche la mise en pause POUR INACTIVITÉ, rien de plus.
+# Le 7 août 2026 la base répondait encore au ping, et elle a été mise en pause
+# dans les 24 h. Seul le plan payant supprime totalement ce risque.
+#
+# Les clés ci-dessous sont les clés PUBLIQUES (publishable), déjà visibles dans
+# le code des sites — rien de secret ici.
 name: Keep Supabase alive
 
 on:
@@ -20,11 +29,18 @@ on:
     - cron: "0 17 * * *" # tous les jours à 17h00 UTC (7h00 à Tahiti)
   workflow_dispatch: {} # déclenchable à la main depuis l'onglet Actions
 
+permissions:
+  contents: write # pour le battement de cœur mensuel
+  issues: write # pour ouvrir / refermer le ticket d'alerte
+
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Pinguer chaque projet (aucun n'entraîne les autres)
+        id: ping
         run: |
           # Un projet par ligne : nom|url|clé publique|table à interroger
           # Pour retirer un projet, commentez sa ligne avec un '#'.
@@ -33,11 +49,9 @@ jobs:
           vaitarua|https://bkywdexmqvjypogmubts.supabase.co|sb_publishable_KovtDlDpp-Hk3Ga1CbaJCA_QIAu6eK1|public_blocked
           LISTE
           )
-          # te-ora-hau a été mis en pause par Supabase le 06/08/2026 puis restauré
-          # le 23/08/2026, données intactes. Le ping ci-dessus doit rester actif :
-          # sur le plan gratuit, une semaine sans requête suffit à remettre en pause.
 
           echecs=0
+          details=""
           while IFS='|' read -r nom url cle table; do
             case "$nom" in ''|\#*) continue ;; esac
             code=$(curl -s -m 30 -o /dev/null -w "%{http_code}" \
@@ -46,14 +60,65 @@ jobs:
             if [ "$code" = "200" ]; then
               echo "::notice::$nom : OK (HTTP $code)"
             else
-              echo "::error::$nom : ECHEC (HTTP $code) — projet en pause, supprimé, ou table renommée ?"
+              echo "::error::$nom : INJOIGNABLE (HTTP $code)"
               echecs=$((echecs + 1))
+              details="$details$nom (HTTP $code) ; "
             fi
           done <<< "$projets"
 
-          echo "----------------------------------------"
-          if [ "$echecs" -gt 0 ]; then
-            echo "$echecs projet(s) injoignable(s) — voir les erreurs ci-dessus."
+          echo "echecs=$echecs" >> "$GITHUB_OUTPUT"
+          echo "details=$details" >> "$GITHUB_OUTPUT"
+
+      # ---- Alerte visible : un ticket ouvert sur le dépôt ----
+      - name: Ouvrir un ticket d'alerte
+        if: steps.ping.outputs.echecs != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DETAILS: ${{ steps.ping.outputs.details }}
+          LIEN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          titre="Base Supabase injoignable"
+          numero=$(gh issue list --state open --search "$titre in:title" --json number --jq '.[0].number // empty')
+          corps=$(printf '%s\n\n%s\n\n%s\n\n%s\n' \
+            "Le ping quotidien n'a pas pu joindre :" \
+            "**$DETAILS**" \
+            "**Que faire :** ouvrir https://supabase.com/dashboard/project/alaesbkvfprgpngrowbt avec le compte GitHub nuisancesonore (profil Chrome TOH). Si le projet est **Paused**, cliquer **Resume project** — les donnees sont conservees. Ce ticket se refermera tout seul au retour a la normale." \
+            "Execution : $LIEN")
+          if [ -z "$numero" ]; then
+            gh issue create --title "$titre" --body "$corps"
+          else
+            gh issue comment "$numero" --body "Toujours injoignable au $(date -u +'%d/%m/%Y %H:%M') UTC."
+          fi
+
+      - name: Refermer le ticket si tout est revenu
+        if: steps.ping.outputs.echecs == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          numero=$(gh issue list --state open --search "Base Supabase injoignable in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$numero" ]; then
+            gh issue close "$numero" --comment "Tous les projets repondent de nouveau au $(date -u +'%d/%m/%Y %H:%M') UTC."
+          fi
+
+      # ---- Battement de cœur : empêche GitHub de désactiver ce workflow ----
+      - name: Garder le workflow planifié actif
+        run: |
+          jours=$(( ( $(date +%s) - $(git log -1 --format=%ct) ) / 86400 ))
+          echo "Dernier commit il y a $jours jour(s) — GitHub desactive les workflows planifies a 60."
+          if [ "$jours" -ge 45 ]; then
+            date -u +"%Y-%m-%dT%H:%M:%SZ" > .github/derniere-activite.txt
+            git config user.name "keep-alive"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/derniere-activite.txt
+            git commit -m "Battement de coeur : garder le workflow planifie actif"
+            git push
+            echo "::notice::Battement de coeur envoye ($jours jours sans commit)."
+          fi
+
+      - name: Conclure
+        run: |
+          if [ "${{ steps.ping.outputs.echecs }}" != "0" ]; then
+            echo "${{ steps.ping.outputs.echecs }} projet(s) injoignable(s) — voir le ticket ouvert sur le depot."
             exit 1
           fi
-          echo "Tous les projets répondent."
+          echo "Tous les projets repondent."

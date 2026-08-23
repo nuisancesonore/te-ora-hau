@@ -1,6 +1,16 @@
 # Ping quotidien des bases Supabase pour empêcher leur mise en pause
 # (plan gratuit : Supabase suspend un projet après ~1 semaine sans requête).
-# Pingue les DEUX projets du compte : te-ora-hau et vaitarua.
+#
+# IMPORTANT — leçon d'une panne réelle (août 2026) :
+# l'ancienne version enchaînait les pings dans des étapes successives se
+# terminant par « test "$code" = "200" ». Quand le projet te-ora-hau a disparu,
+# la PREMIÈRE étape a échoué, le job s'est arrêté, et le ping de vaitarua n'a
+# PLUS JAMAIS été exécuté — le projet encore vivant a donc cessé d'être
+# maintenu éveillé, sans que personne s'en aperçoive.
+# Désormais : chaque projet est pingué indépendamment, on additionne les
+# échecs, et le job n'échoue qu'à la toute fin. Un projet en panne ne peut
+# plus entraîner les autres dans sa chute.
+#
 # Les clés ci-dessous sont les clés PUBLIQUES (publishable) déjà visibles
 # dans le code des sites — rien de secret ici.
 name: Keep Supabase alive
@@ -14,20 +24,35 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping te-ora-hau
+      - name: Pinguer chaque projet (aucun n'entraîne les autres)
         run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://alaesbkvfprgpngrowbt.supabase.co/rest/v1/bureau_emails?select=email&limit=1" \
-            -H "apikey: sb_publishable_R0hXlownDkPs0aCMvGMNaw_qU5gGkcB" \
-            -H "Authorization: Bearer sb_publishable_R0hXlownDkPs0aCMvGMNaw_qU5gGkcB")
-          echo "te-ora-hau : HTTP $code"
-          test "$code" = "200"
-      - name: Ping vaitarua
-        run: |
-          code=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://bkywdexmqvjypogmubts.supabase.co/rest/v1/public_blocked?select=start_date&limit=1" \
-            -H "apikey: sb_publishable_KovtDlDpp-Hk3Ga1CbaJCA_QIAu6eK1" \
-            -H "Authorization: Bearer sb_publishable_KovtDlDpp-Hk3Ga1CbaJCA_QIAu6eK1")
-          echo "vaitarua : HTTP $code"
-          test "$code" = "200"
+          # Un projet par ligne : nom|url|clé publique|table à interroger
+          # Pour retirer un projet, commentez sa ligne avec un '#'.
+          projets=$(cat <<'LISTE'
+          vaitarua|https://bkywdexmqvjypogmubts.supabase.co|sb_publishable_KovtDlDpp-Hk3Ga1CbaJCA_QIAu6eK1|public_blocked
+          LISTE
+          )
+          # te-ora-hau : projet supprimé côté Supabase (l'hôte ne résout plus).
+          # Remettre une ligne ici dès qu'un nouveau projet est créé, au format
+          # ci-dessus, sinon la base retombera en pause au bout d'une semaine.
 
+          echecs=0
+          while IFS='|' read -r nom url cle table; do
+            case "$nom" in ''|\#*) continue ;; esac
+            code=$(curl -s -m 30 -o /dev/null -w "%{http_code}" \
+              "$url/rest/v1/$table?select=*&limit=1" \
+              -H "apikey: $cle" -H "Authorization: Bearer $cle") || code="000"
+            if [ "$code" = "200" ]; then
+              echo "::notice::$nom : OK (HTTP $code)"
+            else
+              echo "::error::$nom : ECHEC (HTTP $code) — projet en pause, supprimé, ou table renommée ?"
+              echecs=$((echecs + 1))
+            fi
+          done <<< "$projets"
+
+          echo "----------------------------------------"
+          if [ "$echecs" -gt 0 ]; then
+            echo "$echecs projet(s) injoignable(s) — voir les erreurs ci-dessus."
+            exit 1
+          fi
+          echo "Tous les projets répondent."

@@ -565,7 +565,7 @@
           }</select></td>
           <td style="white-space:nowrap">
             <button class="btn btn-clair" style="padding:0.25rem 0.55rem;font-size:0.8rem" onclick="editerDemarche('${d.id}')" title="Corriger">✎</button>
-            <button class="btn btn-clair" style="padding:0.25rem 0.55rem;font-size:0.8rem" onclick="supprimerDemarche('${d.id}')" title="Supprimer">✕</button></td>
+            <button class="btn btn-clair" style="padding:0.25rem 0.55rem;font-size:0.8rem" onclick="supprimerDemarche('${d.id}', this)" title="Supprimer">✕</button></td>
         </tr>`).join("") + `</tbody></table>`
         : "<p style='color:var(--gris);margin-top:1rem'>Aucune démarche enregistrée. Ajoutez votre première démarche ci-dessus — ou générez un courrier : on vous proposera de l'enregistrer ici.</p>";
       rendreSuggestion();
@@ -603,11 +603,13 @@
       const d = DEM.find(x => x.id === id); if (d) d.reponse = val;
       rendreSuggestion();
     }
-    async function supprimerDemarche(id){
+    async function supprimerDemarche(id, btn){
       if (!confirm("Supprimer cette démarche de votre suivi ?")) return;
-      const { error } = await sb.from("demarches").delete().eq("id", id);
-      if (error) return alert(messageErreur(error));
-      await chargerDemarches();
+      return actionBouton(btn, "…", async () => {
+        const { error } = await sb.from("demarches").delete().eq("id", id);
+        if (error) return alert(messageErreur(error));
+        await chargerDemarches();
+      });
     }
     // Renseigne "Démarches déjà entreprises" du courrier à partir du suivi.
     function prefillDemarches(){

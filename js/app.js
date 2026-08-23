@@ -214,7 +214,9 @@ function traduireErreur(m) {
   if (/New password should be different/i.test(m)) return "Le nouveau mot de passe doit être différent de l'ancien.";
   if (/Auth session missing|session_not_found|invalid claim|JWT/i.test(m)) return "Votre lien n'est plus valable. Redemandez un lien de réinitialisation.";
   if (/expired|otp_expired/i.test(m)) return "Ce lien a expiré. Redemandez un lien de réinitialisation.";
-  if (/Failed to fetch|NetworkError|network/i.test(m)) return "Connexion au serveur impossible. Vérifiez votre connexion Internet, puis réessayez.";
+  // Peut venir du reseau du membre OU d'une indisponibilite du serveur :
+  // on ne met pas la faute sur le membre sans reserve.
+  if (/Failed to fetch|NetworkError|network/i.test(m)) return "Connexion au serveur impossible. Vérifiez votre connexion Internet ; si le problème persiste, le service est momentanément indisponible — prévenez le bureau à contact@teorahau.net.";
   if (/User not found/i.test(m)) return "Aucun compte ne correspond à cette adresse e-mail.";
   return m;
 }

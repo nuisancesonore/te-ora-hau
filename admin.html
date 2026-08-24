@@ -714,13 +714,13 @@
         const payload = { titre, corps, cible, date_evenement };
         let res = EDIT_ID
           ? await sb.from("annonces").update(payload).eq("id", EDIT_ID)
-          : await sb.from("annonces").insert(Object.assign({ auteur_nom: MOI ? MOI.nom : "" }, payload));
+          : await sb.from("annonces").insert(Object.assign({ auteur_nom: MOI ? nomComplet(MOI) : "" }, payload));
         // Filet de secours si la colonne date_evenement n'est pas encore ajoutée.
         if (res.error && /date_evenement|column|schema cache/i.test(res.error.message||"")){
           const p2 = { titre, corps, cible };
           res = EDIT_ID
             ? await sb.from("annonces").update(p2).eq("id", EDIT_ID)
-            : await sb.from("annonces").insert(Object.assign({ auteur_nom: MOI ? MOI.nom : "" }, p2));
+            : await sb.from("annonces").insert(Object.assign({ auteur_nom: MOI ? nomComplet(MOI) : "" }, p2));
         }
         if (res.error) return alert(messageErreur(res.error, "prévenez le bureau : migration-communication.sql reste à lancer"));
         // Notification push automatique (uniquement pour une NOUVELLE annonce ;

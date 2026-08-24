@@ -86,6 +86,14 @@
       }
       MISSIONS = data || [];
 
+      // Seconde barriere : un assesseur ne doit JAMAIS voir une mission interne
+      // au bureau. Le RLS le garantit cote serveur, mais cette regle a manque
+      // pendant des mois (la colonne « pour » n'existait meme pas en base) —
+      // on ne s'appuie donc pas sur une seule protection.
+      if (!PROFIL || PROFIL.role !== "bureau") {
+        MISSIONS = MISSIONS.filter(m => (m.pour || "assesseurs") !== "bureau");
+      }
+
       // Commentaires de toutes les missions (un seul appel)
       COMS = {};
       try {

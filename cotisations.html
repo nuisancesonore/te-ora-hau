@@ -85,7 +85,7 @@
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
   <script>
-    let PROFILS = [], DATA = [], MOI = null, modeChoisi = "Espèces", editId = null;
+    let PROFILS = [], DATA = [], MOI = null, modeChoisi = "Espèces", editId = null, A_RELIER = [];
 
     (async function () {
       await initPage("admin");
@@ -119,6 +119,7 @@
           au site (échéance : un an). Un paiement sans compte relié reste dans le registre —
           reliez-le dès que la personne s'inscrit.</p>
         <div id="msg" class="message" role="status" aria-live="polite"></div>
+        <div id="a-relier"></div>
         <div id="attente"></div>
         <div class="bilan" id="bilan"></div>
         <div class="barre-outils">
@@ -205,18 +206,27 @@
     function montrer(type, texte) { msg().className = "message " + type; msg().textContent = texte; }
     const fXPF = n => (n || 0).toLocaleString("fr-FR") + " F";
 
-    // Adhérent correspondant au nom saisi (insensible à la casse et aux espaces)
-    function profilPourNom(nom) {
+    // Comptes correspondant au nom saisi (insensible à la casse et aux espaces).
+    function profilsPourNom(nom) {
       const cle = (nom || "").trim().toLowerCase().replace(/\s+/g, " ");
-      if (!cle) return null;
-      return PROFILS.find(p => nomComplet(p).trim().toLowerCase().replace(/\s+/g, " ") === cle) || null;
+      if (!cle) return [];
+      return PROFILS.filter(p => nomComplet(p).trim().toLowerCase().replace(/\s+/g, " ") === cle);
+    }
+    // Liaison automatique UNIQUEMENT si le nom designe un seul compte :
+    // deux homonymes, et on risquerait de debloquer l'acces du mauvais.
+    function profilPourNom(nom) {
+      const l = profilsPourNom(nom);
+      return l.length === 1 ? l[0] : null;
     }
     function majLien() {
-      const p = profilPourNom(document.getElementById("f-nom").value);
+      const l = profilsPourNom(document.getElementById("f-nom").value);
       const el = document.getElementById("f-lien");
-      el.innerHTML = p
-        ? `<span class="lien-ok">✓ compte trouvé</span> l'accès de ${echapper(nomComplet(p))} sera débloqué automatiquement.`
-        : `<span class="lien-non">sans compte relié</span> aucun compte du site ne porte exactement ce nom — le paiement sera quand même enregistré.`;
+      if (l.length === 1)
+        el.innerHTML = `<span class="lien-ok">✓ compte trouvé</span> l'accès de ${echapper(nomComplet(l[0]))} sera débloqué automatiquement.`;
+      else if (l.length > 1)
+        el.innerHTML = `<span class="lien-non">⚠ homonymes</span> ${l.length} comptes portent ce nom — le paiement sera enregistré sans liaison. Validez l'accès du bon compte depuis l'Admin.`;
+      else
+        el.innerHTML = `<span class="lien-non">sans compte relié</span> aucun compte du site ne porte exactement ce nom — le paiement sera quand même enregistré.`;
     }
 
     async function charger() {
@@ -226,6 +236,19 @@
         montrer("err", messageErreur(error, "prévenez : migration-cotisations.sql reste à lancer dans Supabase"));
         DATA = [];
       } else DATA = data || [];
+
+      // Paiements enregistres AVANT l'inscription de la personne : si son
+      // compte existe desormais (nom identique, sans homonyme), on propose la
+      // liaison en un clic — c'est elle qui debloque l'acces.
+      A_RELIER = DATA.filter(c => !c.profil_id && profilPourNom(c.nom));
+      const zone = document.getElementById("a-relier");
+      if (zone) zone.innerHTML = A_RELIER.length ? `
+        <div style="background:#e6f2f4;border:1px solid #b9dde2;border-radius:12px;padding:0.9rem 1.1rem;margin-bottom:1.2rem">
+          <p style="font-weight:700;color:var(--bleu-fonce);margin:0 0 0.5rem">🔗 ${A_RELIER.length} paiement(s) correspondent maintenant à un inscrit</p>
+          ${A_RELIER.map(c => `<div style="font-size:0.88rem;padding:0.15rem 0">${echapper(c.nom)} — ${fXPF(c.montant)} du ${new Date(String(c.date_paiement).slice(0,10)+"T00:00:00").toLocaleDateString("fr-FR")}</div>`).join("")}
+          <button class="btn btn-vert" style="margin-top:0.6rem;padding:0.45rem 1rem;font-size:0.88rem"
+            onclick="relierTout(this)">Relier et débloquer les accès</button>
+        </div>` : "";
       // Années disponibles (l'année en cours toujours proposée)
       const annees = [...new Set(DATA.map(c => String(c.date_paiement).slice(0, 4)))];
       const enCours = String(new Date().getFullYear());
@@ -340,6 +363,21 @@
         if (error) { alert(messageErreur(error)); return; }
         fermerForm();
         montrer("ok", "Ligne supprimée ✔");
+        await charger();
+      });
+    }
+
+    // Relie d'un coup les paiements orphelins aux comptes crees entre-temps.
+    async function relierTout(btn) {
+      return actionBouton(btn, "Liaison…", async () => {
+        let faits = 0;
+        for (const c of A_RELIER) {
+          const p = profilPourNom(c.nom);
+          if (!p) continue;
+          const { error } = await sb.from("cotisations").update({ profil_id: p.id }).eq("id", c.id);
+          if (!error) faits++;
+        }
+        montrer("ok", faits + " paiement(s) relié(s) ✔ Les accès correspondants sont débloqués.");
         await charger();
       });
     }

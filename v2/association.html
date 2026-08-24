@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L'association · Te Ora Hau</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Découvrez Te Ora Hau (« Vivre en paix ») : sa mission contre le bruit en Polynésie française depuis 1998, son bureau et ses actions de soutien aux victimes de nuisances sonores.">
+  <meta property="og:title" content="Qui sommes-nous ? — Te Ora Hau">
+  <meta property="og:description" content="L'association polynésienne de lutte contre les nuisances sonores : mission, bureau, histoire depuis 1998.">
+  <meta property="og:image" content="https://nuisancesonore.github.io/te-ora-hau/images/icon-512.png">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .prose { max-width: 800px; }
+    .prose p { margin-bottom: 1rem; }
+    .edito {
+      background: var(--blanc); border-radius: var(--radius);
+      padding: 1.6rem 1.8rem; box-shadow: var(--ombre); margin-bottom: 1.4rem;
+      border-top: 4px solid var(--bleu-lagon);
+    }
+    .edito h3 { color: var(--bleu-fonce); margin-bottom: 0.2rem; }
+    .edito .signature { text-align: right; font-style: italic; color: var(--gris); margin-top: 0.8rem; }
+    .engagements { list-style: none; }
+    .engagements li { padding: 0.5rem 0 0.5rem 1.8rem; position: relative; }
+    .engagements li::before { content: "✔"; position: absolute; left: 0; color: var(--vert-paix); font-weight: 700; }
+    .frise { list-style: none; border-left: 3px solid var(--bleu-lagon); margin-left: 0.5rem; }
+    .frise li { position: relative; padding: 0.3rem 0 1.1rem 1.6rem; }
+    .frise li::before {
+      content: ""; position: absolute; left: -0.55rem; top: 0.6rem;
+      width: 0.9rem; height: 0.9rem; background: var(--corail);
+      border-radius: 50%; border: 3px solid var(--sable);
+    }
+    .frise .an { font-weight: 700; color: var(--bleu-fonce); }
+    .carte-membre-bureau { text-align: center; }
+    .photo-membre {
+      width: 150px; height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center 25%;
+      margin: 0 auto 0.9rem;
+      box-shadow: 0 3px 10px rgba(6,74,84,0.18);
+      border: 3px solid #fff;
+    }
+    .carte-membre-bureau p { margin-bottom: 0.2rem; }
+
+    .edito-toggle {
+      background: #fff; border-radius: var(--radius); box-shadow: var(--ombre);
+      margin-bottom: 1.2rem; border-top: 4px solid var(--bleu-lagon); overflow: hidden;
+    }
+    .edito-toggle summary {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem 1.3rem; cursor: pointer; list-style: none;
+    }
+    .edito-toggle summary::-webkit-details-marker { display: none; }
+    .edito-toggle summary:hover { background: #f7f4ec; }
+    .photo-pres {
+      width: 74px; height: 74px; border-radius: 50%;
+      object-fit: cover; object-position: center top; flex: 0 0 auto;
+      box-shadow: 0 2px 8px rgba(6,74,84,0.2); border: 2px solid #fff;
+    }
+    .avatar-initiales {
+      width: 74px; height: 74px; border-radius: 50%; flex: 0 0 auto;
+      background: var(--bleu-fonce); color: #fff; display: grid; place-items: center;
+      font-weight: 800; font-size: 1.25rem; letter-spacing: 1px;
+    }
+    .pres-titre { flex: 1; }
+    .pres-titre h3 { color: var(--bleu-fonce); margin: 0; font-size: 1.1rem; }
+    .pres-titre .sous { font-size: 0.85rem; color: var(--gris); }
+    .chevron { color: var(--corail); font-size: 1.3rem; transition: transform 0.2s; }
+    .edito-toggle[open] .chevron { transform: rotate(90deg); }
+    .edito-toggle .corps { padding: 0 1.4rem 1.4rem; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <h1 class="section-titre">L'association Te Ora Hau</h1>
+    <h2 class="section-titre" style="margin-top:2rem">Notre objectif</h2>
+    <div class="prose">
+      <p>L'association <strong>Te Ora Hau</strong> (« Vivre en Paix ») a pour objectif de <strong>lutter contre les nuisances sonores</strong> de tout ordre, afin d'obtenir, <strong>de jour comme de nuit</strong>, l'<strong>application stricte</strong> des textes qui réglementent le bruit.</p>
+      <p>En adhérant, vous recevez un <strong>soutien technique et moral</strong>, ainsi que tous les renseignements indispensables pour les <strong>démarches</strong> à entreprendre auprès des administrations concernées.</p>
+    </div>
+
+    <h2 class="section-titre" style="margin-top:2.5rem">Nos engagements</h2>
+    <div class="grille">
+      <div class="carte"><h3>Informer &amp; sensibiliser</h3><p><strong>Campagnes d'information</strong>, ateliers et conférences pour éduquer la communauté sur la <strong>prévention</strong> et la gestion des nuisances.</p></div>
+      <div class="carte"><h3>Accompagner &amp; soutenir</h3><p>Écoute attentive, <strong>conseils juridiques</strong> et <strong>accompagnement personnalisé</strong> pour retrouver un cadre de vie serein.</p></div>
+      <div class="carte"><h3>Agir &amp; plaider</h3><p>Collaboration avec les <strong>autorités</strong> et les législateurs pour <strong>renforcer la réglementation</strong> et son application.</p></div>
+      <div class="carte"><h3>Innover &amp; adapter</h3><p><strong>Veille technologique</strong> et exploration de nouvelles solutions, car les défis du bruit évoluent constamment.</p></div>
+    </div>
+
+    <h2 class="section-titre" style="margin-top:2.5rem">Le bureau</h2>
+    <p style="color:var(--gris);margin-bottom:1.2rem">Membres du bureau réélus le 06 juin 2026.</p>
+    <div class="grille">
+      <div class="carte carte-membre-bureau" style="border-top-color:var(--corail)">
+        <img width="340" height="408" class="photo-membre" src="images/Linda%20Maea.jpg" alt="Linda Maea TEMATUA">
+        <h3>Présidente</h3>
+        <p><strong>Linda Maea TEMATUA</strong></p>
+        <p>📱 Vini : <a href="tel:+68987721687">87 72 16 87</a></p>
+        <p>✉️ <a href="mailto:lindamaeatematua@gmail.com">lindamaeatematua@gmail.com</a></p>
+      </div>
+      <div class="carte carte-membre-bureau" style="border-top-color:var(--bleu-lagon)">
+        <img width="356" height="370" class="photo-membre" src="images/Ariitea.jpg" alt="Ariitea BERNADINO">
+        <h3>Vice-président</h3>
+        <p><strong>Ariitea BERNADINO</strong></p>
+        <p>☎️ Fixe : <a href="tel:+68940821463">40 82 14 63</a></p>
+        <p>📱 Vini : <a href="tel:+68988719290">88 71 92 90</a></p>
+        <p>✉️ <a href="mailto:ariiteab@yahoo.fr">ariiteab@yahoo.fr</a></p>
+      </div>
+      <div class="carte carte-membre-bureau" style="border-top-color:var(--vert-paix)">
+        <img width="202" height="202" class="photo-membre" src="images/Terupe.jpg" alt="Terupe SALMON">
+        <h3>Secrétaire général</h3>
+        <p><strong>Terupe SALMON</strong></p>
+        <p>📱 Vini : <a href="tel:+68989750415">89 75 04 15</a></p>
+        <p>✉️ <a href="mailto:terupe@gmail.com">terupe@gmail.com</a></p>
+      </div>
+      <div class="carte carte-membre-bureau" style="border-top-color:var(--vert-paix)">
+        <img width="441" height="566" class="photo-membre" src="images/Hina-Pumaire.jpg" alt="Hina-Pumaire MAHUTA">
+        <h3>Secrétaire générale adjointe</h3>
+        <p><strong>Hina-Pumaire MAHUTA</strong></p>
+        <p>📱 Vini : <a href="tel:+68988285718">88 28 57 18</a></p>
+        <p>✉️ <a href="mailto:hinapumaire.mahuta@gmail.com">hinapumaire.mahuta@gmail.com</a></p>
+      </div>
+      <div class="carte carte-membre-bureau" style="border-top-color:var(--or)">
+        <img width="500" height="579" class="photo-membre" src="images/Jean-Baptiste.jpg" alt="Jean-Baptiste HAUATA">
+        <h3>Trésorier</h3>
+        <p><strong>Jean-Baptiste HAUATA</strong></p>
+        <p>📱 Vini : <a href="tel:+68989785166">89 78 51 66</a></p>
+        <p>✉️ <a href="mailto:jbhauata3@gmail.com">jbhauata3@gmail.com</a></p>
+      </div>
+      <div class="carte carte-membre-bureau" style="border-top-color:var(--or)">
+        <img width="500" height="500" class="photo-membre" src="images/Charlotte.jpg" alt="Charlotte MORITZ">
+        <h3>Trésorière adjointe</h3>
+        <p><strong>Charlotte MORITZ</strong></p>
+        <p>📱 Vini : <a href="tel:+68989269805">89 26 98 05</a></p>
+        <p>✉️ <a href="mailto:charlotte.moritz@laposte.net">charlotte.moritz@laposte.net</a></p>
+      </div>
+    </div>
+
+    <h2 class="section-titre" style="margin-top:2.5rem">Le mot des présidents</h2>
+
+    <p style="color:var(--gris);margin-bottom:1rem">Cliquez sur une carte pour lire l'éditorial.</p>
+
+    <details class="edito-toggle">
+      <summary>
+        <img width="340" height="408" class="photo-pres" src="images/Linda%20Maea.jpg" alt="Linda Maea TEMATUA">
+        <div class="pres-titre">
+          <h3>Éditorial de la Présidente</h3>
+          <div class="sous">Linda Maea TEMATUA — élue depuis le 16 mars 2024</div>
+        </div>
+        <span class="chevron">▸</span>
+      </summary>
+      <div class="corps prose">
+        <p><em>Ia Orana,</em> chers membres et visiteurs. C'est avec gratitude et un engagement renouvelé que je vous accueille. Depuis notre création, nous nous consacrons sans relâche à la défense de ceux qui souffrent des nuisances sonores, ces fléaux invisibles qui détériorent notre qualité de vie.</p>
+        <p>Qu'elles soient industrielles, liées aux transports ou à des comportements individuels irresponsables, ces nuisances affectent le sommeil, la concentration, et peuvent entraîner des troubles cardiovasculaires. Chacun a le droit de vivre dans un environnement paisible et sain. Nous nous engageons à&nbsp;:</p>
+        <ul class="engagements">
+          <li>Informer et sensibiliser le public et les autorités&nbsp;;</li>
+          <li>Accompagner et soutenir les victimes&nbsp;;</li>
+          <li>Agir et plaider pour une réglementation appliquée&nbsp;;</li>
+          <li>Innover et adapter nos moyens d'action.</li>
+        </ul>
+        <p>Ensemble, nous pouvons faire la différence. En rejoignant Te Ora Hau, vous soutenez une cause vitale et contribuez à un futur où chacun profite de la tranquillité et du bien-être.</p>
+        <p class="signature">— Linda Maea TEMATUA, Présidente</p>
+      </div>
+    </details>
+
+    <details class="edito-toggle" style="border-top-color:var(--corail)">
+      <summary>
+        <img width="500" height="329" class="photo-pres" src="images/jean-michel%20carlson.jpg" alt="Jean-Michel CARLSON">
+        <div class="pres-titre">
+          <h3>Éditorial du Président fondateur</h3>
+          <div class="sous">Jean-Michel CARLSON, fondateur</div>
+        </div>
+        <span class="chevron">▸</span>
+      </summary>
+      <div class="corps prose">
+        <p>Sous-produit de la civilisation technologique et urbaine, le bruit est l'un des fléaux les plus perturbants de la vie moderne. Il peut léser l'oreille interne, atteindre le système nerveux, modifier le comportement et la vigilance, altérer les fonctions sensorielles et motrices.</p>
+        <p>Seule une prise de conscience collective et une ferme volonté de changer les mentalités vaincront l'indifférence et l'inertie. Si vous êtes décidé, au-delà de votre cas personnel, à mener ce rude combat contre l'incivisme, adhérez et militez à notre cause. <strong>Nous avons besoin de vous tous.</strong></p>
+        <p class="signature">— Jean-Michel CARLSON, Président fondateur</p>
+      </div>
+    </details>
+
+    <h2 class="section-titre" style="margin-top:2.5rem">Notre histoire</h2>
+    <ul class="frise">
+      <li><span class="an">1998</span> — Fondation de Te Ora Hau par Jean-Michel CARLSON, indépendante de toute idéologie. L'action se limite alors aux quartiers de Tipearui, Paofai et Auae à Faa'a.</li>
+      <li><span class="an">Décembre 1999</span> — Des personnes d'horizons divers, excédées par le bruit, rejoignent l'association. L'Assemblée générale du 11 décembre 1999 modifie les statuts&nbsp;: l'action s'étend à toute la Polynésie française, avec la possibilité d'ester en justice.</li>
+      <li><span class="an">Décembre 2012</span> — Partenariat avec une association métropolitaine au combat identique, l'Association Anti-Bruit de Voisinage (AABV), chaque entité conservant sa totale indépendance.</li>
+      <li><span class="an">27 juillet 2013</span> — Jean-Michel CARLSON succède à Edgard AIAMU à la présidence.</li>
+      <li><span class="an">16 mars 2024</span> — Linda Maea TEMATUA est élue Présidente.</li>
+    </ul>
+
+    <div class="carte" style="margin-top:1.4rem">
+      <h3>Présidences successives</h3>
+      <p>Jean-Michel CARLSON · Myrna RIVIERE · Edgard AIAMU · Jean-Michel CARLSON · Roland GARRIGOU.</p>
+      <img width="530" height="128" src="images/President%20successives.jpg"
+           alt="Portraits des présidents successifs de Te Ora Hau"
+           style="display:block;width:100%;max-width:560px;margin:0.8rem auto 0;border-radius:10px;">
+      <p style="color:var(--gris);font-size:0.9rem;margin-top:0.6rem">Avec l'hommage à Myrna RIVIERE, ancienne chargée de communication, et Jean-Michel CARLSON, président fondateur.</p>
+    </div>
+
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>initPage("association");</script>
+</body>
+</html>

@@ -141,6 +141,8 @@
               <div class="champ" style="margin:0"><label>Intensité</label>
                 <select id="j-intensite"><option>Faible</option><option>Moyenne</option><option selected>Forte</option><option>Insupportable</option></select></div>
               <div class="champ" style="margin:0;grid-column:1/-1"><label>Note</label><input id="j-note" placeholder="Ex. musique, fête voisin…"></div>
+              <div class="champ" style="margin:0;grid-column:1/-1"><label for="j-dossier">Dossier concerné</label>
+                <select id="j-dossier"><option value="">— Aucun (épisode isolé) —</option></select></div>
               <button class="btn btn-vert" type="submit" style="grid-column:1/-1">Ajouter l'épisode</button>
             </form>
           </div>
@@ -165,6 +167,8 @@
                 <select id="d-mode"><option>Courrier simple</option><option>Recommandé A.R.</option><option>E-mail</option><option>Dépôt en main propre</option><option>Téléphone</option><option>Sur place</option></select></div>
               <div class="champ" style="margin:0"><label>Destinataire</label><input id="d-dest" placeholder="Ex. M. X, Mairie de Punaauia…"></div>
               <div class="champ" style="margin:0;grid-column:1/-1"><label>Note (facultatif)</label><input id="d-note" placeholder="Ex. réponse promise sous 8 jours…"></div>
+              <div class="champ" style="margin:0;grid-column:1/-1"><label for="d-dossier">Dossier concerné</label>
+                <select id="d-dossier"><option value="">— Aucun (démarche isolée) —</option></select></div>
               <div style="grid-column:1/-1;display:flex;gap:0.5rem;flex-wrap:wrap">
                 <button class="btn btn-vert" type="submit" id="d-submit">Ajouter la démarche</button>
                 <button class="btn btn-clair" type="button" id="d-annuler" onclick="annulerEditDem()" style="display:none">Annuler la modification</button>
@@ -184,6 +188,8 @@
       }));
 
       preparerCourrier();
+
+      await chargerDossiers();          // alimente les deux selecteurs « Dossier concerne »
 
       document.getElementById("j-date").value = aujLoc();
       document.getElementById("form-jb").addEventListener("submit", ajouterEpisode);
@@ -442,8 +448,15 @@
         duree_min: parseInt(document.getElementById("j-duree").value)||null,
         intensite: document.getElementById("j-intensite").value,
         note: document.getElementById("j-note").value.trim(),
+        signalement_id: dossierChoisi("j-dossier"),
       };
-      const { error } = await sb.from("journal_bruit").insert(row);
+      let { error } = await sb.from("journal_bruit").insert(row);
+      // Filet de secours : si migration-dossier.sql n'a pas encore ete lance,
+      // on enregistre l'episode sans son rattachement plutot que d'echouer.
+      if (error && /signalement_id|column|schema cache/i.test(error.message||"")) {
+        const sans = Object.assign({}, row); delete sans.signalement_id;
+        ({ error } = await sb.from("journal_bruit").insert(sans));
+      }
       rendre();
       const m = document.getElementById("jmsg");
       m.className = "message " + (error?"err":"ok");
@@ -453,6 +466,58 @@
       await chargerJournal();
     }
     let JB = [];
+    /* ----- Dossiers de l'adherent : le fil conducteur -----
+       Un episode de journal ou une demarche se rattache au signalement qu'il
+       concerne. On pre-selectionne le dossier actif (celui qu'on vient d'ouvrir
+       ou de consulter) pour que l'adherent n'ait rien a faire dans le cas
+       courant : une seule nuisance, un seul dossier. */
+    let DOSSIERS = [];
+    async function chargerDossiers(){
+      try {
+        const { data, error } = await sb.from("signalements")
+          .select("id,type,commune,quartier,cree_le").order("cree_le", { ascending:false });
+        if (error) return;                       // colonne pas encore en base : on n'affiche rien
+        DOSSIERS = data || [];
+      } catch(_) { return; }
+
+      let actif = "";
+      try { actif = localStorage.getItem("TOH_dossier_actif") || ""; } catch(_){}
+      // Un seul dossier : aucune ambiguite, on le choisit d'office.
+      if (!actif && DOSSIERS.length === 1) actif = DOSSIERS[0].id;
+
+      const libelle = d => [d.type, d.commune, d.quartier].filter(Boolean).join(" · ")
+        + " (" + new Date(d.cree_le).toLocaleDateString("fr-FR") + ")";
+      const options = DOSSIERS.map(d =>
+        `<option value="${d.id}"${d.id === actif ? " selected" : ""}>${echapper(libelle(d))}</option>`).join("");
+
+      ["j-dossier","d-dossier"].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const aucun = id === "j-dossier" ? "— Aucun (épisode isolé) —" : "— Aucun (démarche isolée) —";
+        sel.innerHTML = `<option value="">${aucun}</option>` + options;
+        if (actif) sel.value = actif;
+        // Le choix de l'adherent devient le dossier actif pour la suite.
+        sel.addEventListener("change", () => {
+          try { localStorage.setItem("TOH_dossier_actif", sel.value); } catch(_){}
+          const autre = document.getElementById(id === "j-dossier" ? "d-dossier" : "j-dossier");
+          if (autre) autre.value = sel.value;
+        });
+      });
+      // Sans aucun signalement, le rattachement n'a pas de sens : on masque.
+      if (!DOSSIERS.length) {
+        ["j-dossier","d-dossier"].forEach(id => {
+          const sel = document.getElementById(id);
+          if (sel && sel.closest(".champ")) sel.closest(".champ").style.display = "none";
+        });
+      }
+    }
+
+    // Valeur a enregistrer, ou null si l'adherent n'a rattache a rien.
+    function dossierChoisi(id){
+      const sel = document.getElementById(id);
+      return sel && sel.value ? sel.value : null;
+    }
+
     async function chargerJournal(){
       const { data } = await sb.from("journal_bruit").select("*").order("date_episode",{ascending:false});
       JB = data || [];
@@ -511,12 +576,18 @@
         mode: document.getElementById("d-mode").value,
         destinataire: document.getElementById("d-dest").value.trim(),
         note: document.getElementById("d-note").value.trim(),
+        signalement_id: dossierChoisi("d-dossier"),
       };
       let error;
-      if (EDIT_DEM){
-        ({ error } = await sb.from("demarches").update(champs).eq("id", EDIT_DEM));
-      } else {
-        ({ error } = await sb.from("demarches").insert(Object.assign({ auteur: s.user.id }, champs)));
+      const ecrire = async (c) => EDIT_DEM
+        ? (await sb.from("demarches").update(c).eq("id", EDIT_DEM)).error
+        : (await sb.from("demarches").insert(Object.assign({ auteur: s.user.id }, c))).error;
+      error = await ecrire(champs);
+      // Filet de secours : si migration-dossier.sql n'a pas encore ete lance,
+      // on enregistre la demarche sans son rattachement plutot que d'echouer.
+      if (error && /signalement_id|column|schema cache/i.test(error.message||"")) {
+        const sans = Object.assign({}, champs); delete sans.signalement_id;
+        error = await ecrire(sans);
       }
       rendre();
       const m = document.getElementById("dmsg");

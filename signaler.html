@@ -227,14 +227,20 @@
                    .filter(Boolean).join(" ; "),
           lat: pt?pt.lat:null, lng: pt?pt.lng:null,
         };
-        let { error } = await sb.from("signalements").insert(row);
+        // « .select("id") » : on recupere l'identifiant de la ligne creee, pour
+        // pouvoir rattacher ensuite le journal et les demarches a ce dossier.
+        let { data, error } = await sb.from("signalements").insert(row).select("id");
         if (error && /column|schema cache|constat|debut|horaire_detail|voisins|preuves|auteur_presume|personnes_foyer/i.test(error.message)) {  // colonnes pas encore ajoutées
           delete row.constat; delete row.debut;
           delete row.horaire_detail; delete row.voisins_genes; delete row.preuves;
           delete row.auteur_presume; delete row.personnes_foyer;
-          ({ error } = await sb.from("signalements").insert(row));
+          ({ data, error } = await sb.from("signalements").insert(row).select("id"));
         }
         if (error){ rendre(); msg.className="message err"; msg.textContent = messageErreur(error); msg.scrollIntoView({ behavior:"smooth", block:"center" }); return; }
+        // Le dossier qui vient d'être ouvert devient le dossier actif : les
+        // épisodes de journal et les démarches saisis ensuite s'y rattacheront
+        // automatiquement, sans que l'adhérent ait à y penser.
+        try { if (data && data[0] && data[0].id) localStorage.setItem("TOH_dossier_actif", data[0].id); } catch(_){}
         // Mémorise le signalement pour pré-remplir un courrier (outils.html).
         try { localStorage.setItem("TOH_signalement", JSON.stringify({
           type: row.type, commune: row.commune, quartier: row.quartier,

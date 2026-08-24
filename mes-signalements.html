@@ -81,6 +81,7 @@
         ${sg.description?`<div style="margin-top:0.3rem">${echapper(sg.description)}</div>`:''}
         <div class="meta" style="margin-top:0.3rem">${geo} · ${new Date(sg.cree_le).toLocaleDateString('fr-FR')}</div>
         <div class="actions">
+          <a class="mini" style="background:var(--bleu-lagon);color:#fff;text-decoration:none;display:inline-block" href="dossier.html?id=${sg.id}">📁 Voir le dossier</a>
           <button class="mini vert" onclick="editer('${sg.id}')">✏️ Modifier</button>
           <button class="mini rouge" onclick="supprimer('${sg.id}', this)">🗑️ Supprimer</button>
         </div>`;

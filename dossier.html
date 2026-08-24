@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dossier de nuisance · Te Ora Hau</title>
+  <!-- Page réservée aux membres : aucun intérêt dans les résultats de recherche. -->
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .fiche { background:var(--blanc); border-radius:var(--radius); box-shadow:var(--ombre);
+             padding:1.6rem 1.8rem; max-width:900px; margin:0 auto; }
+    .fiche-ent { display:flex; gap:1rem; align-items:flex-start; justify-content:space-between;
+                 border-bottom:3px solid var(--bleu-fonce); padding-bottom:0.9rem; margin-bottom:1.2rem; flex-wrap:wrap; }
+    .fiche-ent h1 { font-size:1.35rem; color:var(--bleu-fonce); margin:0 0 0.2rem; }
+    .ref { font-family:ui-monospace,Consolas,monospace; font-size:0.82rem; color:var(--gris); }
+
+    .etat { display:inline-block; padding:0.25rem 0.7rem; border-radius:999px;
+            font-size:0.78rem; font-weight:700; white-space:nowrap; }
+    .etat.ouvert   { background:#fdf0d5; color:#8a6100; }
+    .etat.encours  { background:#e6f2f4; color:#064a54; }
+    .etat.constate { background:#e8e3f5; color:#534ab7; }
+    .etat.resolu   { background:#e3f5ea; color:#1d6b3f; }
+    .etat.classe   { background:#eceae2; color:#6b7a7b; }
+
+    .resume { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+              gap:0.9rem; margin-bottom:1.4rem; }
+    .kpi { background:var(--sable); border-radius:10px; padding:0.8rem 0.9rem; }
+    .kpi .n { font-size:1.6rem; font-weight:800; color:var(--bleu-fonce); line-height:1.1;
+              font-variant-numeric:tabular-nums; }
+    .kpi .l { font-size:0.78rem; color:var(--gris); }
+
+    .bloc { margin-bottom:1.5rem; }
+    .bloc h2 { font-size:1.05rem; color:var(--bleu-fonce); margin:0 0 0.6rem;
+               border-left:4px solid var(--bleu-lagon); padding-left:0.6rem; }
+    .paire { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:0.5rem 1.2rem; }
+    .paire div { font-size:0.9rem; }
+    .paire b { color:var(--gris); font-weight:600; display:block; font-size:0.76rem;
+               text-transform:uppercase; letter-spacing:0.04em; }
+
+    /* Chronologie : la colonne vertébrale du dossier */
+    .chrono { list-style:none; padding:0; margin:0; position:relative; }
+    .chrono::before { content:""; position:absolute; left:9px; top:6px; bottom:6px;
+                      width:2px; background:#e0ded4; }
+    .chrono li { position:relative; padding:0 0 1.1rem 2.1rem; }
+    .chrono .pt { position:absolute; left:2px; top:3px; width:16px; height:16px; border-radius:50%;
+                  border:3px solid var(--blanc); box-shadow:0 0 0 1px #d8d5ca; }
+    .chrono .pt.sig  { background:var(--corail); }
+    .chrono .pt.ep   { background:var(--or); }
+    .chrono .pt.dem  { background:var(--bleu-lagon); }
+    .chrono .pt.rep  { background:var(--vert-paix); }
+    .chrono .q { font-size:0.76rem; color:var(--gris); font-variant-numeric:tabular-nums; }
+    .chrono .t { font-weight:600; color:var(--bleu-fonce); }
+    .chrono .d { font-size:0.88rem; }
+
+    .vide { color:var(--gris); font-size:0.9rem; font-style:italic; }
+    .barre { display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.2rem; }
+
+    @media print {
+      body { background:#fff; padding-top:0 !important; }
+      .banniere, header.site, footer.site, .barre, #nav-mount { display:none !important; }
+      .fiche { box-shadow:none; padding:0; max-width:100%; }
+      main { padding:0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+
+  <main>
+    <div id="contenu"><p class="vide">Chargement du dossier…</p></div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (async function () {
+      await initPage("mes-signalements");
+      const contenu = document.getElementById("contenu");
+      const profil = await monProfil();
+
+      const v = verrouAcces(profil);
+      if (v) { contenu.innerHTML = v; return; }
+
+      const id = new URLSearchParams(location.search).get("id");
+      if (!id) {
+        contenu.innerHTML = `<h1 class="section-titre">Dossier</h1>
+          <p class="vide">Aucun dossier indiqué. Revenez à <a href="mes-signalements.html">Mes signalements</a> et ouvrez-en un.</p>`;
+        return;
+      }
+
+      // Le signalement, ses épisodes de journal et ses démarches.
+      const { data: sig, error } = await sb.from("signalements").select("*").eq("id", id).single();
+      if (error || !sig) {
+        contenu.innerHTML = `<h1 class="section-titre">Dossier</h1>
+          <div class="message err" style="display:block">Ce dossier est introuvable, ou ne vous appartient pas.</div>
+          <p style="margin-top:1rem"><a href="mes-signalements.html">Retour à mes signalements</a></p>`;
+        return;
+      }
+
+      let episodes = [], demarches = [];
+      try {
+        const r = await sb.from("journal_bruit").select("*").eq("signalement_id", id).order("date_episode", { ascending: true });
+        episodes = r.data || [];
+      } catch (_) {}
+      try {
+        const r = await sb.from("demarches").select("*").eq("signalement_id", id).order("date_demarche", { ascending: true });
+        demarches = r.data || [];
+      } catch (_) {}
+
+      const reponses = demarches.filter(d => d.reponse === "Réponse reçue").length;
+      const dateFr = d => d ? new Date(String(d).slice(0, 10) + "T00:00:00").toLocaleDateString("fr-FR") : "—";
+      const classeEtat = e => ({ "Ouvert":"ouvert", "En cours":"encours", "Constaté":"constate",
+                                 "Résolu":"resolu", "Classé sans suite":"classe" })[e] || "ouvert";
+
+      // ---- Chronologie : un seul fil, du signalement à la dernière réponse ----
+      const evts = [];
+      evts.push({ q: sig.cree_le, cls: "sig", t: "Signalement déposé",
+        d: [sig.type, sig.commune, sig.quartier].filter(Boolean).join(" · ") });
+      episodes.forEach(e => evts.push({ q: e.date_episode, cls: "ep",
+        t: "Épisode de bruit" + (e.heure ? " à " + e.heure : ""),
+        d: [e.intensite, e.duree_min ? e.duree_min + " min" : "", e.note].filter(Boolean).join(" · ") }));
+      demarches.forEach(d => {
+        evts.push({ q: d.date_demarche || d.cree_le, cls: "dem", t: d.type,
+          d: [d.mode, d.destinataire, d.note].filter(Boolean).join(" · ") });
+        if (d.reponse && d.reponse !== "En attente") {
+          evts.push({ q: d.date_demarche || d.cree_le, cls: d.reponse === "Réponse reçue" ? "rep" : "dem",
+            t: "Suite : " + d.reponse, d: d.destinataire || "" });
+        }
+      });
+      evts.sort((a, b) => new Date(String(a.q).slice(0,10)) - new Date(String(b.q).slice(0,10)));
+
+      const champ = (l, val) => val ? `<div><b>${l}</b>${echapper(String(val))}</div>` : "";
+
+      contenu.innerHTML = `
+        <div class="barre">
+          <a href="mes-signalements.html" class="btn btn-clair">← Mes signalements</a>
+          <button class="btn btn-primaire" onclick="window.print()">Imprimer / PDF</button>
+        </div>
+
+        <div class="fiche">
+          <div class="fiche-ent">
+            <div>
+              <h1>Dossier de nuisance sonore</h1>
+              <div class="ref">Référence ${echapper(sig.id.slice(0,8).toUpperCase())} ·
+                ouvert le ${dateFr(sig.cree_le)} · ${echapper(nomComplet(profil))}</div>
+            </div>
+            <span class="etat ${classeEtat(sig.etat)}">${echapper(sig.etat || "Ouvert")}</span>
+          </div>
+
+          <div class="resume">
+            <div class="kpi"><div class="n">${episodes.length}</div><div class="l">épisode${episodes.length>1?"s":""} relevé${episodes.length>1?"s":""}</div></div>
+            <div class="kpi"><div class="n">${demarches.length}</div><div class="l">démarche${demarches.length>1?"s":""} engagée${demarches.length>1?"s":""}</div></div>
+            <div class="kpi"><div class="n">${reponses}</div><div class="l">réponse${reponses>1?"s":""} obtenue${reponses>1?"s":""}</div></div>
+            <div class="kpi"><div class="n">${sig.personnes_foyer || "—"}</div><div class="l">personnes du foyer</div></div>
+          </div>
+
+          <div class="bloc">
+            <h2>La nuisance</h2>
+            <div class="paire">
+              ${champ("Type", sig.type)}
+              ${champ("Commune", sig.commune)}
+              ${champ("Quartier", sig.quartier)}
+              ${champ("Lieu du bruit", sig.adresse_source)}
+              ${champ("Auteur présumé", sig.auteur_presume)}
+              ${champ("Depuis", moisAnnee(sig.debut))}
+              ${champ("Horaire", sig.horaire)}
+              ${champ("Précision horaire", sig.horaire_detail)}
+              ${champ("Récurrence", sig.recurrence)}
+              ${champ("Intensité ressentie", sig.intensite)}
+              ${champ("Voisins également gênés", sig.voisins_genes ? "Oui" : "")}
+              ${champ("Preuves déclarées", sig.preuves)}
+              ${champ("Suite donnée", sig.constat)}
+            </div>
+            ${sig.description ? `<div style="margin-top:0.8rem;font-size:0.92rem">${echapper(sig.description)}</div>` : ""}
+          </div>
+
+          <div class="bloc">
+            <h2>Chronologie</h2>
+            ${evts.length ? `<ul class="chrono">${evts.map(e => `
+              <li><span class="pt ${e.cls}"></span>
+                <div class="q">${dateFr(e.q)}</div>
+                <div class="t">${echapper(e.t)}</div>
+                ${e.d ? `<div class="d">${echapper(e.d)}</div>` : ""}
+              </li>`).join("")}</ul>` : `<p class="vide">Rien d'autre que le signalement pour l'instant.</p>`}
+          </div>
+
+          ${(!episodes.length || !demarches.length) ? `
+          <div class="bloc">
+            <h2>Renforcer ce dossier</h2>
+            <p style="font-size:0.9rem;color:var(--gris);margin-bottom:0.6rem">
+              ${!episodes.length ? "Un <strong>journal de bruit</strong> est la preuve qui pèse le plus auprès des autorités : notez chaque épisode, avec la date et l'heure. " : ""}
+              ${!demarches.length ? "Consignez vos <strong>démarches</strong> (courriers, appels) : elles montrent que vous avez cherché une solution amiable avant d'aller plus loin." : ""}
+            </p>
+            <div class="barre" style="margin:0">
+              <a href="outils.html" class="btn btn-vert" onclick="try{localStorage.setItem('TOH_dossier_actif','${sig.id}')}catch(e){}">Ouvrir mes outils</a>
+            </div>
+          </div>` : ""}
+        </div>`;
+    })();
+  </script>
+</body>
+</html>

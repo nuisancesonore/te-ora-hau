@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon profil · Te Ora Hau</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .grp-titre { font-weight:700; color:var(--bleu-fonce); margin:1.4rem 0 0.6rem; font-size:0.95rem;
+                 border-left:4px solid var(--bleu-lagon); padding-left:0.6rem; }
+    .grp-titre:first-of-type { margin-top:0; }
+    .pourquoi { font-size:0.78rem; color:var(--gris); margin-top:0.25rem; line-height:1.4; }
+    .bloc-completer { background:#fff8ef; border:1px solid #f0d9a8; border-radius:10px; padding:0.9rem 1rem; margin-top:1.2rem; }
+    .badge-todo { background:#8a5a00; color:#fff; font-size:0.7rem; font-weight:700;
+                  padding:0.1rem 0.5rem; border-radius:20px; margin-left:0.4rem; vertical-align:middle; }
+    .retour { display:inline-block; margin-bottom:1rem; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <div id="footer-mount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (async function () {
+      await initPage("espace");
+      const contenu = document.getElementById("contenu");
+      const profil = await monProfil();
+      if (!profil) { contenu.innerHTML = verrouAcces(null); return; }
+
+      const nuis = profil.type_nuisance || "";
+
+      contenu.innerHTML = `
+        <a href="espace.html" class="retour">← Mon espace</a>
+        <h1 class="section-titre">Mon profil</h1>
+        <div class="form-wrap" style="max-width:640px;margin:0">
+          <p class="intro">Vos coordonnées sont reprises de votre inscription. Elles ne servent qu'à
+            l'association : elles ne sont jamais transmises à un tiers.</p>
+          <div id="msg" class="message" role="status" aria-live="polite"></div>
+          <form id="form-profil">
+            <p class="grp-titre">Qui vous êtes</p>
+            <div class="champ"><label for="nom">Nom</label>
+              <input id="nom" value="${echapper(profil.nom)}" required></div>
+            <div class="champ"><label for="prenom">Prénom</label>
+              <input id="prenom" value="${echapper(profil.prenom)}"></div>
+            <div class="champ"><label for="date_naissance">Date de naissance</label>
+              <input type="date" id="date_naissance" value="${echapper(profil.date_naissance)}">
+              <p class="pourquoi">Sert aux statistiques de l'association et aux dossiers déposés
+                auprès des autorités. Jamais publiée.</p></div>
+
+            <p class="grp-titre">Où vous habitez</p>
+            <div class="champ"><label for="ile">Île de résidence</label>
+              <input id="ile" list="iles-pf" value="${echapper(profil.ile) || 'Tahiti'}">
+              <datalist id="iles-pf"><option>Tahiti</option><option>Moorea</option><option>Raiatea</option>
+                <option>Taha'a</option><option>Bora Bora</option><option>Huahine</option><option>Maupiti</option>
+                <option>Tubuai</option><option>Rurutu</option><option>Rangiroa</option><option>Tikehau</option>
+                <option>Fakarava</option><option>Nuku Hiva</option><option>Hiva Oa</option><option>Gambier</option>
+              </datalist></div>
+            <div class="champ"><label for="commune">Commune de résidence</label>
+              <select id="commune" required></select>
+              <input id="commune_autre" aria-label="Préciser la commune"
+                     placeholder="Île puis commune (ex. Raiatea, Uturoa)" style="display:none;margin-top:0.5rem">
+              <p class="pourquoi">Permet de regrouper les signalements par commune : c'est ce qui
+                donne du poids aux démarches auprès de votre mairie.</p></div>
+            <div class="champ"><label for="adresse">Adresse</label>
+              <input id="adresse" value="${echapper(profil.adresse)}" placeholder="Quartier, rue, lotissement…"></div>
+
+            <p class="grp-titre">Comment vous joindre</p>
+            <div class="champ"><label for="telephone">Téléphone</label>
+              <input id="telephone" type="tel" value="${echapper(profil.telephone)}" placeholder="Ex. 87 12 34 56">
+              <p class="pourquoi">Utilisé uniquement pour les SMS importants de l'association.</p></div>
+
+            <div class="bloc-completer">
+              <p class="grp-titre" style="margin-top:0;border:none;padding:0">La nuisance que vous subissez
+                ${nuis ? '' : '<span class="badge-todo">à renseigner</span>'}</p>
+              <div class="champ"><label for="type_nuisance">Type de nuisance</label>
+                <select id="type_nuisance">${optionsListe(SIG_TYPES, nuis, "— Choisir —")}</select>
+                <p class="pourquoi">Cette information n'est pas demandée à l'inscription. Elle aide
+                  l'association à cibler ses actions par type de bruit.</p></div>
+              <div class="champ" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0">
+                <input type="checkbox" id="annuaire" style="width:auto" ${profil.annuaire_optin ? 'checked' : ''}>
+                <label for="annuaire" style="margin:0">Apparaître dans l'annuaire des adhérents de ma commune</label>
+              </div>
+              <p class="pourquoi" style="margin-top:0.4rem">L'annuaire permet aux adhérents d'une même
+                commune de se contacter et d'agir ensemble. Vous pouvez vous en retirer à tout moment.</p>
+            </div>
+
+            <button type="submit" class="btn btn-primaire btn-bloc" style="margin-top:1.2rem">Enregistrer mon profil</button>
+          </form>
+        </div>`;
+
+      const sel = document.getElementById("commune");
+      sel.innerHTML = optionsCommunes(profil.commune);
+      const valCommune = brancherCommuneAutre(sel, document.getElementById("commune_autre"));
+
+      const msg = document.getElementById("msg");
+      document.getElementById("form-profil").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        if (envoiEnCours(e.target)) return;
+        const rendre = boutonOccupe(boutonForm(e.target), "Enregistrement…");
+        const maj = {
+          nom: document.getElementById("nom").value.trim(),
+          prenom: document.getElementById("prenom").value.trim(),
+          commune: valCommune(),
+          type_nuisance: document.getElementById("type_nuisance").value.trim(),
+          annuaire_optin: document.getElementById("annuaire").checked,
+          date_naissance: document.getElementById("date_naissance").value || null,
+          adresse: document.getElementById("adresse").value.trim(),
+          telephone: document.getElementById("telephone").value.trim(),
+          ile: document.getElementById("ile").value.trim(),
+        };
+        let { error } = await sb.from("profils").update(maj).eq("id", profil.id);
+        // Filet de secours ciblé : si une colonne récente n'existe pas encore en
+        // base, on retire uniquement celle-là et on réessaie.
+        let partiel = false, garde = 0;
+        const optionnelles = ["prenom","ile","date_naissance","adresse","telephone","type_nuisance","annuaire_optin"];
+        while (error && /column|schema cache|does not exist/i.test(error.message || "") && garde < 8) {
+          const manquante = optionnelles.find(k => (k in maj) && new RegExp("\\b" + k + "\\b", "i").test(error.message || ""));
+          if (!manquante) break;
+          delete maj[manquante]; partiel = true; garde++;
+          const retry = await sb.from("profils").update(maj).eq("id", profil.id);
+          error = retry.error;
+        }
+        rendre();
+        msg.className = "message " + (error ? "err" : "ok");
+        msg.textContent = error
+          ? messageErreur(error, "prévenez le bureau : une mise à jour de la base est nécessaire")
+          : (partiel
+              ? "Profil enregistré ✔ (certaines infos seront prises en compte une fois la base mise à jour)"
+              : "Profil enregistré ✔ Retour à votre espace…");
+        if (!error) setTimeout(() => location.href = "espace.html", 1400);
+      });
+    })();
+  </script>
+</body>
+</html>

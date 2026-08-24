@@ -227,66 +227,46 @@ async function rendreNav(pageActive) {
   const lien = (href, label, id) =>
     `<a href="${href}" class="${id === pageActive ? "actif" : ""}">${label}</a>`;
 
-  // Déroulant "Comprendre" : Le son & l'audition / Bruit & santé
-  const dropdown = `
+  // ------------------------------------------------------------------
+  // Menu simplifie : six categories au maximum, orientees ACTION.
+  // Les pages d'information sont regroupees sous « Comprendre » ; les
+  // fonctions du membre ne sont plus enfouies dans un deroulant, elles
+  // vivent dans « Mon espace », qui est le tableau de bord.
+  // ------------------------------------------------------------------
+  const pagesComprendre = ["association", "comprendre", "bruit"];
+  const comprendre = `
     <div class="menu-drop">
-      <a href="comprendre.html" class="drop-trigger ${pageActive === "comprendre" ? "actif" : ""}">Comprendre <span class="caret">▾</span></a>
+      <a href="association.html" class="drop-trigger ${pagesComprendre.includes(pageActive) ? "actif" : ""}">Comprendre <span class="caret">▾</span></a>
       <div class="drop-menu">
+        <a href="association.html">Qui sommes-nous&nbsp;?</a>
         <a href="comprendre.html#audition">Le son &amp; l'audition</a>
         <a href="comprendre.html#sante">Bruit &amp; santé</a>
+        <a href="le-bruit.html">Les textes de lois</a>
       </div>
     </div>`;
 
-  // Liens dépendant de la connexion
   let blocAuth;
   if (profil) {
-    // Membre connecté : déroulant "Mon espace" (tableau de bord, signalements,
-    // annuaire, forum) · Cotiser · (Admin) · Déconnexion
-    const espaceActif = ["espace", "signaler", "mes-signalements", "annuaire", "forum", "outils", "missions"].includes(pageActive) ? "actif" : "";
-    // Les entrées réservées sont marquées d'un cadenas tant que la cotisation
-    // n'est pas validée par le bureau (les pages expliquent alors quoi faire).
+    // Membre connecte : l'action principale (signaler) et son espace, rien de plus.
     const acces = aDroitAcces(profil);
-    const lk = acces ? "" : "🔒 ";
-    // "Mes missions" : uniquement pour les assesseurs (le bureau pilote les
-    // missions depuis l'Administration, il ne les reçoit pas).
-    const estAssesseur = profil.type_adhesion === "Assesseur";
-    const dropEspace = `
-      <div class="menu-drop">
-        <a href="espace.html" id="nav-espace-trigger" class="drop-trigger ${espaceActif}">Mon espace <span class="caret">▾</span></a>
-        <div class="drop-menu">
-          <a href="espace.html" id="nav-tableau">Tableau de bord</a>
-          <a href="signaler.html">${lk}Signaler une nuisance</a>
-          <a href="mes-signalements.html">${lk}Mes signalements</a>
-          <a href="outils.html">${lk}Courriers &amp; journal</a>
-          <a href="annuaire.html">${lk}Annuaire des adhérents</a>
-          <a href="forum.html" id="nav-forum">${lk}Forum</a>
-          ${estAssesseur ? `<a href="missions.html" id="nav-missions">Mes missions</a>` : ``}
-        </div>
-      </div>`;
-    blocAuth = dropEspace +
-      `<a href="cotiser.html" class="lien-cotiser ${pageActive === "cotiser" ? "actif" : ""}">Cotiser</a>` +
+    const espaceActif = ["espace", "profil", "mes-signalements", "annuaire", "forum",
+                         "outils", "missions", "cotiser"].includes(pageActive) ? "actif" : "";
+    blocAuth =
+      `<a href="${acces ? "signaler.html" : "cotiser.html"}" class="${pageActive === "signaler" ? "actif" : ""}">${acces ? "" : "🔒 "}Signaler une nuisance</a>` +
+      `<a href="espace.html" id="nav-espace-trigger" class="${espaceActif}">Mon espace</a>` +
       (profil.role === "bureau" ? lien("admin.html", "Admin", "admin") : "") +
       `<a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`;
   } else {
-    // Visiteur : déroulant "Inscription" (Adhérer · Cotiser) puis Connexion
-    const inscriptionActif = (pageActive === "inscription" || pageActive === "cotiser") ? "actif" : "";
-    const dropInscription = `
-      <div class="menu-drop">
-        <a href="inscription.html" class="drop-trigger ${inscriptionActif}">Inscription <span class="caret">▾</span></a>
-        <div class="drop-menu">
-          <a href="inscription.html">Adhérer</a>
-          <a href="cotiser.html">Cotiser</a>
-        </div>
-      </div>`;
-    blocAuth = dropInscription + lien("connexion.html", "Connexion", "connexion");
+    // Visiteur : une seule action mise en avant, adherer.
+    blocAuth =
+      `<a href="inscription.html" class="lien-cotiser ${pageActive === "inscription" ? "actif" : ""}">Adhérer</a>` +
+      lien("connexion.html", "Connexion", "connexion");
   }
 
   const menuHTML = [
     lien("index.html", "Accueil", "accueil"),
-    lien("association.html", "Qui sommes-nous ?", "association"),
+    comprendre,
     lien("carte.html", "Carte des nuisances", "carte"),
-    dropdown,
-    lien("le-bruit.html", "Les textes de lois", "bruit"),
     blocAuth,
   ].join("");
 
@@ -438,9 +418,11 @@ async function fermerNotifsAffichees() {
 }
 async function verifierNotifications(profil) {
   const c = await compterNonLus(profil);
-  if (c.annonces > 0) marquerNotif("nav-tableau", c.annonces);
-  if (c.forum > 0) marquerNotif("nav-forum", c.forum);
-  if (c.missions > 0) marquerNotif("nav-missions", c.missions);
+  if (c.annonces > 0) marquerNotif("nav-espace-trigger", c.annonces);
+  if (c.forum > 0 && !document.getElementById("nav-forum")) marquerNotif("nav-espace-trigger", c.forum);
+  else if (c.forum > 0) marquerNotif("nav-forum", c.forum);
+  if (c.missions > 0 && !document.getElementById("nav-missions")) marquerNotif("nav-espace-trigger", c.missions);
+  else if (c.missions > 0) marquerNotif("nav-missions", c.missions);
   majBadgeApp(c.total);
   if (c.total === 0) fermerNotifsAffichees();   // plus rien à lire → on nettoie tout
 }

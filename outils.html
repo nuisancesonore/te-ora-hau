@@ -33,7 +33,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+  <!-- jsPDF ecrit du VRAI texte dans le PDF. L'ancienne bibliotheque html2pdf
+       photographiait le courrier avec html2canvas, qui rendait une image vide :
+       le fichier produit pesait 3 Ko et ne contenait rien. -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script>
     let PROFIL = null;
     let DERNIER = null;   // dernier courrier généré { type, objet, email }
@@ -406,23 +409,31 @@
 
     function telechargerPDF(){
       const t = lettreActuelle();
-      if (!window.html2pdf){ telechargerLettre(); return; }   // repli si la librairie n'a pas chargé
-      const page = document.createElement("div");
-      page.style.cssText = "position:fixed;left:-9999px;top:0;width:210mm;box-sizing:border-box;"+
-        "padding:22mm 20mm;background:#fff;color:#111;font-family:Georgia,'Times New Roman',serif;"+
-        "font-size:11.5pt;line-height:1.55;white-space:pre-wrap;word-wrap:break-word;";
-      page.textContent = t;
-      document.body.appendChild(page);
-      html2pdf().set({
-        margin: 0,
-        filename: "courrier-nuisances.pdf",
-        image: { type:"jpeg", quality:0.98 },
-        html2canvas: { scale:2, useCORS:true, backgroundColor:"#ffffff" },
-        jsPDF: { unit:"mm", format:"a4", orientation:"portrait" },
-        pagebreak: { mode:["css","legacy"] }
-      }).from(page).save()
-        .then(() => { page.remove(); proposerSuivi("Courrier (PDF)"); })
-        .catch(() => page.remove());
+      const JS = window.jspdf && window.jspdf.jsPDF;
+      if (!JS){ telechargerLettre(); return; }   // repli en .txt si la librairie n'a pas chargé
+
+      // Le courrier est du texte : on l'ecrit tel quel dans le PDF plutot que de
+      // le photographier. Resultat : texte selectionnable et copiable par le
+      // destinataire, fichier leger, et surtout une page qui n'est jamais vide.
+      const doc = new JS({ unit:"mm", format:"a4", orientation:"portrait" });
+      doc.setFont("times", "normal");
+      doc.setFontSize(11.5);
+
+      const MARGE = 20, LARGEUR = 210 - 2 * MARGE, BAS = 297 - 22, INTERLIGNE = 5.6;
+      let y = 25;
+      // On respecte les sauts de ligne du courrier, et on coupe les paragraphes
+      // trop longs a la largeur utile.
+      t.split(/\r?\n/).forEach(paragraphe => {
+        const lignes = paragraphe.trim() ? doc.splitTextToSize(paragraphe, LARGEUR) : [""];
+        lignes.forEach(ligne => {
+          if (y > BAS) { doc.addPage(); y = 25; }
+          doc.text(ligne, MARGE, y);
+          y += INTERLIGNE;
+        });
+      });
+
+      doc.save("courrier-nuisances.pdf");
+      proposerSuivi("Courrier (PDF)");
     }
 
     function copierLettre(btn){

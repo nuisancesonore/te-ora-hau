@@ -35,13 +35,26 @@
       if (!profil) { contenu.innerHTML = verrouAcces(null); return; }
 
       const nuis = profil.type_nuisance || "";
+      // Arrivee depuis l'inscription : on affiche le fil d'avancement et on
+      // enchaine vers la cotisation plutot que de renvoyer au tableau de bord.
+      const enAdhesion = new URLSearchParams(location.search).get("etape") === "2";
+      const fil = enAdhesion ? `
+        <div class="franchie"><strong>Votre compte est créé ✔</strong>
+          Il vous reste deux étapes : quelques informations, puis votre cotisation.</div>
+        <ol class="fil-etapes" aria-label="Étapes de l'adhésion">
+          <li class="faite"><span class="num">Étape 1</span>Mon compte</li>
+          <li class="actif"><span class="num">Étape 2</span>Mes informations</li>
+          <li><span class="num">Étape 3</span>Ma cotisation</li>
+        </ol>` : "";
 
       contenu.innerHTML = `
-        <a href="espace.html" class="retour">← Mon espace</a>
-        <h1 class="section-titre">Mon profil</h1>
+        ${enAdhesion ? "" : '<a href="espace.html" class="retour">← Mon espace</a>'}
+        <h1 class="section-titre">${enAdhesion ? "Compléter mes informations" : "Mon profil"}</h1>
+        ${fil}
         <div class="form-wrap" style="max-width:640px;margin:0">
-          <p class="intro">Vos coordonnées sont reprises de votre inscription. Elles ne servent qu'à
-            l'association : elles ne sont jamais transmises à un tiers.</p>
+          <p class="intro">${enAdhesion
+            ? "Ces informations permettent à l'association de regrouper les signalements par commune et de cibler ses actions. Elles ne sont jamais transmises à un tiers."
+            : "Vos coordonnées sont reprises de votre inscription. Elles ne servent qu'à l'association : elles ne sont jamais transmises à un tiers."}</p>
           <div id="msg" class="message" role="status" aria-live="polite"></div>
           <form id="form-profil">
             <p class="grp-titre">Qui vous êtes</p>
@@ -91,7 +104,8 @@
                 commune de se contacter et d'agir ensemble. Vous pouvez vous en retirer à tout moment.</p>
             </div>
 
-            <button type="submit" class="btn btn-primaire btn-bloc" style="margin-top:1.2rem">Enregistrer mon profil</button>
+            <button type="submit" class="btn btn-primaire btn-bloc" style="margin-top:1.2rem">${
+              enAdhesion ? "Continuer vers ma cotisation" : "Enregistrer mon profil"}</button>
           </form>
         </div>`;
 
@@ -132,9 +146,9 @@
         msg.textContent = error
           ? messageErreur(error, "prévenez le bureau : une mise à jour de la base est nécessaire")
           : (partiel
-              ? "Profil enregistré ✔ (certaines infos seront prises en compte une fois la base mise à jour)"
-              : "Profil enregistré ✔ Retour à votre espace…");
-        if (!error) setTimeout(() => location.href = "espace.html", 1400);
+              ? "Enregistré ✔ (certaines infos seront prises en compte une fois la base mise à jour)"
+              : (enAdhesion ? "Enregistré ✔ Dernière étape : votre cotisation…" : "Profil enregistré ✔ Retour à votre espace…"));
+        if (!error) setTimeout(() => location.href = enAdhesion ? "cotiser.html?etape=3" : "espace.html", 1400);
       });
     })();
   </script>

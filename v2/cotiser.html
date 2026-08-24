@@ -33,6 +33,7 @@
 
   <main>
     <h1 class="section-titre">Payer votre cotisation</h1>
+    <div id="fil-adhesion"></div>
     <div class="prose">
       <div id="rappel"></div>
 
@@ -96,6 +97,24 @@
   <script>
     (async function(){
       await initPage("cotiser");
+
+      // Derniere etape du parcours d'adhesion : on situe l'adherent et on lui
+      // dit ce qui se passe ensuite, plutot que de le laisser sans suite.
+      if (new URLSearchParams(location.search).get("etape") === "3") {
+        const bloc = document.getElementById("fil-adhesion");
+        if (bloc) bloc.innerHTML = `
+          <div class="franchie"><strong>Vos informations sont enregistrées ✔</strong>
+            Dernière étape : la cotisation. Choisissez le moyen de paiement qui vous convient
+            ci-dessous — le bureau valide ensuite votre adhésion, en général sous quelques jours.</div>
+          <ol class="fil-etapes" aria-label="Étapes de l'adhésion">
+            <li class="faite"><span class="num">Étape 1</span>Mon compte</li>
+            <li class="faite"><span class="num">Étape 2</span>Mes informations</li>
+            <li class="actif"><span class="num">Étape 3</span>Ma cotisation</li>
+          </ol>
+          <p style="margin-bottom:1.4rem">
+            <a href="espace.html" class="btn btn-clair">J'ai réglé — aller à mon espace</a>
+          </p>`;
+      }
       const profil = await monProfil();
       const r = document.getElementById("rappel");
       if (profil){

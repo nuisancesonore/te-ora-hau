@@ -447,3 +447,24 @@ a, .btn, button { transition: background 0.15s ease, color 0.15s ease, opacity 0
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* ---------- Fil d'avancement d'un parcours en plusieurs etapes ----------
+   « 1. Mon compte -> 2. Mes informations -> 3. Ma cotisation ». L'adherent
+   sait ou il en est et combien d'etapes il lui reste. */
+.fil-etapes { display: flex; gap: 0.4rem; list-style: none; padding: 0;
+              margin: 0 0 1.6rem; counter-reset: etape; }
+.fil-etapes li {
+  flex: 1; position: relative; padding-top: 0.55rem; text-align: center;
+  border-top: 4px solid #e6e3d9; color: var(--gris);
+  font-size: 0.76rem; line-height: 1.3;
+}
+.fil-etapes li.faite { border-top-color: var(--vert-paix); color: var(--vert-paix); }
+.fil-etapes li.actif { border-top-color: var(--bleu-lagon); color: var(--bleu-fonce); font-weight: 700; }
+.fil-etapes .num { display: block; font-size: 0.68rem; text-transform: uppercase;
+                   letter-spacing: 0.06em; opacity: 0.85; }
+.fil-etapes li.faite .num::after { content: " ✔"; }
+
+/* Confirmation d'etape franchie */
+.franchie { background: #e3f5ea; border: 1px solid #b6e2c6; color: #1d6b3f;
+            border-radius: 12px; padding: 0.9rem 1.1rem; margin-bottom: 1.4rem; }
+.franchie strong { display: block; font-size: 1.02rem; margin-bottom: 0.2rem; }

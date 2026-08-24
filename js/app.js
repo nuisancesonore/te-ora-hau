@@ -768,3 +768,132 @@ async function actionBouton(btn, texte, action) {
   try { return await action(); }
   finally { rendre(); }
 }
+
+
+/* ============================================================
+   Referentiel des demarches contre une nuisance sonore
+   ------------------------------------------------------------
+   Etabli a partir des dossiers reels de l'association (mairie,
+   gendarmerie, DIREN, IJSPF, ministeres, Presidence, tribunal
+   administratif). Chaque etape porte :
+     v     le libelle enregistre en base
+     dest  le destinataire suggere
+     mode  le mode d'envoi conseille
+     delai le delai de reponse raisonnable, en jours
+     aide  ce que l'adherent doit savoir avant de l'engager
+   ============================================================ */
+const DEMARCHES_REF = [
+  { g: "1 · À l'amiable", items: [
+    { v: "Courrier amiable au responsable du bruit", dest: "L'auteur du bruit (voisin, exploitant, gérant)",
+      mode: "Courrier simple", delai: 15,
+      aide: "Première étape presque toujours indispensable : elle prouve votre bonne foi et conditionne la suite. Restez factuel, datez les faits." },
+    { v: "Mise en demeure", dest: "L'auteur du bruit", mode: "Recommandé A.R.", delai: 15,
+      aide: "Après un courrier amiable resté sans effet. Conservez précieusement l'avis de réception : il fait courir les délais." },
+    { v: "Courrier au bailleur ou au syndic", dest: "Propriétaire, bailleur ou syndic de copropriété",
+      mode: "Recommandé A.R.", delai: 30,
+      aide: "Le bailleur est tenu d'assurer la jouissance paisible du logement ; il peut agir sur son locataire." },
+  ]},
+  { g: "2 · La commune", items: [
+    { v: "Demande d'intervention au Maire", dest: "Mairie de votre commune", mode: "Recommandé A.R.", delai: 60,
+      aide: "Le maire est chargé du bon ordre et de la tranquillité publique. La police municipale peut constater les infractions aux arrêtés municipaux par procès-verbal." },
+    { v: "Demande d'arrêté municipal anti-bruit", dest: "Mairie de votre commune", mode: "Recommandé A.R.", delai: 60,
+      aide: "Quand la nuisance est récurrente et collective. Un arrêté municipal peut encadrer les horaires et les niveaux sonores." },
+  ]},
+  { g: "3 · Forces de l'ordre", items: [
+    { v: "Signalement gendarmerie / police municipale", dest: "Brigade de gendarmerie ou police municipale",
+      mode: "Sur place", delai: 30,
+      aide: "Pour un bruit de nuit : le tapage nocturne est réprimé par l'article R. 623-2 du code pénal. Appelez pendant les faits — le constat sur le moment a le plus de valeur." },
+    { v: "Dépôt de plainte", dest: "Brigade de gendarmerie", mode: "Sur place", delai: 60,
+      aide: "Demandez systématiquement le récépissé de dépôt : il vous sera réclamé par la suite." },
+  ]},
+  { g: "4 · Services du Pays", items: [
+    { v: "Saisine de la DIREN (environnement)", dest: "Direction de l'environnement de la Polynésie française",
+      mode: "Recommandé A.R.", delai: 60,
+      aide: "Compétente pour la réglementation sur le bruit du Code de l'environnement polynésien, notamment les installations classées." },
+    { v: "Saisine de l'IJSPF (sports mécaniques)", dest: "Institut de la jeunesse et des sports de la Polynésie française",
+      mode: "Recommandé A.R.", delai: 60,
+      aide: "Compétent pour les sites et manifestations sportives : circuits, terrains de motocross, compétitions." },
+    { v: "Saisine de la Direction de la santé", dest: "Direction de la santé de la Polynésie française",
+      mode: "Recommandé A.R.", delai: 60,
+      aide: "Quand la nuisance a des effets documentés sur la santé : sommeil, acouphènes, stress. Joignez vos certificats médicaux." },
+    { v: "Saisine du Ministre concerné", dest: "Ministère en charge du secteur (Sports, Environnement, Logement…)",
+      mode: "Recommandé A.R.", delai: 60,
+      aide: "Quand le service compétent n'a pas répondu ou s'est déclaré incompétent. Mettez en copie les autres services déjà saisis." },
+    { v: "Saisine de la Présidence de la Polynésie française", dest: "Présidence de la Polynésie française, BP 2551, 98713 Papeete",
+      mode: "Recommandé A.R.", delai: 60,
+      aide: "Étape haute de la voie administrative. Souvent adressée en parallèle du ministère et du service concerné." },
+    { v: "Saisine du Haut-Commissariat", dest: "Haut-Commissariat de la République en Polynésie française",
+      mode: "Recommandé A.R.", delai: 60,
+      aide: "Représentant de l'État. Utile lorsque l'ordre public ou une compétence de l'État est en jeu." },
+  ]},
+  { g: "5 · Voie contentieuse", items: [
+    { v: "Réclamation préalable indemnitaire (art. R. 421-1 CJA)", dest: "L'administration responsable (Pays, IJSPF, commune…)",
+      mode: "Recommandé A.R.", delai: 60, cle: "prealable",
+      aide: "ÉTAPE OBLIGATOIRE avant de saisir le tribunal administratif. Le silence gardé pendant 2 mois vaut refus, et ouvre alors un délai de 2 mois pour déposer votre recours. Chiffrez votre préjudice." },
+    { v: "Recours au tribunal administratif de Papeete", dest: "Tribunal administratif de Papeete",
+      mode: "Recommandé A.R.", delai: 180,
+      aide: "À déposer dans les 2 mois suivant le refus, explicite ou implicite, de votre réclamation préalable. L'avocat n'est pas obligatoire mais vivement conseillé." },
+    { v: "Plainte au Procureur de la République", dest: "Procureur de la République, Tribunal de première instance de Papeete",
+      mode: "Recommandé A.R.", delai: 90,
+      aide: "Voie pénale, distincte de la voie administrative. Joignez les procès-verbaux et constats déjà obtenus." },
+    { v: "Saisine d'un avocat", dest: "Cabinet d'avocats", mode: "E-mail", delai: 15,
+      aide: "Pour un trouble anormal de voisinage ou un contentieux administratif. Rassemblez d'abord votre dossier complet." },
+  ]},
+  { g: "6 · Preuves et appuis", items: [
+    { v: "Constat d'huissier", dest: "Huissier de justice", mode: "Sur place", delai: 30,
+      aide: "La preuve la plus solide, mais payante. À faire réaliser pendant les nuisances, aux horaires que vous aurez relevés." },
+    { v: "Attestation de témoin", dest: "Voisin, visiteur, proche", mode: "Dépôt en main propre", delai: 15,
+      aide: "Modèle disponible sur le site. Le témoin doit joindre une copie de sa pièce d'identité." },
+    { v: "Certificat médical ou ORL", dest: "Médecin traitant ou médecin ORL", mode: "Sur place", delai: 15,
+      aide: "Documente le préjudice de santé : troubles du sommeil, acouphènes, anxiété. Pièce décisive pour une demande d'indemnisation." },
+    { v: "Mesure sonométrique", dest: "Organisme de mesure ou service technique", mode: "Sur place", delai: 45,
+      aide: "Chiffre la nuisance en décibels et la confronte aux valeurs limites réglementaires." },
+    { v: "Pétition du voisinage", dest: "Voisins concernés", mode: "Dépôt en main propre", delai: 30,
+      aide: "Montre que la gêne est collective et non individuelle. Modèle disponible sur le site." },
+    { v: "Signalement à la presse", dest: "Rédaction (Tahiti Infos, La Dépêche, radios…)", mode: "E-mail", delai: 15,
+      aide: "À manier avec prudence : efficace pour faire bouger un dossier enlisé, mais peut durcir les positions." },
+  ]},
+  { g: "7 · Autres", items: [
+    { v: "Appel téléphonique", dest: "", mode: "Téléphone", delai: 7, aide: "Notez la date, l'heure et le nom de votre interlocuteur." },
+    { v: "Rencontre / visite", dest: "", mode: "Sur place", delai: 7, aide: "Notez qui était présent et ce qui a été convenu." },
+    { v: "Autre", dest: "", mode: "", delai: 0, aide: "" },
+  ]},
+];
+
+/* Suites possibles d'une demarche, du plus courant au plus definitif. */
+const DEMARCHE_SUITES = ["En attente", "Accusé de réception", "Réponse reçue",
+  "Engagement pris", "Refus", "Sans réponse", "Résolu", "Classé sans suite"];
+
+/* Retrouve la fiche d'une demarche a partir du libelle enregistre en base. */
+function ficheDemarche(libelle) {
+  for (const groupe of DEMARCHES_REF) {
+    for (const it of groupe.items) if (it.v === libelle) return Object.assign({ groupe: groupe.g }, it);
+  }
+  return null;
+}
+
+/* Ou en est une demarche par rapport au delai raisonnable de reponse ?
+   Renvoie null si la question ne se pose pas (deja repondu, pas de date). */
+function echeanceDemarche(d) {
+  if (!d || !d.date_demarche) return null;
+  const enAttente = !d.reponse || d.reponse === "En attente" || d.reponse === "Accusé de réception";
+  if (!enAttente) return null;
+  const fiche = ficheDemarche(d.type);
+  const delai = fiche && fiche.delai ? fiche.delai : 60;
+  const jours = Math.floor((Date.now() - new Date(String(d.date_demarche).slice(0, 10) + "T00:00:00")) / 86400000);
+  if (jours < 0) return null;
+  const depasse = jours >= delai;
+  // Cas particulier de la reclamation prealable : le silence de 2 mois vaut
+  // refus et ouvre un delai de 2 mois pour saisir le tribunal administratif.
+  if (fiche && fiche.cle === "prealable" && jours >= 60) {
+    const reste = 120 - jours;
+    return { jours, delai, depasse: true, urgent: reste <= 30,
+      texte: reste > 0
+        ? "Silence depuis " + jours + " jours : refus implicite acquis. Il vous reste " + reste + " jours pour saisir le tribunal administratif."
+        : "Silence depuis " + jours + " jours : le délai de recours devant le tribunal administratif est dépassé." };
+  }
+  return { jours, delai, depasse, urgent: false,
+    texte: depasse
+      ? "Sans réponse depuis " + jours + " jours (délai raisonnable : " + delai + " jours) — une relance ou l'étape suivante s'impose."
+      : "En attente depuis " + jours + " jour" + (jours > 1 ? "s" : "") + " (délai raisonnable : " + delai + " jours)." };
+}

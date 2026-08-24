@@ -23,6 +23,16 @@
     @media(max-width:620px){ .grille2{ grid-template-columns:1fr; } }
     .etapes{ display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem; font-size:0.8rem; color:var(--gris); }
     .etapes span{ background:#fff; border-radius:20px; padding:0.25rem 0.7rem; box-shadow:var(--ombre); }
+    .aide-dem { background:#e6f2f4; border-left:4px solid var(--bleu-lagon); border-radius:8px;
+                padding:0.6rem 0.8rem; font-size:0.85rem; line-height:1.5; }
+    .aide-dem b { color:var(--bleu-fonce); }
+    .aide-dem .etape { display:inline-block; font-size:0.72rem; text-transform:uppercase;
+                letter-spacing:0.05em; color:var(--gris); font-weight:700; margin-bottom:0.2rem; }
+    .delai { display:inline-block; font-size:0.74rem; padding:0.12rem 0.45rem; border-radius:999px;
+             white-space:nowrap; margin-top:0.2rem; }
+    .delai.ok      { background:#eef4f5; color:#4a6b70; }
+    .delai.depasse { background:#fdf0d5; color:#8a6100; font-weight:700; }
+    .delai.urgent  { background:#fce6e1; color:#b2381f; font-weight:700; }
   </style>
 </head>
 <body>
@@ -158,13 +168,9 @@
             <p class="intro">Consignez chaque démarche entreprise (courrier, visite, appel…) : vous gardez le fil de votre dossier et le <strong>bureau de Te Ora Hau en est informé</strong> pour pouvoir vous appuyer. Quand vous générez un courrier, on vous propose de l'enregistrer ici automatiquement.</p>
             <div id="dmsg" class="message" role="status" aria-live="polite"></div>
             <form id="form-dem" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.7rem;align-items:end">
-              <div class="champ" style="margin:0"><label>Démarche</label>
-                <select id="d-type">
-                  <option>Courrier amiable</option><option>Mise en demeure</option>
-                  <option>Demande au Maire</option><option>Signalement gendarmerie/police</option>
-                  <option>Plainte au Procureur</option><option>Courrier bailleur/syndic</option>
-                  <option>Appel téléphonique</option><option>Rencontre / visite</option><option>Autre</option>
-                </select></div>
+              <div class="champ" style="margin:0;grid-column:1/-1"><label for="d-type">Démarche</label>
+                <select id="d-type"></select></div>
+              <div id="d-aide" class="aide-dem" style="grid-column:1/-1;display:none"></div>
               <div class="champ" style="margin:0"><label>Date</label><input type="date" id="d-date" required></div>
               <div class="champ" style="margin:0"><label>Mode</label>
                 <select id="d-mode"><option>Courrier simple</option><option>Recommandé A.R.</option><option>E-mail</option><option>Dépôt en main propre</option><option>Téléphone</option><option>Sur place</option></select></div>
@@ -198,6 +204,7 @@
       document.getElementById("form-jb").addEventListener("submit", ajouterEpisode);
       await chargerJournal();
 
+      remplirTypesDemarche();
       document.getElementById("d-date").value = aujLoc();
       document.getElementById("form-dem").addEventListener("submit", ajouterDemarche);
       await chargerDemarches();
@@ -628,6 +635,53 @@
       document.getElementById("d-dest").value = ""; document.getElementById("d-note").value = "";
     }
 
+    /* ----- Les demarches, presentees comme un parcours -----
+       La liste vient du referentiel partage (js/app.js), etabli a partir des
+       dossiers reels de l'association. Choisir une etape renseigne d'office le
+       destinataire et le mode d'envoi conseilles, et affiche ce qu'il faut
+       savoir avant de l'engager. */
+    function remplirTypesDemarche(){
+      const sel = document.getElementById("d-type");
+      if (!sel || typeof DEMARCHES_REF === "undefined") return;
+      sel.innerHTML = DEMARCHES_REF.map(g =>
+        `<optgroup label="${echapper(g.g)}">` +
+        g.items.map(i => `<option value="${echapper(i.v)}">${echapper(i.v)}</option>`).join("") +
+        `</optgroup>`).join("");
+      sel.addEventListener("change", majAideDemarche);
+      majAideDemarche();
+    }
+
+    function majAideDemarche(){
+      const sel = document.getElementById("d-type");
+      const boite = document.getElementById("d-aide");
+      if (!sel || !boite) return;
+      const f = ficheDemarche(sel.value);
+      if (!f || !f.aide){ boite.style.display = "none"; boite.innerHTML = ""; }
+      else {
+        boite.style.display = "";
+        boite.innerHTML = `<span class="etape">${echapper(f.groupe)}</span><br>${echapper(f.aide)}` +
+          (f.delai ? `<br><span class="delai ok">Délai de réponse raisonnable : ${f.delai} jours</span>` : "");
+      }
+      // On remplace notre propre suggestion precedente, jamais ce que
+      // l'adherent a tape lui-meme : on retient donc ce qu'on avait propose.
+      const dest = document.getElementById("d-dest");
+      if (dest && f){
+        dest.placeholder = f.dest || "Ex. M. X, Mairie de Punaauia…";
+        const nousAvionsPropose = dest.dataset.suggere !== undefined && dest.value === dest.dataset.suggere;
+        if (!dest.value || nousAvionsPropose) dest.value = f.dest || "";
+        dest.dataset.suggere = f.dest || "";
+      }
+      const mode = document.getElementById("d-mode");
+      if (mode && f && f.mode && !mode.dataset.choisi){
+        const opt = [...mode.options].find(o => o.value === f.mode || o.textContent === f.mode);
+        if (opt) mode.value = opt.value;
+      }
+      if (mode && !mode.dataset.branche){
+        mode.dataset.branche = "1";
+        mode.addEventListener("change", () => { mode.dataset.choisi = "1"; });
+      }
+    }
+
     async function chargerDemarches(){
       const box = document.getElementById("liste-dem");
       if (!box) return;
@@ -635,12 +689,18 @@
         .order("date_demarche", { ascending:false }).order("cree_le", { ascending:false });
       if (error){ box.innerHTML = ""; document.getElementById("suggestion-dem").innerHTML = ""; return; }
       DEM = data || [];
-      const SUITES = ["En attente","Réponse reçue","Sans réponse","Résolu"];
+      const SUITES = (typeof DEMARCHE_SUITES !== "undefined") ? DEMARCHE_SUITES
+        : ["En attente","Réponse reçue","Sans réponse","Résolu"];
       box.innerHTML = DEM.length ? `
         <table class="jb"><thead><tr><th>Date</th><th>Démarche</th><th>Destinataire</th><th>Mode</th><th>Suite donnée</th><th></th></tr></thead><tbody>` +
         DEM.map(d => `<tr>
           <td>${frDateLoc(d.date_demarche)}</td>
-          <td><strong>${echapper(d.type)}</strong>${d.note ? `<br><span style="color:var(--gris);font-size:0.8rem">${echapper(d.note)}</span>` : ''}</td>
+          <td><strong>${echapper(d.type)}</strong>${d.note ? `<br><span style="color:var(--gris);font-size:0.8rem">${echapper(d.note)}</span>` : ''}${(() => {
+            const e = (typeof echeanceDemarche === "function") ? echeanceDemarche(d) : null;
+            if (!e) return "";
+            const cl = e.urgent ? "urgent" : (e.depasse ? "depasse" : "ok");
+            return `<br><span class="delai ${cl}">${echapper(e.texte)}</span>`;
+          })()}</td>
           <td>${echapper(d.destinataire)||'—'}</td><td>${echapper(d.mode)||'—'}</td>
           <td><select onchange="majSuite('${d.id}', this.value)" style="padding:0.3rem 0.4rem;border:1.5px solid #d6d6cf;border-radius:7px;font-size:0.85rem">${
             SUITES.map(o => `<option${(d.reponse||'En attente')===o?' selected':''}>${o}</option>`).join("")

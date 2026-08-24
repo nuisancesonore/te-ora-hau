@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registre des cotisations · Te Ora Hau</title>
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root { --especes:#1f9d55; --cheque:#2563eb; --virement:#9333ea; }
+    .entete-reg { display:flex; align-items:center; justify-content:space-between;
+                  gap:1rem; flex-wrap:wrap; margin-bottom:1.2rem; }
+    .entete-reg select { padding:0.5rem 0.9rem; border-radius:10px; border:1.5px solid #d6d6cf;
+                         font-size:1rem; font-weight:700; background:var(--blanc); }
+    .bilan { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+             gap:0.9rem; margin-bottom:1.4rem; }
+    .bloc-total { background:linear-gradient(135deg,#0b6e4f,#064a54); color:#fff;
+                  border-radius:14px; padding:1.1rem 1.3rem; box-shadow:var(--ombre); grid-column:1/-1; }
+    .bloc-total .t { font-size:0.75rem; letter-spacing:0.08em; opacity:0.85; text-transform:uppercase; }
+    .bloc-total .m { font-size:2rem; font-weight:800; font-variant-numeric:tabular-nums; }
+    .bloc-total .c { font-size:0.82rem; opacity:0.85; }
+    .bloc-mode { background:var(--blanc); border-radius:12px; padding:0.9rem 1.1rem;
+                 box-shadow:var(--ombre); border-left:5px solid var(--gris); }
+    .bloc-mode.especes { border-left-color:var(--especes); }
+    .bloc-mode.cheque  { border-left-color:var(--cheque); }
+    .bloc-mode.virement{ border-left-color:var(--virement); }
+    .bloc-mode .t { font-size:0.75rem; color:var(--gris); text-transform:uppercase; letter-spacing:0.05em; }
+    .bloc-mode .m { font-size:1.35rem; font-weight:800; color:var(--bleu-fonce); font-variant-numeric:tabular-nums; }
+    .bloc-mode .c { font-size:0.78rem; color:var(--gris); }
+
+    .barre-outils { display:flex; gap:0.6rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem; }
+    .barre-outils input[type=search] { flex:1 1 220px; padding:0.6rem 0.9rem; border-radius:10px;
+                                        border:1.5px solid #d6d6cf; font-size:0.95rem; }
+
+    .item { display:flex; align-items:center; gap:0.9rem; background:var(--blanc);
+            border-radius:12px; box-shadow:var(--ombre); padding:0.75rem 1rem; margin-bottom:0.6rem; }
+    .item .pastille-mode { width:10px; height:42px; border-radius:6px; flex:none; background:var(--gris); }
+    .item .pastille-mode.Espèces { background:var(--especes); }
+    .item .pastille-mode.Chèque  { background:var(--cheque); }
+    .item .pastille-mode.Virement{ background:var(--virement); }
+    .item .infos { flex:1; min-width:0; }
+    .item .nom { font-weight:700; color:var(--bleu-fonce); }
+    .item .det { font-size:0.8rem; color:var(--gris); }
+    .item .montant { font-weight:800; font-size:1.05rem; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .lien-ok  { display:inline-block; font-size:0.72rem; font-weight:700; padding:0.1rem 0.5rem;
+                border-radius:999px; background:#e3f5ea; color:#1d6b3f; }
+    .lien-non { display:inline-block; font-size:0.72rem; font-weight:700; padding:0.1rem 0.5rem;
+                border-radius:999px; background:#fdf0d5; color:#8a6100; }
+    .vide-reg { text-align:center; color:var(--gris); padding:3rem 1rem; }
+
+    .btn-plus { position:fixed; right:1.2rem; bottom:1.2rem; width:60px; height:60px;
+                border-radius:50%; border:none; background:#0b6e4f; color:#fff; font-size:2rem;
+                box-shadow:0 6px 18px rgba(11,110,79,0.45); cursor:pointer; z-index:50; }
+    .btn-plus:hover { background:#064a54; }
+
+    .voile { position:fixed; inset:0; background:rgba(6,74,84,0.55); display:none;
+             align-items:flex-end; justify-content:center; z-index:60; }
+    .voile.ouvert { display:flex; }
+    .feuille { background:var(--blanc); border-radius:18px 18px 0 0; width:min(560px,100%);
+               max-height:92vh; overflow:auto; padding:1.4rem 1.4rem 1.8rem; }
+    @media (min-width:640px){ .voile{ align-items:center; } .feuille{ border-radius:18px; } }
+    .feuille h2 { color:var(--bleu-fonce); margin:0 0 1rem; font-size:1.2rem; }
+    .montant-saisie { font-size:1.5rem !important; font-weight:800; text-align:center; }
+    .modes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; margin-bottom:1rem; }
+    .mode-btn { border:2px solid #d6d6cf; border-radius:10px; padding:0.6rem 0.3rem;
+                text-align:center; cursor:pointer; font-weight:700; font-size:0.85rem; color:var(--gris); }
+    .mode-btn .ic { display:block; font-size:1.3rem; margin-bottom:0.15rem; }
+    .mode-btn.actif.Espèces  { border-color:var(--especes); background:#eafaf1; color:var(--especes); }
+    .mode-btn.actif.Chèque   { border-color:var(--cheque);  background:#eaf0fe; color:var(--cheque); }
+    .mode-btn.actif.Virement { border-color:var(--virement); background:#f5eafe; color:var(--virement); }
+    .actions-form { display:flex; gap:0.6rem; margin-top:1rem; }
+    .actions-form .btn { flex:1; }
+    .btn-suppr { width:100%; margin-top:0.8rem; background:none; border:none; color:#b2381f;
+                 font-weight:700; cursor:pointer; padding:0.5rem; }
+  </style>
+</head>
+<body>
+  <div id="nav-mount"></div>
+  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <div id="footer-mount"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    let PROFILS = [], DATA = [], MOI = null, modeChoisi = "Espèces", editId = null;
+
+    (async function () {
+      await initPage("admin");
+      const contenu = document.getElementById("contenu");
+      MOI = await monProfil();
+      // Page reservee au COMPTABLE de l'association (pas a tout le bureau).
+      const COMPTABLE = "jbhauata3@gmail.com";
+      if (MOI && MOI.role === "bureau" && (MOI.email || "").toLowerCase() !== COMPTABLE) {
+        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
+          <h2 style="color:var(--bleu-fonce)">Réservé au comptable</h2>
+          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Le registre des cotisations est tenu par le comptable de l'association. Les validations d'accès restent visibles dans l'Administration.</p>
+          <a href="admin.html" class="btn btn-primaire">Retour à l'Administration</a></div>`;
+        return;
+      }
+      if (!MOI || MOI.role !== "bureau") {
+        contenu.innerHTML = `<div class="verrou"><div class="ico">⛔</div>
+          <h2 style="color:var(--bleu-fonce)">Accès réservé au bureau</h2>
+          <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Le registre des cotisations est réservé aux administrateurs de l'association.</p>
+          <a href="index.html" class="btn btn-primaire">Retour à l'accueil</a></div>`;
+        return;
+      }
+
+      contenu.innerHTML = `
+        <a href="admin.html" style="display:inline-block;margin-bottom:0.8rem">← Administration</a>
+        <div class="entete-reg">
+          <h1 class="section-titre" style="margin:0">Registre des cotisations</h1>
+          <select id="sel-annee" aria-label="Année"></select>
+        </div>
+        <p style="color:var(--gris);font-size:0.9rem;margin-bottom:1rem">
+          Chaque paiement enregistré pour un adhérent <strong>débloque automatiquement son accès</strong>
+          au site (échéance : un an). Un paiement sans compte relié reste dans le registre —
+          reliez-le dès que la personne s'inscrit.</p>
+        <div id="msg" class="message" role="status" aria-live="polite"></div>
+        <div id="attente"></div>
+        <div class="bilan" id="bilan"></div>
+        <div class="barre-outils">
+          <input type="search" id="recherche" placeholder="🔍 Rechercher un nom…" aria-label="Rechercher">
+          <select id="filtre-mode" aria-label="Mode de paiement">
+            <option value="">Tous</option><option>Espèces</option><option>Chèque</option><option>Virement</option>
+          </select>
+          <button class="btn btn-clair" id="btn-import">Importer l'ancien outil (JSON)</button>
+          <input type="file" id="fichier-json" accept=".json" style="display:none">
+        </div>
+        <div id="liste"></div>
+        <button class="btn-plus" id="btn-plus" aria-label="Ajouter une cotisation">+</button>
+
+        <div class="voile" id="voile">
+          <div class="feuille">
+            <h2 id="titre-form">Nouvelle cotisation</h2>
+            <div class="champ"><label for="f-montant">Montant (XPF)</label>
+              <input type="number" id="f-montant" class="montant-saisie" inputmode="numeric" min="0" placeholder="0"></div>
+            <div class="champ"><label for="f-nom">Nom du membre</label>
+              <input type="text" id="f-nom" list="liste-membres" placeholder="NOM Prénom" autocomplete="off">
+              <datalist id="liste-membres"></datalist>
+              <p id="f-lien" style="font-size:0.8rem;margin-top:0.3rem"></p></div>
+            <label style="display:block;font-weight:600;font-size:0.88rem;margin-bottom:0.3rem">Mode de paiement</label>
+            <div class="modes">
+              <div class="mode-btn Espèces" onclick="choisirMode('Espèces')"><span class="ic">💵</span>Espèces</div>
+              <div class="mode-btn Chèque" onclick="choisirMode('Chèque')"><span class="ic">🧾</span>Chèque</div>
+              <div class="mode-btn Virement" onclick="choisirMode('Virement')"><span class="ic">🏦</span>Virement</div>
+            </div>
+            <div class="champ" id="champ-cheque" style="display:none"><label for="f-ref">N° de chèque / banque (facultatif)</label>
+              <input type="text" id="f-ref" placeholder="Ex. 0012345 — Banque de Tahiti"></div>
+            <div class="champ"><label for="f-date">Date</label><input type="date" id="f-date"></div>
+            <div class="champ"><label for="f-note">Note (facultatif)</label>
+              <input type="text" id="f-note" placeholder="Ex. cotisation 2026, don…"></div>
+            <div class="actions-form">
+              <button class="btn btn-clair" onclick="fermerForm()">Annuler</button>
+              <button class="btn btn-primaire" id="btn-enregistrer" onclick="enregistrerCoti(this)">Enregistrer</button>
+            </div>
+            <button class="btn-suppr" id="btn-suppr" style="display:none" onclick="supprimerCoti(this)">🗑 Supprimer cette ligne</button>
+          </div>
+        </div>`;
+
+      // Adhérents connus, pour la liaison automatique par nom
+      const { data: profs } = await sb.from("profils").select("id,nom,prenom,email,role,cotisation_payee,cotisation_echeance");
+      PROFILS = profs || [];
+      document.getElementById("liste-membres").innerHTML =
+        PROFILS.map(p => `<option value="${echapper(nomComplet(p))}">`).join("");
+
+      // Les inscrits en attente : compte cree, cotisation pas encore validee.
+      // Un clic ouvre le formulaire deja rempli a leur nom — enregistrer le
+      // paiement debloque leur acces dans la foulee.
+      const enAttente = PROFILS.filter(p => {
+        if (!p.nom && !p.prenom) return false;
+        const ech = p.cotisation_echeance ? new Date(String(p.cotisation_echeance).slice(0,10) + "T23:59:59") : null;
+        const aJour = p.cotisation_payee && (!ech || ech >= new Date());
+        return !aJour && p.role !== "bureau";
+      });
+      if (enAttente.length) {
+        document.getElementById("attente").innerHTML = `
+          <div style="background:#fff8ef;border:1px solid #f0d9a8;border-radius:12px;padding:1rem 1.1rem;margin-bottom:1.2rem">
+            <p style="font-weight:700;color:#8a5a00;margin:0 0 0.6rem">⏳ ${enAttente.length} inscrit(s) en attente de validation</p>
+            ${enAttente.map(p => `
+              <div style="display:flex;align-items:center;gap:0.8rem;padding:0.35rem 0;flex-wrap:wrap">
+                <span style="flex:1 1 200px"><strong>${echapper(nomComplet(p))}</strong>
+                  <span style="color:var(--gris);font-size:0.82rem"> · ${echapper(p.email || "")}</span></span>
+                <button class="btn btn-vert" style="padding:0.4rem 0.9rem;font-size:0.85rem"
+                  onclick="ouvrirFormPour('${p.id}')">💳 A payé — enregistrer</button>
+              </div>`).join("")}
+          </div>`;
+      }
+
+      document.getElementById("btn-plus").addEventListener("click", () => ouvrirForm());
+      document.getElementById("recherche").addEventListener("input", render);
+      document.getElementById("filtre-mode").addEventListener("change", render);
+      document.getElementById("sel-annee").addEventListener("change", render);
+      document.getElementById("f-nom").addEventListener("input", majLien);
+      document.getElementById("btn-import").addEventListener("click", () => document.getElementById("fichier-json").click());
+      document.getElementById("fichier-json").addEventListener("change", importerJSON);
+      document.getElementById("voile").addEventListener("click", e => { if (e.target.id === "voile") fermerForm(); });
+
+      await charger();
+    })();
+
+    const msg = () => document.getElementById("msg");
+    function montrer(type, texte) { msg().className = "message " + type; msg().textContent = texte; }
+    const fXPF = n => (n || 0).toLocaleString("fr-FR") + " F";
+
+    // Adhérent correspondant au nom saisi (insensible à la casse et aux espaces)
+    function profilPourNom(nom) {
+      const cle = (nom || "").trim().toLowerCase().replace(/\s+/g, " ");
+      if (!cle) return null;
+      return PROFILS.find(p => nomComplet(p).trim().toLowerCase().replace(/\s+/g, " ") === cle) || null;
+    }
+    function majLien() {
+      const p = profilPourNom(document.getElementById("f-nom").value);
+      const el = document.getElementById("f-lien");
+      el.innerHTML = p
+        ? `<span class="lien-ok">✓ compte trouvé</span> l'accès de ${echapper(nomComplet(p))} sera débloqué automatiquement.`
+        : `<span class="lien-non">sans compte relié</span> aucun compte du site ne porte exactement ce nom — le paiement sera quand même enregistré.`;
+    }
+
+    async function charger() {
+      const { data, error } = await sb.from("cotisations").select("*")
+        .order("date_paiement", { ascending: false }).order("cree_le", { ascending: false });
+      if (error) {
+        montrer("err", messageErreur(error, "prévenez : migration-cotisations.sql reste à lancer dans Supabase"));
+        DATA = [];
+      } else DATA = data || [];
+      // Années disponibles (l'année en cours toujours proposée)
+      const annees = [...new Set(DATA.map(c => String(c.date_paiement).slice(0, 4)))];
+      const enCours = String(new Date().getFullYear());
+      if (!annees.includes(enCours)) annees.push(enCours);
+      annees.sort().reverse();
+      const sel = document.getElementById("sel-annee");
+      const avant = sel.value;
+      sel.innerHTML = annees.map(a => `<option>${a}</option>`).join("");
+      if (annees.includes(avant)) sel.value = avant;
+      render();
+    }
+
+    function render() {
+      const annee = document.getElementById("sel-annee").value;
+      const q = (document.getElementById("recherche").value || "").toLowerCase();
+      const fm = document.getElementById("filtre-mode").value;
+      const liste = DATA.filter(c => String(c.date_paiement).slice(0, 4) === annee
+        && (!q || (c.nom || "").toLowerCase().includes(q))
+        && (!fm || c.mode === fm));
+
+      // Bilan
+      const tot = m => liste.filter(c => !m || c.mode === m);
+      const somme = a => a.reduce((s, c) => s + (c.montant || 0), 0);
+      document.getElementById("bilan").innerHTML = `
+        <div class="bloc-total"><div class="t">Total ${annee}</div>
+          <div class="m">${fXPF(somme(tot()))}</div><div class="c">${tot().length} cotisation(s)</div></div>
+        ${["Espèces","Chèque","Virement"].map(m => `
+        <div class="bloc-mode ${m === "Espèces" ? "especes" : m === "Chèque" ? "cheque" : "virement"}">
+          <div class="t">${m}${m === "Chèque" ? "s" : m === "Virement" ? "s" : ""}</div>
+          <div class="m">${fXPF(somme(tot(m)))}</div><div class="c">${tot(m).length} versement(s)</div></div>`).join("")}`;
+
+      // Liste
+      document.getElementById("liste").innerHTML = liste.length ? liste.map(c => `
+        <div class="item">
+          <div class="pastille-mode ${echapper(c.mode)}"></div>
+          <div class="infos">
+            <div class="nom">${echapper(c.nom)}
+              ${c.profil_id ? '<span class="lien-ok">✓ accès débloqué</span>' : '<span class="lien-non">sans compte relié</span>'}</div>
+            <div class="det">${new Date(String(c.date_paiement).slice(0,10) + "T00:00:00").toLocaleDateString("fr-FR")}
+              · ${echapper(c.mode)}${c.ref ? " · " + echapper(c.ref) : ""}${c.note ? " · " + echapper(c.note) : ""}</div>
+          </div>
+          <div class="montant">${fXPF(c.montant)}</div>
+          <button class="mini vert" onclick="ouvrirForm('${c.id}')" title="Modifier">✎</button>
+        </div>`).join("")
+        : `<div class="vide-reg">📋<br>Aucune cotisation pour ${annee}${q || fm ? " avec ces filtres" : ""}.<br>
+           Touchez le bouton <strong>+</strong> pour en ajouter une.</div>`;
+    }
+
+    /* ---------- Formulaire ---------- */
+    function choisirMode(m) {
+      modeChoisi = m;
+      document.querySelectorAll(".mode-btn").forEach(b => b.classList.toggle("actif", b.textContent.includes(m)));
+      document.getElementById("champ-cheque").style.display = (m === "Chèque") ? "" : "none";
+    }
+    function ouvrirForm(id) {
+      editId = id || null;
+      const c = id ? DATA.find(x => x.id === id) : null;
+      document.getElementById("titre-form").textContent = c ? "Modifier la cotisation" : "Nouvelle cotisation";
+      document.getElementById("f-montant").value = c ? c.montant : "";
+      document.getElementById("f-nom").value = c ? c.nom : "";
+      document.getElementById("f-ref").value = c ? c.ref : "";
+      document.getElementById("f-note").value = c ? c.note : "";
+      document.getElementById("f-date").value = c ? String(c.date_paiement).slice(0, 10)
+        : new Date().toISOString().slice(0, 10);
+      document.getElementById("btn-suppr").style.display = c ? "" : "none";
+      choisirMode(c ? c.mode : "Espèces");
+      majLien();
+      document.getElementById("voile").classList.add("ouvert");
+      document.getElementById("f-montant").focus();
+    }
+    function fermerForm() { document.getElementById("voile").classList.remove("ouvert"); }
+    // Ouvre le formulaire deja rempli au nom d'un inscrit en attente.
+    function ouvrirFormPour(profilId) {
+      const p = PROFILS.find(x => x.id === profilId);
+      ouvrirForm();
+      if (p) { document.getElementById("f-nom").value = nomComplet(p); majLien(); }
+    }
+
+    async function enregistrerCoti(btn) {
+      return actionBouton(btn, "Enregistrement…", async () => {
+        const montant = parseInt(document.getElementById("f-montant").value, 10);
+        const nom = document.getElementById("f-nom").value.trim();
+        const date = document.getElementById("f-date").value;
+        if (!nom) { montrerForm("Indiquez le nom du membre."); return; }
+        if (!(montant >= 0)) { montrerForm("Indiquez le montant."); return; }
+        if (!date) { montrerForm("Indiquez la date du paiement."); return; }
+        const p = profilPourNom(nom);
+        const ligne = {
+          nom, montant, mode: modeChoisi, date_paiement: date,
+          ref: (modeChoisi === "Chèque") ? document.getElementById("f-ref").value.trim() : "",
+          note: document.getElementById("f-note").value.trim(),
+          profil_id: p ? p.id : null,
+        };
+        let error;
+        if (editId) ({ error } = await sb.from("cotisations").update(ligne).eq("id", editId));
+        else ({ error } = await sb.from("cotisations").insert(Object.assign({ cree_par: MOI.id }, ligne)));
+        if (error) { montrerForm(messageErreur(error, "migration-cotisations.sql est-elle lancée ?")); return; }
+        fermerForm();
+        montrer("ok", p
+          ? `Cotisation enregistrée ✔ L'accès de ${nomComplet(p)} est débloqué (échéance à un an).`
+          : "Cotisation enregistrée ✔ (sans compte relié — reliez-la quand la personne s'inscrit).");
+        await charger();
+      });
+    }
+    function montrerForm(t) { alert(t); }
+
+    async function supprimerCoti(btn) {
+      if (!editId) return;
+      if (!confirm("Supprimer cette ligne du registre ?\n\n(L'accès au site de l'adhérent n'est pas retiré : c'est une correction comptable, pas une radiation.)")) return;
+      return actionBouton(btn, "…", async () => {
+        const { error } = await sb.from("cotisations").delete().eq("id", editId);
+        if (error) { alert(messageErreur(error)); return; }
+        fermerForm();
+        montrer("ok", "Ligne supprimée ✔");
+        await charger();
+      });
+    }
+
+    /* ---------- Import de l'ancien outil (sauvegarde JSON) ---------- */
+    async function importerJSON(e) {
+      const f = e.target.files && e.target.files[0];
+      e.target.value = "";
+      if (!f) return;
+      let brut;
+      try { brut = JSON.parse(await f.text()); }
+      catch (_) { montrer("err", "Ce fichier n'est pas une sauvegarde JSON valide."); return; }
+      // La sauvegarde de l'ancien outil est un tableau (parfois enveloppé).
+      const lignes = Array.isArray(brut) ? brut
+        : (Array.isArray(brut.data) ? brut.data : (Array.isArray(brut.cotisations) ? brut.cotisations : null));
+      if (!lignes || !lignes.length) { montrer("err", "Aucune cotisation trouvée dans ce fichier."); return; }
+
+      const MODES = { especes: "Espèces", cheque: "Chèque", virement: "Virement" };
+      let ajoutees = 0, reliees = 0, doublons = 0;
+      // Doublon = même nom + même date + même montant déjà au registre.
+      const cle = c => [(c.nom || "").trim().toLowerCase(), String(c.date_paiement || c.date).slice(0, 10), c.montant].join("|");
+      const existantes = new Set(DATA.map(cle));
+      for (const l of lignes) {
+        if (!l || !l.nom || l.montant == null) continue;
+        if (existantes.has(cle(l))) { doublons++; continue; }
+        const p = profilPourNom(l.nom);
+        const { error } = await sb.from("cotisations").insert({
+          nom: String(l.nom).trim(),
+          montant: parseInt(l.montant, 10) || 0,
+          mode: MODES[l.mode] || l.mode || "Espèces",
+          ref: l.ref || "", note: l.note || "",
+          date_paiement: String(l.date || l.date_paiement || "").slice(0, 10) || new Date().toISOString().slice(0, 10),
+          profil_id: p ? p.id : null, cree_par: MOI.id,
+        });
+        if (!error) { ajoutees++; if (p) reliees++; }
+      }
+      montrer("ok", `Import terminé ✔ ${ajoutees} cotisation(s) ajoutée(s), dont ${reliees} reliée(s) à un compte` +
+        (doublons ? ` — ${doublons} doublon(s) ignoré(s).` : "."));
+      await charger();
+    }
+  </script>
+</body>
+</html>

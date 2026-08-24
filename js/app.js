@@ -255,6 +255,9 @@ async function rendreNav(pageActive) {
       `<a href="${acces ? "signaler.html" : "cotiser.html"}" class="${pageActive === "signaler" ? "actif" : ""}">${acces ? "" : "🔒 "}Signaler une nuisance</a>` +
       `<a href="espace.html" id="nav-espace-trigger" class="${espaceActif}">Mon espace</a>` +
       (profil.role === "bureau" ? lien("admin.html", "Admin", "admin") : "") +
+      // Onglet du COMPTABLE uniquement : le registre des cotisations.
+      ((profil.role === "bureau" && (profil.email || "").toLowerCase() === "jbhauata3@gmail.com")
+        ? lien("cotisations.html", "Cotisations", "cotisations") : "") +
       `<a href="#" class="bouton" onclick="deconnecter();return false;">Déconnexion</a>`;
   } else {
     // Visiteur : une seule action mise en avant, adherer.

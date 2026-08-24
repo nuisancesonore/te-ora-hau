@@ -71,6 +71,11 @@
     .chevron { color: var(--corail); font-size: 1.3rem; transition: transform 0.2s; }
     .edito-toggle[open] .chevron { transform: rotate(90deg); }
     .edito-toggle .corps { padding: 0 1.4rem 1.4rem; }
+    .quiestqui { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:0.9rem; }
+    .quiestqui > div { background:var(--blanc); border-radius:12px; box-shadow:var(--ombre);
+                       padding:1rem 1.1rem; border-top:4px solid var(--or); }
+    .quiestqui b { color:var(--bleu-fonce); display:block; margin-bottom:0.3rem; font-size:1rem; }
+    .quiestqui p { font-size:0.88rem; color:var(--gris); line-height:1.5; margin:0; }
   </style>
 </head>
 <body>
@@ -90,6 +95,22 @@
       <div class="carte"><h3>Accompagner &amp; soutenir</h3><p>Écoute attentive, <strong>conseils juridiques</strong> et <strong>accompagnement personnalisé</strong> pour retrouver un cadre de vie serein.</p></div>
       <div class="carte"><h3>Agir &amp; plaider</h3><p>Collaboration avec les <strong>autorités</strong> et les législateurs pour <strong>renforcer la réglementation</strong> et son application.</p></div>
       <div class="carte"><h3>Innover &amp; adapter</h3><p><strong>Veille technologique</strong> et exploration de nouvelles solutions, car les défis du bruit évoluent constamment.</p></div>
+    </div>
+
+    <h2 class="section-titre" style="margin-top:2.5rem">Qui est qui&nbsp;?</h2>
+    <div class="quiestqui">
+      <div><b>Adhérent</b><p>Une personne qui a rejoint Te Ora Hau et dont la cotisation
+        est à jour. Elle peut signaler les nuisances, tenir son dossier, utiliser le forum
+        et les outils.</p></div>
+      <div><b>Assesseur</b><p>Un adhérent qui s'engage davantage&nbsp;: il accompagne les
+        personnes de son secteur et réalise les missions que lui confie le bureau
+        (relevés, constats, contacts). Envie de le devenir&nbsp;?
+        <a href="contact.html">Écrivez au bureau</a>.</p></div>
+      <div><b>Membre du bureau</b><p>Un membre élu qui administre l'association&nbsp;:
+        validation des adhésions, annonces, missions, dossiers et rapports aux autorités.</p></div>
+      <div><b>Association ou collectif affilié</b><p>Une structure qui rejoint Te Ora Hau
+        pour agir ensemble. L'affiliation se fait <a href="contact.html">sur demande auprès
+        du bureau</a>.</p></div>
     </div>
 
     <h2 class="section-titre" style="margin-top:2.5rem">Le bureau</h2>

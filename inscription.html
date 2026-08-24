@@ -4,73 +4,58 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Adhérer · Te Ora Hau</title>
-  <meta name="description" content="Adhérez à Te Ora Hau et bénéficiez d'un soutien technique et moral contre les nuisances sonores : signalement sur carte, courriers types, suivi de vos démarches.">
-  <meta property="og:title" content="Adhérer à Te Ora Hau">
-  <meta property="og:description" content="Rejoignez la lutte contre les nuisances sonores en Polynésie française — ne restez pas seul.">
-  <meta property="og:image" content="https://nuisancesonore.github.io/te-ora-hau/images/icon-512.png">
-  <meta property="og:type" content="website">
+  <meta name="description" content="Adhérez à Te Ora Hau : créez votre compte en une minute, puis complétez votre profil et réglez votre cotisation.">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    @media (min-width: 640px) {
-      .form-large { max-width: 720px; }
-      .form-large .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.1rem; }
-      .form-large .form-grid .pleine { grid-column: 1 / -1; }
-    }
-    .aide-mdp { font-size: 0.82rem; color: var(--gris); margin: -0.4rem 0 1rem; }
+    .pourquoi { font-size: 0.78rem; color: var(--gris); margin-top: 0.25rem; line-height: 1.4; }
+    .apres { background: #e6f2f4; border-left: 4px solid var(--bleu-lagon); border-radius: 10px;
+             padding: 0.8rem 1rem; margin-top: 1.2rem; font-size: 0.86rem; line-height: 1.5; }
+    .apres b { color: var(--bleu-fonce); }
+    .autre-voie { background: var(--blanc); border-radius: var(--radius); box-shadow: var(--ombre);
+                  padding: 1.2rem 1.4rem; margin-top: 1.6rem; border-top: 4px solid var(--or); }
+    .autre-voie h2 { color: var(--bleu-fonce); font-size: 1.05rem; margin: 0 0 0.4rem; }
+    .autre-voie p { font-size: 0.9rem; color: var(--gris); margin-bottom: 0.8rem; }
   </style>
 </head>
 <body>
   <div id="nav-mount"></div>
 
   <main>
-    <div class="form-wrap form-large">
+    <div class="form-wrap" style="max-width:560px">
       <h1>Adhérer à Te Ora Hau</h1>
-      <p class="intro">Rejoignez la lutte contre les nuisances sonores : créez votre compte, puis soutenez l'association par la cotisation.</p>
+      <p class="intro">Trois étapes, dont une seule maintenant. Créez votre compte en une minute :
+        vous compléterez le reste ensuite.</p>
+
+      <ol class="fil-etapes" aria-label="Étapes de l'adhésion">
+        <li class="actif"><span class="num">Étape 1</span>Mon compte</li>
+        <li><span class="num">Étape 2</span>Mes informations</li>
+        <li><span class="num">Étape 3</span>Ma cotisation</li>
+      </ol>
+
       <div id="msg" class="message" role="status" aria-live="polite"></div>
-      <form id="form-inscription" class="form-grid">
-        <div class="champ">
-          <label for="nom">Nom</label>
-          <input type="text" id="nom" required placeholder="Ex. TEROOATEA">
-        </div>
+
+      <form id="form-inscription" novalidate>
         <div class="champ">
           <label for="prenom">Prénom</label>
-          <input type="text" id="prenom" required placeholder="Ex. Heimata">
+          <input type="text" id="prenom" required autocomplete="given-name" placeholder="Ex. Heimata">
         </div>
         <div class="champ">
-          <label for="naissance">Date de naissance</label>
-          <input type="date" id="naissance">
+          <label for="nom">Nom</label>
+          <input type="text" id="nom" required autocomplete="family-name" placeholder="Ex. TEROOATEA">
         </div>
         <div class="champ">
-          <label for="adresse">Adresse</label>
-          <input type="text" id="adresse" placeholder="Rue, quartier, lieu-dit…">
-        </div>
-        <div class="champ">
-          <label for="telephone">Téléphone <span style="font-weight:400;color:var(--gris)">— pour les SMS de l'association</span></label>
-          <input type="tel" id="telephone" placeholder="Ex. 87 12 34 56">
-        </div>
-        <div class="champ">
-          <label for="ile">Île de résidence</label>
-          <input id="ile" list="iles-pf" placeholder="Ex. Tahiti" value="Tahiti">
-          <datalist id="iles-pf">
-            <option>Tahiti</option><option>Moorea</option><option>Raiatea</option><option>Taha'a</option>
-            <option>Bora Bora</option><option>Huahine</option><option>Maupiti</option><option>Tubuai</option>
-            <option>Rurutu</option><option>Rapa</option><option>Rimatara</option><option>Raivavae</option>
-            <option>Rangiroa</option><option>Tikehau</option><option>Fakarava</option><option>Manihi</option>
-            <option>Nuku Hiva</option><option>Hiva Oa</option><option>Ua Pou</option><option>Gambier</option>
-          </datalist>
-        </div>
-        <div class="champ">
-          <label for="commune">Commune de résidence</label>
-          <select id="commune" required></select>
-          <input id="commune_autre" aria-label="Préciser la commune" placeholder="Commune (ex. Uturoa)" style="display:none;margin-top:0.5rem">
-        </div>
-        <div class="champ pleine">
           <label for="email">Adresse e-mail</label>
-          <input type="email" id="email" required autocomplete="email"
-                 autocapitalize="none" spellcheck="false" inputmode="email"
-                 placeholder="vous@exemple.pf">
+          <input type="email" id="email" required autocomplete="email" autocapitalize="none"
+                 spellcheck="false" inputmode="email" placeholder="vous@exemple.pf">
+          <p class="pourquoi">C'est votre identifiant de connexion. L'association vous y écrira
+            pour les annonces et le renouvellement de votre cotisation.</p>
+        </div>
+        <div class="champ">
+          <label for="telephone">Téléphone</label>
+          <input type="tel" id="telephone" autocomplete="tel" inputmode="tel" placeholder="Ex. 87 12 34 56">
+          <p class="pourquoi">Utilisé uniquement pour les SMS importants de l'association.</p>
         </div>
         <div class="champ">
           <label for="mdp">Mot de passe</label>
@@ -81,19 +66,27 @@
           <label for="mdp2">Confirmer le mot de passe</label>
           <input type="password" id="mdp2" required minlength="6" autocomplete="new-password">
         </div>
-        <p class="aide-mdp pleine">🔒 Vous choisissez vous-même ce mot de passe&nbsp;: il vous servira à <strong>vous reconnecter à votre espace personnel</strong> (signaler, forum, renouveler votre cotisation…). Chaque adhérent a le sien.</p>
-        <button type="submit" id="btn-inscription" class="btn btn-primaire btn-bloc pleine">Créer mon compte</button>
+
+        <button type="submit" id="btn-inscription" class="btn btn-primaire btn-bloc">Créer mon compte</button>
       </form>
-      <p class="form-foot">Déjà adhérent ? <a href="connexion.html">Se connecter</a> — le renouvellement de cotisation se fait dans <strong>Mon espace</strong>.</p>
-      <p class="form-foot" style="margin-top:0.5rem">
-        Vous préférez le papier&nbsp;? <a href="formulaire-adhesion.html">Formulaire d'adhésion à imprimer</a>
+
+      <div class="apres">
+        <b>Et ensuite ?</b> Vous indiquerez votre commune et la nuisance que vous subissez,
+        puis vous réglerez votre cotisation. Votre accès complet — signalements, carte, forum,
+        courriers — se débloque dès que le bureau l'a validée.
+      </div>
+
+      <p class="form-foot" style="margin-top:1.2rem">
+        Déjà adhérent ? <a href="connexion.html">Se connecter</a><br>
+        Vous préférez le papier ? <a href="formulaire-adhesion.html">Formulaire à imprimer</a>
       </p>
     </div>
 
-    <div class="form-wrap form-large" style="margin-top:1.4rem;border-top:4px solid var(--bleu-lagon)">
-      <h2 style="color:var(--bleu-fonce)">Association ou collectif affilié&nbsp;?</h2>
-      <p class="intro">Vous représentez une <strong>association</strong> ou un <strong>collectif</strong> qui souhaite s'affilier à Te Ora Hau&nbsp;? Les modalités sont spécifiques&nbsp;: contactez-nous, nous vous accompagnons.</p>
-      <a href="contact.html" class="btn btn-clair btn-bloc">Nous contacter</a>
+    <div class="autre-voie" style="max-width:560px;margin-left:auto;margin-right:auto">
+      <h2>Vous représentez une association ou un collectif ?</h2>
+      <p>L'affiliation d'une structure suit un parcours différent de celui d'un particulier :
+        les modalités sont fixées avec le bureau, au cas par cas.</p>
+      <a href="contact.html?sujet=affiliation" class="btn btn-clair btn-bloc">Demander une affiliation</a>
     </div>
   </main>
 
@@ -103,56 +96,55 @@
   <script src="js/app.js"></script>
   <script>
     initPage("inscription");
+
+    const msg = document.getElementById("msg");
+    const btn = document.getElementById("btn-inscription");
+    function montrer(type, texte) { msg.className = "message " + type; msg.textContent = texte; }
+
     // Œil « afficher / masquer » + jauge de robustesse et contrôle de concordance.
     oeilMotDePasse(document.getElementById("mdp"));
     oeilMotDePasse(document.getElementById("mdp2"));
     jaugeMotDePasse(document.getElementById("mdp"), document.getElementById("mdp2"));
-    const btnInscription = document.getElementById("btn-inscription");
-    document.getElementById("commune").innerHTML = optionsCommunes("");
-    const valCommune = brancherCommuneAutre(document.getElementById("commune"), document.getElementById("commune_autre"));
 
-    const msg = document.getElementById("msg");
-    document.getElementById("form-inscription").addEventListener("submit", async function(e) {
+    document.getElementById("form-inscription").addEventListener("submit", async function (e) {
       e.preventDefault();
-      if (envoiEnCours(e.target)) return;   // envoi déjà en cours (double clic / touche Entrée)
-      if (!TOH_PRET) { montrer("err", "Le service est momentanément indisponible. Réessayez plus tard."); return; }
-      const nom = document.getElementById("nom").value.trim();
+      if (envoiEnCours(e.target)) return;
+
       const prenom = document.getElementById("prenom").value.trim();
-      const naissance = document.getElementById("naissance").value || null;
-      const adresse = document.getElementById("adresse").value.trim();
-      const telephone = document.getElementById("telephone").value.trim();
-      const commune = valCommune();
+      const nom = document.getElementById("nom").value.trim();
       const email = document.getElementById("email").value.trim();
+      const telephone = document.getElementById("telephone").value.trim();
       const mdp = document.getElementById("mdp").value;
       const mdp2 = document.getElementById("mdp2").value;
-      if (mdp.length < 6) { montrer("err", "Le mot de passe doit contenir au moins 6 caractères."); document.getElementById("mdp").focus(); return; }
-      if (mdp !== mdp2) { montrer("err", "Les deux mots de passe saisis ne sont pas identiques."); document.getElementById("mdp2").focus(); return; }
-      // Bouton verrouillé pendant l'appel : évite de créer deux fois le même compte.
-      const rendre = boutonOccupe(btnInscription, "Création du compte…");
-      montrer("info", "Création du compte…");
-      const ile = document.getElementById("ile").value.trim();
-      const res = await inscrire(nom, prenom, email, mdp, commune,
-        { date_naissance: naissance || "", adresse: adresse, telephone: telephone, ile: ile });
-      if (!res.ok) rendre();
-      montrer(res.ok ? "ok" : "err", res.msg);
-      if (res.ok) {
-        const complement = { date_naissance: naissance, adresse: adresse, telephone: telephone };
-        // Mémorisé pour être appliqué à la 1re connexion (cas confirmation e-mail).
-        try { localStorage.setItem("TOH_profil_complement", JSON.stringify(complement)); } catch (_) {}
-        if (res.session) {
-          // Session immédiate : on enregistre tout de suite.
-          try { await sb.from("profils").update(complement).eq("id", res.session.user.id); } catch (_) {}
-          try { localStorage.removeItem("TOH_profil_complement"); } catch (_) {}
-          montrer("ok", "Bienvenue ! Dernière étape : votre cotisation pour soutenir Te Ora Hau.");
-          setTimeout(() => location.href = "cotiser.html", 1500);
-        } else {
-          // Confirmation d'e-mail requise : on garde le complément pour plus tard.
-          montrer("ok", "Compte créé ! Vérifiez votre boîte e-mail pour confirmer votre adresse, puis connectez-vous — vos informations seront complétées automatiquement.");
-          setTimeout(() => location.href = "connexion.html", 3500);
-        }
+
+      if (!prenom || !nom) { montrer("err", "Merci d'indiquer votre prénom et votre nom."); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        montrer("err", "Merci de saisir une adresse e-mail valide.");
+        document.getElementById("email").focus(); return;
+      }
+      if (mdp.length < 6) { montrer("err", "Le mot de passe doit contenir au moins 6 caractères."); return; }
+      if (mdp !== mdp2) { montrer("err", "Les deux mots de passe saisis ne sont pas identiques."); return; }
+      if (!TOH_PRET) { montrer("err", "Le service est momentanément indisponible. Réessayez plus tard."); return; }
+
+      const rendre = boutonOccupe(btn, "Création du compte…");
+      montrer("info", "Création de votre compte…");
+      // La commune et le reste sont demandés à l'étape 2 : on ne retient ici
+      // que le strict nécessaire pour ouvrir un compte.
+      const res = await inscrire(nom, prenom, email, mdp, "", { telephone: telephone });
+      if (!res.ok) { rendre(); montrer("err", res.msg); return; }
+
+      // Mémorisé pour être appliqué à la première connexion si l'e-mail doit
+      // être confirmé avant que la session existe.
+      try { localStorage.setItem("TOH_profil_complement", JSON.stringify({ telephone: telephone })); } catch (_) {}
+
+      if (res.session) {
+        montrer("ok", "Votre compte est créé ✔ Passons à l'étape 2…");
+        setTimeout(() => location.href = "profil.html?etape=2", 1200);
+      } else {
+        montrer("ok", "Compte créé ✔ Vérifiez votre boîte e-mail pour confirmer votre adresse, puis connectez-vous — nous reprendrons où vous en êtes.");
+        setTimeout(() => location.href = "connexion.html", 3500);
       }
     });
-    function montrer(type, texte) { msg.className = "message " + type; msg.textContent = texte; }
   </script>
 </body>
 </html>

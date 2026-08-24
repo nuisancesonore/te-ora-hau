@@ -37,6 +37,17 @@
     .num-badge { flex:0 0 auto; width:40px; height:40px; border-radius:50%;
       background:var(--bleu-fonce); color:#fff; display:flex; align-items:center;
       justify-content:center; font-weight:800; font-size:1.1rem; }
+    .aiguillage { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+                  gap:0.9rem; margin:0 0 2.2rem; }
+    .aiguillage a { display:flex; flex-direction:column; gap:0.15rem; text-decoration:none;
+                    background:var(--blanc); border-radius:14px; box-shadow:var(--ombre);
+                    padding:1rem 1.1rem; color:var(--texte); border-top:4px solid var(--bleu-lagon);
+                    transition:transform 0.12s ease; }
+    .aiguillage a:hover { transform:translateY(-2px); text-decoration:none; }
+    .aiguillage a:focus-visible { outline:3px solid var(--bleu-lagon); outline-offset:2px; }
+    .aiguillage .ico { font-size:1.45rem; }
+    .aiguillage b { color:var(--bleu-fonce); font-size:1.02rem; }
+    .aiguillage span:last-child { font-size:0.82rem; color:var(--gris); line-height:1.4; }
   </style>
 </head>
 <body>
@@ -50,6 +61,19 @@
         <a href="inscription.html" class="btn btn-clair">Rejoindre Te Ora Hau</a>
         <a href="signaler.html" class="btn btn-ghost">Signaler une nuisance</a>
       </div>
+    </section>
+
+    <!-- Aiguillage : le visiteur dit ce qu'il veut faire, le site l'y emmène.
+         Quatre situations, quatre boutons — pas de texte à lire d'abord. -->
+    <section class="aiguillage" aria-label="Que voulez-vous faire ?">
+      <a href="association.html"><span class="ico">👀</span><b>Je découvre</b>
+        <span>Qui est Te Ora Hau, ce que fait l'association</span></a>
+      <a href="inscription.html"><span class="ico">🤝</span><b>Je veux adhérer</b>
+        <span>Créer mon compte en une minute, en 3 étapes guidées</span></a>
+      <a href="signaler.html"><span class="ico">🔊</span><b>Je subis un bruit</b>
+        <span>Le signaler sur la carte et constituer mon dossier</span></a>
+      <a href="espace.html"><span class="ico">👤</span><b>Je suis déjà membre</b>
+        <span>Retrouver mon espace, mes dossiers, ma cotisation</span></a>
     </section>
 
     <h2 class="section-titre">Le bruit, un fléau du quotidien</h2>

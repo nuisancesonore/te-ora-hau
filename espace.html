@@ -4,46 +4,74 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mon espace · Te Ora Hau</title>
-  <!-- Page réservée aux membres : aucun intérêt dans les résultats de recherche. -->
   <meta name="robots" content="noindex, follow">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .layout { display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; align-items:start; }
-    @media (max-width:760px){ .layout{ grid-template-columns:1fr; } }
-    .carte-membre {
-      background: linear-gradient(135deg, var(--bleu-fonce), var(--bleu-lagon));
-      color:#fff; border-radius:18px; padding:1.6rem; box-shadow:var(--ombre);
-    }
-    .carte-membre .ligne { display:flex; justify-content:space-between; align-items:center; }
-    .carte-membre h3 { font-size:1.3rem; }
-    .carte-membre .label { font-size:0.72rem; opacity:0.8; text-transform:uppercase; letter-spacing:1px; }
-    .carte-membre .val { font-size:1rem; font-weight:600; margin-bottom:0.6rem; }
-    .badge { display:inline-block; padding:0.25rem 0.7rem; border-radius:20px; font-size:0.8rem; font-weight:700; }
-    .badge.ok { background:#1d6b3f; }
-    .badge.ko { background:#b2381f; }
-    #qr { background:#fff; padding:8px; border-radius:10px; width:fit-content; }
-    .rappel-coti { border-radius:10px; padding:0.7rem 0.9rem; font-size:0.9rem; margin-bottom:0.8rem; }
-    .rappel-coti.r-urgent { background:#fce6e1; color:#b2381f; border:1px solid #f3c2b6; }
-    .rappel-coti.r-doux { background:#fff4e0; color:#8a5a00; border:1px solid #f0d9a8; }
-    .grp-titre { font-weight:700; color:var(--bleu-fonce); margin:0.4rem 0 0.5rem; font-size:0.95rem; }
-    .bloc-completer { background:#fff8ef; border:1px solid #f0d9a8; border-radius:10px; padding:0.9rem 1rem; margin-top:1rem; }
-    .bloc-completer .grp-titre { margin-top:0; }
-    .badge-todo { background:#8a5a00; color:#fff; font-size:0.7rem; font-weight:700; padding:0.1rem 0.5rem; border-radius:20px; margin-left:0.4rem; vertical-align:middle; }
-    .annonce { background:#fff; border-radius:12px; box-shadow:var(--ombre); border-left:4px solid var(--bleu-lagon); padding:1rem 1.2rem; margin-bottom:0.9rem; }
-    .annonce h4 { color:var(--bleu-fonce); font-size:1.08rem; margin:0 0 0.4rem; }
+    .bonjour { margin-bottom:0.3rem; font-size:1.6rem; color:var(--bleu-fonce); }
+    .statut { color:var(--gris); font-size:0.95rem; margin-bottom:1.4rem; }
+    .statut .pastille { display:inline-block; padding:0.18rem 0.7rem; border-radius:999px;
+                        font-size:0.8rem; font-weight:700; margin-right:0.4rem; }
+    .pastille.ok { background:#e3f5ea; color:#1d6b3f; }
+    .pastille.ko { background:#fce6e1; color:#b2381f; }
+    .pastille.bureau { background:#e8e3f5; color:#534ab7; }
+
+    /* « À faire » : ce que le site attend de vous, avant tout le reste */
+    .afaire { background:#fff8ef; border:1px solid #f0d9a8; border-radius:12px;
+              padding:1rem 1.1rem; margin-bottom:1.6rem; }
+    .afaire h2 { font-size:1rem; color:#8a5a00; margin:0 0 0.7rem; }
+    .afaire li { list-style:none; display:flex; gap:0.8rem; align-items:center;
+                 flex-wrap:wrap; padding:0.45rem 0; border-top:1px solid #f0e2c4; }
+    .afaire li:first-of-type { border-top:none; }
+    .afaire .txt { flex:1 1 240px; font-size:0.9rem; }
+    .afaire ul { margin:0; padding:0; }
+    .afaire.urgent { background:#fce6e1; border-color:#f3c2b6; }
+    .afaire.urgent h2 { color:#b2381f; }
+
+    /* Les actions : de gros boutons, pas des menus */
+    .actions { display:grid; grid-template-columns:repeat(auto-fill,minmax(215px,1fr));
+               gap:0.9rem; margin-bottom:1.8rem; }
+    .action { display:flex; gap:0.85rem; align-items:flex-start; text-decoration:none;
+              background:var(--blanc); border-radius:14px; box-shadow:var(--ombre);
+              padding:1rem 1.1rem; color:var(--texte); border-top:4px solid var(--bleu-lagon);
+              transition:transform 0.12s ease, box-shadow 0.15s ease; }
+    .action:hover { text-decoration:none; transform:translateY(-2px);
+                    box-shadow:0 8px 22px rgba(6,74,84,0.16); }
+    .action:focus-visible { outline:3px solid var(--bleu-lagon); outline-offset:2px; }
+    .action .ico { font-size:1.5rem; line-height:1; }
+    .action b { display:block; color:var(--bleu-fonce); font-size:1rem; margin-bottom:0.15rem; }
+    .action span { font-size:0.82rem; color:var(--gris); line-height:1.4; }
+    .action.signaler { border-top-color:var(--corail); }
+    .action.bureau   { border-top-color:#534ab7; }
+    .action.verrou   { opacity:0.6; }
+
+    .carte-membre { background:linear-gradient(135deg,var(--bleu-fonce),var(--bleu-lagon));
+                    color:#fff; border-radius:18px; padding:1.4rem 1.5rem; box-shadow:var(--ombre); }
+    .carte-membre .ligne { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+    .carte-membre h3 { font-size:1.2rem; margin:0; }
+    .carte-membre .label { font-size:0.7rem; opacity:0.85; text-transform:uppercase; letter-spacing:1px; }
+    .carte-membre .val { font-size:0.95rem; font-weight:600; }
+    .carte-membre .infos { display:flex; gap:1.6rem; margin-top:1rem; flex-wrap:wrap; align-items:flex-end; }
+    #qr { background:#fff; padding:7px; border-radius:9px; width:fit-content; }
+
+    .annonce { background:var(--blanc); border-radius:12px; box-shadow:var(--ombre);
+               border-left:4px solid var(--bleu-lagon); padding:1rem 1.2rem; margin-bottom:0.9rem; }
+    .annonce h4 { color:var(--bleu-fonce); font-size:1.05rem; margin:0 0 0.4rem; }
     .annonce .corps { white-space:pre-wrap; line-height:1.55; }
     .annonce .date { font-size:0.78rem; color:var(--gris); margin-top:0.6rem; }
     .annonce .evt { color:var(--corail); font-weight:700; margin-bottom:0.3rem; }
-    @keyframes clignote-annonce { 0%,100% { box-shadow:var(--ombre); } 50% { box-shadow:0 0 0 3px rgba(255,122,89,0.55), var(--ombre); } }
+    @keyframes clignote-annonce { 0%,100%{box-shadow:var(--ombre);} 50%{box-shadow:0 0 0 3px rgba(255,122,89,0.55),var(--ombre);} }
     .annonce.urgent { border-left-color:var(--corail); animation:clignote-annonce 1.2s ease-in-out infinite; }
-    @media (prefers-reduced-motion: reduce){ .annonce.urgent { animation:none; box-shadow:0 0 0 3px rgba(255,122,89,0.5), var(--ombre); } }
+    @media (prefers-reduced-motion:reduce){ .annonce.urgent{ animation:none; box-shadow:0 0 0 3px rgba(255,122,89,0.5),var(--ombre);} }
+
+    .titre-bloc { font-size:1.05rem; color:var(--bleu-fonce); margin:0 0 0.8rem; }
+    .discret { font-size:0.85rem; color:var(--gris); }
   </style>
 </head>
 <body>
   <div id="nav-mount"></div>
-  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <main id="contenu"><p class="discret">Chargement…</p></main>
   <div id="footer-mount"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -51,255 +79,186 @@
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
   <script>
-    (async function() {
+    (async function () {
       await initPage("espace");
       const contenu = document.getElementById("contenu");
       const profil = await monProfil();
-      if (!profil) {
-        contenu.innerHTML = `<div class="verrou"><div class="ico">🔒</div>
-          <h2 style="color:var(--bleu-fonce)">Connexion requise</h2>
-          <p style="margin:0.6rem 0 1.2rem;color:var(--gris)">Connectez-vous pour accéder à votre espace.</p>
-          <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
-        return;
-      }
-      // Applique les infos complémentaires mémorisées à l'inscription
-      // (cas où l'e-mail devait être confirmé avant la 1re connexion).
+      if (!profil) { contenu.innerHTML = verrouAcces(null); return; }
+
+      // Informations mémorisées à l'inscription et pas encore enregistrées
+      // (cas d'une confirmation d'e-mail différée).
       try {
         const raw = localStorage.getItem("TOH_profil_complement");
         if (raw) {
-          const comp = JSON.parse(raw);
-          const maj = {};
-          if (comp.type_adhesion && !profil.type_adhesion) maj.type_adhesion = comp.type_adhesion;
+          const comp = JSON.parse(raw), maj = {};
           if (comp.date_naissance && !profil.date_naissance) maj.date_naissance = comp.date_naissance;
           if (comp.adresse && !profil.adresse) maj.adresse = comp.adresse;
           if (comp.telephone && !profil.telephone) maj.telephone = comp.telephone;
           if (Object.keys(maj).length) {
-            let { error } = await sb.from("profils").update(maj).eq("id", profil.id);
-            if (error) { const m2 = Object.assign({}, maj); delete m2.date_naissance; delete m2.adresse; delete m2.telephone; await sb.from("profils").update(m2).eq("id", profil.id); }
-            Object.assign(profil, maj);
+            const { error } = await sb.from("profils").update(maj).eq("id", profil.id);
+            if (!error) Object.assign(profil, maj);
           }
           localStorage.removeItem("TOH_profil_complement");
         }
       } catch (_) {}
 
       const st = statutCotisation(profil);
-      const aJour = st.aJour;
-      const acces = profil.role === "bureau" || aJour;   // accès complet ?
-      // Type de nuisance : aligné sur la liste des signalements (si l'ancienne
-      // valeur libre ne correspond pas, on laisse vide pour re-choisir).
-      const nuis = SIG_TYPES.includes(profil.type_nuisance || "") ? profil.type_nuisance : "";
+      const estBureau = profil.role === "bureau";
+      const estAssesseur = profil.type_adhesion === "Assesseur";
+      const acces = aDroitAcces(profil);
+      const jours = st.joursRestants;
 
-      // Rappel de cotisation à la connexion : 2 mois avant, puis 1 mois avant.
-      let rappel = "";
-      const _j = st.joursRestants;
-      if (profil.role !== "bureau" && !aJour && _j === null) {
-        rappel = `<div class="rappel-coti r-urgent">Votre <strong>accès complet</strong> (carte détaillée, signaler, forum, annuaire, outils) se débloque dès que votre <strong>cotisation</strong> a été reçue et <strong>validée par le bureau</strong> de Te Ora Hau. Voir <a href="cotiser.html">comment cotiser</a>.</div>`;
-      } else if (_j !== null) {
-        if (_j < 0)
-          rappel = `<div class="rappel-coti r-urgent">Votre cotisation est <strong>échue</strong> depuis le ${st.echeance}. Renouvelez-la pour continuer à soutenir l'association et bénéficier de son aide.</div>`;
-        else if (_j <= 30)
-          rappel = `<div class="rappel-coti r-urgent">Votre cotisation arrive à échéance <strong>dans ${_j} jour${_j>1?'s':''}</strong> (le ${st.echeance}). Pensez à la renouveler dès maintenant.</div>`;
-        else if (_j <= 60)
-          rappel = `<div class="rappel-coti r-doux">Votre cotisation arrive à échéance le <strong>${st.echeance}</strong> (dans ${_j} jours). Vous pouvez déjà la renouveler.</div>`;
-      }
+      /* ---------- 1. Bonjour + statut ---------- */
+      const pastille = estBureau
+        ? '<span class="pastille bureau">Membre du bureau</span>'
+        : (st.aJour ? '<span class="pastille ok">Adhérent actif</span>'
+                    : '<span class="pastille ko">Cotisation à régler</span>');
+      const ligneCoti = st.aJour
+        ? `Cotisation à jour jusqu'au <strong>${st.echeance}</strong>.`
+        : (estBureau ? "" : "Votre accès complet se débloque dès que le bureau aura validé votre cotisation.");
 
+      /* ---------- 2. À faire ---------- */
+      const aFaire = [];
+      if (!st.aJour && !estBureau) aFaire.push({
+        txt: "Votre adhésion attend la validation de votre cotisation par le bureau.",
+        lien: "cotiser.html", libelle: "Régler ma cotisation", urgent: true });
+      else if (jours != null && jours <= 60) aFaire.push({
+        txt: `Votre cotisation arrive à échéance le ${st.echeance}` +
+             (jours > 0 ? ` (dans ${jours} jour${jours > 1 ? "s" : ""}).` : "."),
+        lien: "cotiser.html", libelle: "Renouveler", urgent: jours <= 30 });
+      if (!profil.type_nuisance) aFaire.push({
+        txt: "Votre profil est incomplet : indiquez le type de nuisance que vous subissez.",
+        lien: "profil.html", libelle: "Compléter mon profil" });
+      if (!profil.telephone) aFaire.push({
+        txt: "Aucun téléphone enregistré : vous ne recevrez pas les SMS de l'association.",
+        lien: "profil.html", libelle: "Ajouter mon téléphone" });
+
+      const blocAFaire = aFaire.length ? `
+        <section class="afaire ${aFaire.some(a => a.urgent) ? "urgent" : ""}">
+          <h2>À faire</h2>
+          <ul>${aFaire.map(a => `<li>
+            <span class="txt">${a.txt}</span>
+            <a href="${a.lien}" class="btn btn-primaire" style="padding:0.45rem 0.9rem;font-size:0.88rem">${a.libelle}</a>
+          </li>`).join("")}</ul>
+        </section>` : "";
+
+      /* ---------- 3. Les actions ---------- */
+      const lk = acces ? "" : "🔒 ";
+      const cl = acces ? "" : " verrou";
+      const action = (href, ico, titre, desc, extra) =>
+        `<a class="action${extra || ""}" href="${href}">
+           <span class="ico">${ico}</span><span><b>${titre}</b><span>${desc}</span></span></a>`;
+
+      const actions = [
+        action(acces ? "signaler.html" : "cotiser.html", "🔊", lk + "Signaler une nuisance",
+               "Placez le bruit sur la carte : c'est le point de départ de tout dossier.", " signaler" + cl),
+        action(acces ? "mes-signalements.html" : "cotiser.html", "📁", lk + "Mes dossiers",
+               "Vos signalements, leur chronologie et leur état d'avancement.", cl),
+        action(acces ? "outils.html" : "cotiser.html", "✍️", lk + "Mes démarches et courriers",
+               "Générez vos courriers, tenez votre journal de bruit, suivez vos démarches.", cl),
+        action("profil.html", "👤", "Mon profil",
+               "Vos coordonnées, votre commune, la nuisance que vous subissez."),
+        action("cotiser.html", "💳", "Ma cotisation",
+               st.aJour ? "À jour jusqu'au " + st.echeance + "." : "Montant, moyens de paiement et suivi."),
+        action(acces ? "annuaire.html" : "cotiser.html", "🤝", lk + "Annuaire et forum",
+               "Retrouvez les adhérents de votre commune et échangez avec eux.", cl),
+        action("guide-membre.html", "📄", "Mes documents",
+               "Mode d'emploi, modèles de courriers, textes de loi."),
+        action("contact.html", "💬", "Contacter Te Ora Hau",
+               "Une question, un blocage ? Le bureau vous répond."),
+      ];
+      if (estAssesseur) actions.push(action("missions.html", "🎯", "Mes missions",
+        "Les missions que le bureau confie aux assesseurs — les adhérents qui accompagnent leur secteur."));
+      if (estBureau) actions.push(action("admin.html", "🏛️", "Administration",
+        "Adhérents, cotisations, annonces, missions et rapports.", " bureau"));
+
+      /* ---------- Assemblage ---------- */
       contenu.innerHTML = `
-        <h2 class="section-titre">Mon espace adhérent</h2>
-        ${!nuis ? `<div class="rappel-coti r-doux" style="margin-bottom:1rem">Complétez votre profil : indiquez le <strong>type de nuisance</strong> que vous subissez (encadré « À compléter », plus bas). Cela aide l'association à cibler ses actions.</div>` : ''}
-        <div id="annonces" style="margin-bottom:1.4rem"></div>
-        <div class="layout">
-          <div>
-            <div class="carte-membre">
-              <div class="ligne">
-                <div><div class="label">Membre</div><h3>${echapper(nomComplet(profil))}</h3></div>
-                <span class="badge ${(aJour||profil.role==='bureau')?'ok':'ko'}">${profil.role==='bureau'?'Bureau':(aJour?'À jour':'Cotisation à régler')}</span>
+        <h1 class="bonjour">Bonjour ${echapper(profil.prenom || profil.nom || "")}</h1>
+        <p class="statut">${pastille}${ligneCoti}</p>
+        ${blocAFaire}
+        <div class="actions">${actions.join("")}</div>
+        <div id="annonces"></div>
+        <section style="margin-top:1.6rem">
+          <h2 class="titre-bloc">Ma carte de membre</h2>
+          <div class="carte-membre">
+            <div class="ligne">
+              <div><div class="label">Membre</div><h3>${echapper(nomComplet(profil))}</h3></div>
+              ${pastille.replace('class="pastille', 'class="badge-carte pastille')}
+            </div>
+            <div class="infos">
+              <div>
+                <div class="label">Commune</div><div class="val">${echapper(profil.commune) || "—"}</div>
+                <div class="label" style="margin-top:0.5rem">Carte n°</div><div class="val">${st.numero}</div>
+                <div class="label" style="margin-top:0.5rem">Période</div>
+                <div class="val" style="font-size:0.85rem">${st.debutDate ? "du " + st.debut + " au " + st.echeance : "—"}</div>
               </div>
-              <div style="display:flex;gap:1.4rem;margin:1.2rem 0 0.4rem;flex-wrap:wrap;align-items:flex-end">
-                <div>
-                  <div class="label">Commune</div><div class="val">${echapper(profil.commune)||'—'}</div>
-                  <div class="label">Période de cotisation</div><div class="val" style="font-size:0.85rem">${st.debutDate ? `du ${st.debut} au ${st.echeance}` : '—'}</div>
-                  <div class="label">Carte n°</div><div class="val" style="font-size:0.8rem">${st.numero}</div>
-                </div>
-                <div id="qr"></div>
-              </div>
-            </div>
-            ${acces ? `
-            <div class="carte" style="margin-top:1.2rem;border-top-color:var(--vert-paix)">
-              <h3>Agir</h3>
-              <p style="color:var(--gris)">Un bruit vous gêne ? Signalez-le sur la carte, puis appuyez votre démarche avec un courrier et votre journal de bruit.</p>
-              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.6rem">
-                <a href="signaler.html" class="btn btn-vert">Signaler une nuisance</a>
-                <a href="outils.html" class="btn btn-clair">Courriers &amp; journal</a>
-                <a href="outils.html#demarches" class="btn btn-clair">Mon suivi de démarches</a>
-              </div>
-            </div>` : ``}
-            <div class="carte" style="margin-top:1.2rem;border-top-color:var(--corail)">
-              <h3>Cotisation</h3>
-              ${rappel}
-              <p style="color:var(--gris)">Réglez par virement, chèque ou espèces. Votre statut sera mis à jour par le bureau après réception.</p>
-              <a href="cotiser.html" class="btn btn-primaire" style="margin-top:0.5rem">Comment payer ma cotisation →</a>
-            </div>
-            ${acces ? `
-            <div class="carte" style="margin-top:1.2rem;border-top-color:var(--bleu-lagon)">
-              <h3>Mes signalements</h3>
-              <p style="color:var(--gris)">Consultez, modifiez ou supprimez les nuisances que vous avez signalées.</p>
-              <a href="mes-signalements.html" class="btn btn-clair" style="margin-top:0.5rem">Gérer mes signalements</a>
-            </div>
-            <div class="carte" style="margin-top:1.2rem">
-              <h3>Annuaire des adhérents</h3>
-              <p style="color:var(--gris)">Retrouvez les membres de votre commune qui ont accepté d'être visibles, pour vous entraider entre voisins.</p>
-              <a href="annuaire.html" class="btn btn-clair" style="margin-top:0.5rem">Consulter l'annuaire</a>
-            </div>
-            <div class="carte" style="margin-top:1.2rem">
-              <h3>Forum des membres</h3>
-              <p style="color:var(--gris)">Échangez avec les autres adhérents, posez vos questions et partagez vos démarches.</p>
-              <a href="forum.html" class="btn btn-clair" style="margin-top:0.5rem">Ouvrir le forum</a>
-            </div>` : `
-            <div class="carte" style="margin-top:1.2rem;opacity:0.85">
-              <h3>🔒 Bientôt débloqué</h3>
-              <p style="color:var(--gris)">Dès que le bureau aura validé votre cotisation, vous aurez accès à&nbsp;: <strong>signaler une nuisance</strong>, la <strong>carte détaillée</strong>, le <strong>forum</strong>, l'<strong>annuaire</strong> et les <strong>outils</strong> (courriers, journal de bruit).</p>
-            </div>`}
-            <div class="carte" style="margin-top:1.2rem">
-              <h3>Notifications</h3>
-              <p style="color:var(--gris)" id="notif-txt">Recevez une alerte (et un chiffre sur l'icône) quand l'association publie une annonce.</p>
-              <button class="btn btn-clair" id="btn-notif" style="margin-top:0.5rem">Activer les notifications</button>
+              <div id="qr"></div>
             </div>
           </div>
+        </section>
+        <section style="margin-top:1.6rem">
+          <h2 class="titre-bloc">Notifications</h2>
+          <p class="discret" id="notif-txt">Recevez une alerte quand l'association publie une annonce.</p>
+          <button class="btn btn-clair" id="btn-notif" style="margin-top:0.5rem">Activer les notifications</button>
+        </section>`;
 
-          <div class="form-wrap" style="max-width:100%;margin:0">
-            <h2 style="color:var(--bleu-fonce)">Mon profil</h2>
-            <p class="intro">Vos coordonnées sont reprises de votre inscription : rien à retaper. Il reste à indiquer le type de nuisance que vous subissez.</p>
-            <div id="msg" class="message" role="status" aria-live="polite"></div>
-            <form id="form-profil">
-              <p class="grp-titre">Mes coordonnées</p>
-              <div class="champ"><label>Nom</label><input id="nom" value="${echapper(profil.nom)}" required></div>
-              <div class="champ"><label>Prénom</label><input id="prenom" value="${echapper(profil.prenom)}"></div>
-              <div class="champ"><label>Date de naissance</label><input type="date" id="date_naissance" value="${echapper(profil.date_naissance)}"></div>
-              <div class="champ"><label>Île de résidence</label><input id="ile" list="iles-pf" value="${echapper(profil.ile)||'Tahiti'}">
-                <datalist id="iles-pf"><option>Tahiti</option><option>Moorea</option><option>Raiatea</option><option>Taha'a</option><option>Bora Bora</option><option>Huahine</option><option>Maupiti</option><option>Tubuai</option><option>Rurutu</option><option>Rangiroa</option><option>Tikehau</option><option>Fakarava</option><option>Nuku Hiva</option><option>Hiva Oa</option><option>Gambier</option></datalist></div>
-              <div class="champ"><label>Commune de résidence</label><select id="commune"></select>
-                <input id="commune_autre" aria-label="Préciser la commune" placeholder="Île puis commune (ex. Raiatea, Uturoa)" style="display:none;margin-top:0.5rem"></div>
-              <div class="champ"><label>Adresse</label><input id="adresse" value="${echapper(profil.adresse)}" placeholder="Quartier, rue, lotissement…"></div>
-              <div class="champ"><label>Téléphone <span style="font-weight:400;color:var(--gris)">— pour les SMS de l'association</span></label><input id="telephone" type="tel" value="${echapper(profil.telephone)}" placeholder="Ex. 87 12 34 56"></div>
-
-              <div class="bloc-completer">
-                <p class="grp-titre">À compléter ${nuis ? '' : '<span class="badge-todo">à renseigner</span>'}</p>
-                <p style="font-size:0.83rem;color:var(--gris);margin:-0.25rem 0 0.7rem">Ces informations ne sont pas demandées à l'inscription.</p>
-                <div class="champ"><label>Type de nuisance subie</label>
-                  <select id="type_nuisance">${optionsListe(SIG_TYPES, nuis, "— Choisir —")}</select></div>
-                <div class="champ" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0">
-                  <input type="checkbox" id="annuaire" style="width:auto" ${profil.annuaire_optin?'checked':''}>
-                  <label for="annuaire" style="margin:0">Apparaître dans l'annuaire des membres (même commune)</label>
-                </div>
-              </div>
-
-              <button type="submit" class="btn btn-primaire btn-bloc" style="margin-top:1rem">Enregistrer</button>
-            </form>
-          </div>
-        </div>`;
-
-      // QR code de la carte
       new QRCode(document.getElementById("qr"), {
-        text: "TOH-MEMBRE:" + profil.id, width: 96, height: 96,
+        text: "TOH-MEMBRE:" + profil.id, width: 88, height: 88,
         colorDark: "#064a54", colorLight: "#ffffff",
       });
 
-      // Sélecteur commune
-      const sel = document.getElementById("commune");
-      sel.innerHTML = optionsCommunes(profil.commune);
-      const valCommune = brancherCommuneAutre(sel, document.getElementById("commune_autre"));
+      /* ---------- Notifications ---------- */
+      (function () {
+        const btn = document.getElementById("btn-notif"), txt = document.getElementById("notif-txt");
+        const refl = e => {
+          if (e === "non-supporte") { btn.style.display = "none"; txt.textContent = "Les notifications ne sont pas disponibles sur cet appareil."; }
+          else if (e === "non-configure") { btn.style.display = "none"; txt.textContent = "Les notifications ne sont pas encore configurées par l'association."; }
+          else if (e === "refuse") { btn.style.display = "none"; txt.textContent = "Notifications bloquées par votre navigateur — réactivez-les dans ses réglages."; }
+          else if (e === "actif") { btn.textContent = "Désactiver les notifications"; txt.textContent = "Notifications activées sur cet appareil."; }
+          else { btn.textContent = "Activer les notifications"; txt.textContent = "Recevez une alerte quand l'association publie une annonce."; }
+        };
+        (async () => refl(await etatNotifications()))();
+        btn.addEventListener("click", async () => {
+          const rendre = boutonOccupe(btn, "…");
+          const actif = (await etatNotifications()) === "actif";
+          if (actif) await desactiverNotifications(); else await activerNotifications();
+          rendre();
+          refl(await etatNotifications());
+        });
+      })();
 
-      // Annonces de l'association visibles par ce membre (selon le ciblage).
+      /* ---------- Annonces de l'association ---------- */
       (async () => {
-        const { data } = await sb.from("annonces").select("*").order("cree_le", { ascending:false });
+        const { data } = await sb.from("annonces").select("*").order("cree_le", { ascending: false });
         if (!data || !data.length) return;
-        const voitTout = profil.role === "bureau";
         const maintenant = new Date();
         const vis = data.filter(an => {
-          const okCible = voitTout || an.cible==="tous" || (an.cible==="ajour"&&aJour) || (an.cible==="retard"&&!aJour);
+          const okCible = estBureau || an.cible === "tous"
+            || (an.cible === "ajour" && st.aJour) || (an.cible === "retard" && !st.aJour);
           if (!okCible) return false;
-          // Une annonce d'événement disparaît une fois la date/heure passée.
           if (an.date_evenement && new Date(an.date_evenement) < maintenant) return false;
           return true;
         });
-        // Marque les annonces comme "vues" (efface la pastille / met à jour le badge d'icône).
-        localStorage.setItem("TOH_vu_annonces", String(vis.length ? new Date(vis[0].cree_le).getTime() : Date.now()));
-        try { rafraichirBadge(profil); } catch(_){}
+        try {
+          localStorage.setItem("TOH_vu_annonces", String(vis.length ? new Date(vis[0].cree_le).getTime() : Date.now()));
+          rafraichirBadge(profil);
+        } catch (_) {}
         if (!vis.length) return;
         document.getElementById("annonces").innerHTML =
-          `<h3 style="color:var(--bleu-fonce);margin-bottom:0.7rem">Annonces de l'association</h3>` +
-          vis.slice(0,5).map(an => {
+          `<h2 class="titre-bloc">Annonces de l'association</h2>` +
+          vis.slice(0, 5).map(an => {
             const evt = an.date_evenement ? new Date(an.date_evenement) : null;
             const aVenir = evt && evt >= maintenant;
-            const evtTxt = evt ? `${evt.toLocaleDateString('fr-FR')} à ${evt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}` : null;
-            return `<div class="annonce ${aVenir?'urgent':''}">
+            const evtTxt = evt ? `${evt.toLocaleDateString("fr-FR")} à ${evt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}` : null;
+            return `<div class="annonce ${aVenir ? "urgent" : ""}">
               <h4>${echapper(an.titre)}</h4>
-              ${evtTxt?`<div class="evt">Événement : ${evtTxt}</div>`:''}
+              ${evtTxt ? `<div class="evt">Événement : ${evtTxt}</div>` : ""}
               <div class="corps">${echapper(an.corps)}</div>
-              <div class="date">Publié le ${new Date(an.cree_le).toLocaleDateString('fr-FR')}</div>
+              <div class="date">Publié le ${new Date(an.cree_le).toLocaleDateString("fr-FR")}</div>
             </div>`;
           }).join("");
       })();
-
-      // Réglage des notifications push (activer / désactiver sur cet appareil).
-      (async () => {
-        const btn = document.getElementById("btn-notif");
-        const txt = document.getElementById("notif-txt");
-        if (!btn) return;
-        function refl(e){
-          if (e === "non-supporte"){ btn.style.display="none"; txt.textContent = "Les notifications ne sont pas supportées sur cet appareil."; }
-          else if (e === "non-configure"){ btn.style.display="none"; txt.textContent = "Notifications bientôt disponibles."; }
-          else if (e === "refuse"){ btn.style.display="none"; txt.textContent = "Notifications bloquées dans les réglages du navigateur/téléphone."; }
-          else if (e === "actif"){ btn.textContent = "Désactiver les notifications"; txt.textContent = "Notifications activées sur cet appareil ✔"; }
-          else { btn.textContent = "Activer les notifications"; txt.textContent = "Recevez une alerte (et un chiffre sur l'icône) quand l'association publie une annonce. Pensez à installer le site sur votre écran d'accueil."; }
-        }
-        refl(await etatNotifications());
-        btn.addEventListener("click", async () => {
-          btn.disabled = true;
-          const actif = (await etatNotifications()) === "actif";
-          if (actif) await desactiverNotifications(); else await activerNotifications();
-          refl(await etatNotifications());
-          btn.disabled = false;
-        });
-      })();
-
-      const msg = document.getElementById("msg");
-      document.getElementById("form-profil").addEventListener("submit", async function(e) {
-        e.preventDefault();
-        if (envoiEnCours(e.target)) return;   // envoi déjà en cours
-        // Bouton verrouillé pendant l'enregistrement (plus de double envoi).
-        const rendre = boutonOccupe(boutonForm(e.target), "Enregistrement…");
-        const maj = {
-          nom: document.getElementById("nom").value.trim(),
-          prenom: document.getElementById("prenom").value.trim(),
-          commune: valCommune(),
-          type_nuisance: document.getElementById("type_nuisance").value.trim(),
-          annuaire_optin: document.getElementById("annuaire").checked,
-          date_naissance: document.getElementById("date_naissance").value || null,
-          adresse: document.getElementById("adresse").value.trim(),
-          telephone: document.getElementById("telephone").value.trim(),
-          ile: document.getElementById("ile").value.trim(),
-        };
-        let { error } = await sb.from("profils").update(maj).eq("id", profil.id);
-        let partiel = false, garde = 0;
-        // Filet de secours CIBLÉ : si une colonne récente n'existe pas encore en
-        // base, on retire UNIQUEMENT celle-là (nommée dans l'erreur) et on
-        // réessaie — les autres champs (dont le prénom) sont bien enregistrés.
-        const optionnelles = ["prenom","ile","date_naissance","adresse","telephone","type_nuisance","annuaire_optin"];
-        while (error && /column|schema cache|does not exist/i.test(error.message||"") && garde < 8){
-          const manquante = optionnelles.find(k => (k in maj) && new RegExp("\\b"+k+"\\b","i").test(error.message||""));
-          if (!manquante) break;
-          delete maj[manquante]; partiel = true; garde++;
-          const retry = await sb.from("profils").update(maj).eq("id", profil.id);
-          error = retry.error;
-        }
-        rendre();
-        msg.className = "message " + (error ? "err" : "ok");
-        msg.textContent = error ? messageErreur(error, "prévenez le bureau : une mise à jour de la base est nécessaire")
-          : (partiel
-              ? "Profil enregistré ✔ (certaines infos seront prises en compte une fois la base mise à jour)"
-              : "Profil enregistré ✔");
-      });
     })();
   </script>
 </body>

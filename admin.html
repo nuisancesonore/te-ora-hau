@@ -84,7 +84,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+  <!-- jsPDF ecrit du VRAI texte dans le PDF. html2pdf photographiait la page
+       avec html2canvas, qui rendait une image vide : le rapport produit pesait
+       toujours 3058 octets, soit une page blanche. -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
   <script>
     let ADH = [];
     let MOI = null;
@@ -340,63 +343,161 @@
             <p class="pf">Liste anonymisée — l'association tient les dossiers complets à disposition des autorités, avec l'accord des plaignants.</p>`;
         }
 
-        // ----- Page A4 -----
-        const page = document.createElement("div");
-        page.style.cssText = "position:fixed;left:-9999px;top:0;width:210mm;box-sizing:border-box;padding:13mm 15mm;"+
-          "background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;font-size:10.2pt;line-height:1.5;";
-        page.innerHTML = `
-          <style>
-            .rap-ent { display:flex; align-items:center; gap:12px; border-bottom:3px solid #c0392b; padding-bottom:8px; margin-bottom:10px; }
-            .rap-ent img { width:58px; }
-            .rap-ent h1 { font-size:15pt; margin:0; }
-            .rap-ent .s { font-size:9pt; color:#444; }
-            .kpis { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
-            .kpi { flex:1 1 28%; border:1px solid #ccc; border-radius:8px; padding:8px 10px; text-align:center; }
-            .kpi b { display:block; font-size:15pt; color:#064a54; }
-            .kpi span { font-size:8.5pt; color:#444; }
-            h2 { font-size:11pt; border-left:4px solid #c0392b; padding-left:6px; margin:14px 0 6px; }
-            .rb-wrap { display:flex; flex-wrap:wrap; gap:10px; }
-            .rb { flex:1 1 45%; }
-            .rb h3 { font-size:9.5pt; margin:0 0 3px; color:#064a54; }
-            .rb table, table.liste { width:100%; border-collapse:collapse; font-size:8.8pt; }
-            .rb td, table.liste td, table.liste th { border:1px solid #bbb; padding:3px 6px; }
-            table.liste th { background:#eef2fb; text-align:left; }
-            .pf { font-size:8pt; color:#666; margin-top:4px; }
-            .pied { margin-top:14px; border-top:1px solid #ccc; padding-top:6px; font-size:8.5pt; color:#555; }
-          </style>
-          <div class="rap-ent">
-            <img src="images/icon-192.png">
-            <div style="flex:1;text-align:center">
-              <h1>${TXT.titre}</h1>
-              <div class="s"><b>Association Te Ora Hau</b> — « Vivre en paix » · ${TXT.sous}</div>
-            </div>
-            <div style="width:58px"></div>
-          </div>
-          <p style="text-align:right;font-size:9pt;color:#555">${commune ? "Commune : <b>" + echapper(commune) + "</b> · " : ""}Signalements recensés depuis le ${depuisLe} · Rapport établi le ${new Date().toLocaleDateString("fr-FR")}</p>
-          <p>${TXT.intro}</p>
-          <div class="kpis">${kpis.map(k => `<div class="kpi"><b>${k[0]}</b><span>${k[1]}</span></div>`).join("")}</div>
-          ${TXT.extra}
-          <h2>Répartition des nuisances</h2>
-          <div class="rb-wrap">
-            ${tableRap("Par type de bruit", repartition(S, s=>s.type), n)}
-            ${commune ? tableRap("Par quartier", repartition(S, s=>s.quartier), n) : tableRap("Par commune", repartition(S, s=>s.commune), n)}
-            ${tableRap("Par horaire", repartition(S, s=>s.horaire), n)}
-            <div class="rb"><h3>Nouveaux signalements (6 derniers mois)</h3><table>${evol.map(e=>`<tr><td>${e[0]}</td><td style="text-align:right"><b>${e[1]}</b></td></tr>`).join("")}</table></div>
-          </div>
-          ${liste}
-          <h2>Conclusion</h2>
-          <p>${TXT.conclusion}</p>
-          <div class="pied">Association Te Ora Hau — BP 2524, 98713 Papeete · contact@teorahau.net · 87 72 16 87 — Rapport généré à partir des signalements géolocalisés et datés déposés par les adhérents sur la plateforme de l'association.</div>`;
-        document.body.appendChild(page);
-        const nomF = "rapport-nuisances-" + dest + (commune ? "-" + commune.toLowerCase().replace(/[^a-z0-9]+/gi,"-") : "-global") + ".pdf";
-        await html2pdf().set({
-          margin: 0, filename: nomF,
-          image: { type:"jpeg", quality:0.97 },
-          html2canvas: { scale:2, useCORS:true, backgroundColor:"#ffffff" },
-          jsPDF: { unit:"mm", format:"a4", orientation:"portrait" },
-          pagebreak: { mode:["css","legacy"] }
-        }).from(page).save();
-        page.remove();
+        // ----- Composition du PDF -----
+        // Le rapport est ECRIT dans le PDF, pas photographie : texte
+        // selectionnable par le destinataire, fichier leger, et une page qui
+        // n'est jamais blanche.
+        const sansBalises = h => String(h == null ? "" : h)
+          .replace(/<br\s*\/?>/gi, " ").replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+        const M = 15, L = 210 - 2 * M, BAS = 297 - 20;
+        let y = 18, page = 1;
+
+        const pied = () => {
+          doc.setDrawColor(200); doc.line(M, 283, 210 - M, 283);
+          doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(110);
+          doc.text("Association Te Ora Hau \u2014 BP 2524, 98713 Papeete \u00b7 contact@teorahau.net \u00b7 87 72 16 87", M, 287);
+          doc.text("Page " + page, 210 - M, 287, { align: "right" });
+          doc.setTextColor(20);
+        };
+        const nouvellePage = () => { pied(); doc.addPage(); page++; y = 18; };
+        const place = h => { if (y + h > BAS) nouvellePage(); };
+
+        const para = (txt, taille, style) => {
+          const t = sansBalises(txt);
+          if (!t) return;
+          doc.setFont("helvetica", style || "normal"); doc.setFontSize(taille || 9.5);
+          doc.splitTextToSize(t, L).forEach(ligne => { place(5); doc.text(ligne, M, y); y += 4.6; });
+          y += 2;
+        };
+        const titre2 = t => {
+          place(11); y += 2;
+          doc.setFillColor(192, 57, 43); doc.rect(M, y - 3.4, 1.4, 5, "F");
+          doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(20);
+          doc.text(t, M + 3.5, y); y += 6;
+        };
+
+        // --- En-tete ---
+        doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(20);
+        doc.splitTextToSize(TXT.titre, L).forEach(l => { doc.text(l, 105, y, { align: "center" }); y += 6.5; });
+        doc.setFont("helvetica", "normal"); doc.setFontSize(8.8); doc.setTextColor(70);
+        doc.splitTextToSize("Association Te Ora Hau \u2014 \u00ab Vivre en paix \u00bb \u00b7 " + sansBalises(TXT.sous), L)
+          .forEach(l => { doc.text(l, 105, y, { align: "center" }); y += 4.2; });
+        y += 1.5;
+        doc.setDrawColor(192, 57, 43); doc.setLineWidth(0.8); doc.line(M, y, 210 - M, y); doc.setLineWidth(0.2);
+        y += 5;
+        doc.setFontSize(8.2); doc.setTextColor(85);
+        doc.text((commune ? "Commune : " + commune + " \u00b7 " : "") +
+                 "Signalements recens\u00e9s depuis le " + depuisLe +
+                 " \u00b7 Rapport \u00e9tabli le " + new Date().toLocaleDateString("fr-FR"),
+                 210 - M, y, { align: "right" });
+        y += 6; doc.setTextColor(20);
+
+        para(TXT.intro, 9.5);
+
+        // --- Indicateurs, trois par ligne ---
+        y += 1;
+        const largK = (L - 8) / 3, hautK = 15;
+        kpis.forEach((k, idx) => {
+          const col = idx % 3;
+          if (col === 0) place(hautK + 4);
+          const x = M + col * (largK + 4);
+          doc.setDrawColor(200); doc.roundedRect(x, y, largK, hautK, 1.6, 1.6);
+          doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(6, 74, 84);
+          doc.text(String(k[0]), x + largK / 2, y + 6.5, { align: "center" });
+          doc.setFont("helvetica", "normal"); doc.setFontSize(7.2); doc.setTextColor(70);
+          doc.splitTextToSize(String(k[1]), largK - 4).slice(0, 2)
+            .forEach((l, li) => doc.text(l, x + largK / 2, y + 10.5 + li * 3.1, { align: "center" }));
+          if (col === 2 || idx === kpis.length - 1) y += hautK + 4;
+        });
+        doc.setTextColor(20); y += 2;
+
+        if (sansBalises(TXT.extra)) para(TXT.extra, 9);
+
+        // --- Repartitions, deux par ligne ---
+        titre2("R\u00e9partition des nuisances");
+        const blocs = [
+          ["Par type de bruit", repartition(S, s => s.type)],
+          [commune ? "Par quartier" : "Par commune", repartition(S, s => commune ? s.quartier : s.commune)],
+          ["Par horaire", repartition(S, s => s.horaire)],
+          ["Nouveaux signalements (6 derniers mois)", evol]
+        ];
+        const largB = (L - 6) / 2;
+        for (let b = 0; b < blocs.length; b += 2) {
+          const paire = blocs.slice(b, b + 2).filter(x => x[1] && x[1].length);
+          if (!paire.length) continue;
+          place(6 + Math.max.apply(null, paire.map(x => Math.min(x[1].length, 8))) * 4.2 + 4);
+          const yDebut = y;
+          paire.forEach((bloc, c) => {
+            const x = M + c * (largB + 6);
+            let yy = yDebut;
+            doc.setFont("helvetica", "bold"); doc.setFontSize(8.6); doc.setTextColor(6, 74, 84);
+            doc.text(bloc[0], x, yy); yy += 4.4;
+            doc.setFont("helvetica", "normal"); doc.setFontSize(8.4); doc.setTextColor(20);
+            const estEvolution = bloc[0].indexOf("Nouveaux") === 0;
+            bloc[1].slice(0, 8).forEach(paireVal => {
+              const cle = paireVal[0], nb = paireVal[1];
+              doc.text(doc.splitTextToSize(String(cle || "Non pr\u00e9cis\u00e9"), largB - 24)[0], x, yy);
+              doc.text(estEvolution ? String(nb) : nb + " (" + Math.round(nb / Math.max(n, 1) * 100) + "%)",
+                       x + largB, yy, { align: "right" });
+              doc.setDrawColor(228); doc.line(x, yy + 1.2, x + largB, yy + 1.2);
+              yy += 4.2;
+            });
+            if (yy > y) y = yy;
+          });
+          y += 3;
+        }
+
+        // --- Detail des signalements (autorites uniquement, anonymise) ---
+        if (dest !== "global") {
+          titre2("D\u00e9tail des signalements" + (S.length > 30 ? " (30 premiers sur " + S.length + ")" : ""));
+          const cols = [["Depuis", 25], ["Type", 38], ["Quartier", 30], ["Horaire", 32], ["Intensit\u00e9", 23], ["D\u00e9marche", L - 148]];
+          const enTete = () => {
+            doc.setFillColor(238, 242, 251); doc.rect(M, y - 3.6, L, 5.4, "F");
+            doc.setFont("helvetica", "bold"); doc.setFontSize(7.8); doc.setTextColor(20);
+            let x = M + 1.5;
+            cols.forEach(c => { doc.text(c[0], x, y); x += c[1]; });
+            y += 4.8; doc.setFont("helvetica", "normal");
+          };
+          place(10); enTete();
+          S.slice(0, 30).forEach(sg => {
+            if (y + 5.5 > BAS) { nouvellePage(); enTete(); }
+            const vals = [
+              sg.debut ? moisAnneeRap(sg.debut) : "\u2014",
+              sg.type || "\u2014",
+              sg.quartier || sg.commune || "\u2014",
+              (sg.horaire || "\u2014") + (sg.horaire_detail ? " (" + sg.horaire_detail + ")" : ""),
+              sg.intensite || "\u2014",
+              sg.constat || "Signalement seul"
+            ];
+            doc.setFontSize(7.8); doc.setTextColor(20);
+            let x = M + 1.5;
+            vals.forEach((v, ci) => {
+              doc.text(doc.splitTextToSize(String(v), cols[ci][1] - 2)[0] || "\u2014", x, y);
+              x += cols[ci][1];
+            });
+            doc.setDrawColor(228); doc.line(M, y + 1.4, M + L, y + 1.4);
+            y += 4.6;
+          });
+          y += 1;
+          doc.setTextColor(110);
+          para("Liste anonymis\u00e9e \u2014 l'association tient les dossiers complets \u00e0 disposition des autorit\u00e9s, avec l'accord des plaignants.", 7.5);
+          doc.setTextColor(20);
+        }
+
+        titre2("Conclusion");
+        para(TXT.conclusion, 9.5);
+        y += 2;
+        doc.setTextColor(110);
+        para("Rapport g\u00e9n\u00e9r\u00e9 \u00e0 partir des signalements g\u00e9olocalis\u00e9s et dat\u00e9s d\u00e9pos\u00e9s par les adh\u00e9rents sur la plateforme de l'association.", 7.8);
+        doc.setTextColor(20);
+        pied();
+
+        const nomF = "rapport-nuisances-" + dest +
+          (commune ? "-" + commune.toLowerCase().replace(/[^a-z0-9]+/gi, "-") : "-global") + ".pdf";
+        doc.save(nomF);
       } catch(e){
         alert("Génération impossible. " + messageErreur(e));
       }

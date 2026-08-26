@@ -458,6 +458,8 @@ function rendreFooter() {
           <p><a href="carte.html">Carte des nuisances</a></p>
           <p><a href="inscription.html">Adhérer</a></p>
           <p><a href="guide-membre.html">Mode d'emploi</a></p>
+          <p><button onclick="partagerSite(this)"
+              style="background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;text-decoration:underline">📣 Partager le site</button></p>
         </div>
         <div>
           <h2 class="foot-titre">Contact</h2>
@@ -497,6 +499,49 @@ function nomComplet(p) {
   if (!p) return "";
   return ((p.nom || "") + (p.prenom ? " " + p.prenom : "")).trim();
 }
+// Dates au clavier (JJ/MM/AAAA) : les selecteurs de date obligent a faire
+// defiler des dizaines d'annees pour une date de naissance — au clavier c'est
+// direct. Retour d'Eric (assesseur, ne en 1957), phase de test d'aout 2026.
+function dateIsoVersFr(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : "";
+}
+function dateFrVersIso(txt) {
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(txt || "").trim());
+  if (!m) return null;
+  const j = +m[1], mo = +m[2], a = +m[3];
+  const d = new Date(a, mo - 1, j);
+  if (a < 1900 || a > new Date().getFullYear() ||
+      d.getFullYear() !== a || d.getMonth() !== mo - 1 || d.getDate() !== j) return null;
+  return `${a}-${String(mo).padStart(2, "0")}-${String(j).padStart(2, "0")}`;
+}
+// Ajoute les / tout seul pendant la frappe : 05071957 -> 05/07/1957.
+function masqueDateFr(input) {
+  if (!input) return;
+  input.addEventListener("input", () => {
+    const c = input.value.replace(/\D/g, "").slice(0, 8);
+    input.value = c.length > 4 ? `${c.slice(0,2)}/${c.slice(2,4)}/${c.slice(4)}`
+                : c.length > 2 ? `${c.slice(0,2)}/${c.slice(2)}` : c;
+  });
+}
+
+// Partage du site (suggestion d'Eric) : menu de partage du telephone si
+// disponible, sinon copie du lien avec confirmation sur le bouton.
+async function partagerSite(btn) {
+  const url = "https://nuisancesonore.github.io/te-ora-hau/";
+  const texte = "Le bruit vous gêne ? Découvrez Te Ora Hau, l'association polynésienne de lutte contre les nuisances sonores : signalements, courriers prêts à envoyer, suivi de vos démarches.";
+  if (navigator.share) {
+    try { await navigator.share({ title: "Te Ora Hau", text: texte, url }); } catch (_) {}
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(texte + " " + url);
+    if (btn) { const t = btn.textContent; btn.textContent = "Lien copié ✔ — collez-le dans WhatsApp ou un e-mail"; setTimeout(() => { btn.textContent = t; }, 4000); }
+  } catch (_) {
+    window.prompt("Copiez ce lien :", url);
+  }
+}
+
 function maintenantTexte() {
   const d = new Date(); const p = n => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;

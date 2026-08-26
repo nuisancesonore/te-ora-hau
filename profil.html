@@ -63,8 +63,10 @@
             <div class="champ"><label for="prenom">Prénom</label>
               <input id="prenom" value="${echapper(profil.prenom)}"></div>
             <div class="champ"><label for="date_naissance">Date de naissance</label>
-              <input type="date" id="date_naissance" value="${echapper(profil.date_naissance)}">
-              <p class="pourquoi">Sert aux statistiques de l'association et aux dossiers déposés
+              <input id="date_naissance" inputmode="numeric" autocomplete="bday" maxlength="10"
+                placeholder="JJ/MM/AAAA" value="${dateIsoVersFr(profil.date_naissance)}">
+              <p class="pourquoi">Écrivez-la au clavier, ex. 05/07/1957 — les barres s'ajoutent toutes seules.
+                Sert aux statistiques de l'association et aux dossiers déposés
                 auprès des autorités. Jamais publiée.</p></div>
 
             <p class="grp-titre">Où vous habitez</p>
@@ -112,11 +114,19 @@
       const sel = document.getElementById("commune");
       sel.innerHTML = optionsCommunes(profil.commune);
       const valCommune = brancherCommuneAutre(sel, document.getElementById("commune_autre"));
+      masqueDateFr(document.getElementById("date_naissance"));
 
       const msg = document.getElementById("msg");
       document.getElementById("form-profil").addEventListener("submit", async function (e) {
         e.preventDefault();
         if (envoiEnCours(e.target)) return;
+        const dnTexte = document.getElementById("date_naissance").value.trim();
+        const dnIso = dateFrVersIso(dnTexte);
+        if (dnTexte && !dnIso) {
+          msg.className = "message err";
+          msg.textContent = "La date de naissance doit s'écrire JJ/MM/AAAA, par exemple 05/07/1957.";
+          return;
+        }
         const rendre = boutonOccupe(boutonForm(e.target), "Enregistrement…");
         const maj = {
           nom: document.getElementById("nom").value.trim(),
@@ -124,7 +134,7 @@
           commune: valCommune(),
           type_nuisance: document.getElementById("type_nuisance").value.trim(),
           annuaire_optin: document.getElementById("annuaire").checked,
-          date_naissance: document.getElementById("date_naissance").value || null,
+          date_naissance: dnIso,
           adresse: document.getElementById("adresse").value.trim(),
           telephone: document.getElementById("telephone").value.trim(),
           ile: document.getElementById("ile").value.trim(),

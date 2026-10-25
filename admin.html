@@ -116,6 +116,7 @@
 
       contenu.innerHTML = `
         <h2 class="section-titre">Tableau de bord du bureau</h2>
+        ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<p><a href="cotisations.html" class="btn btn-primaire">Registre des cotisations</a></p>' : ""}
         <div class="stats">
           <div class="stat"><div class="n">${total}</div><div class="l">Adhérents</div></div>
           <div class="stat"><div class="n">${aJour}</div><div class="l">À jour de cotisation</div></div>

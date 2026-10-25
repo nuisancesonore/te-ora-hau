@@ -14,6 +14,12 @@
     .acces-registre a { display:inline-flex; align-items:center; justify-content:space-between; gap:1rem; max-width:100%; box-sizing:border-box; padding:0.95rem 1.25rem; border-radius:12px; background:var(--corail); color:#fff; font-weight:700; text-decoration:none; box-shadow:var(--ombre); }
     .acces-registre a:hover, .acces-registre a:focus-visible { filter:brightness(0.94); outline-offset:3px; }
     .acces-registre .indication { display:block; font-size:0.82rem; color:var(--gris); margin-top:0.45rem; }
+    .relances-box { background:#fff; border-radius:12px; padding:1.2rem; margin:0 0 1.6rem; box-shadow:var(--ombre); }
+    .relances-box h3 { color:var(--bleu-fonce); margin:0 0 0.45rem; }
+    .relances-box p { color:var(--gris); margin:0.4rem 0 0.8rem; font-size:0.9rem; }
+    .relances-box .relance-ligne { display:flex; gap:0.65rem; align-items:flex-start; margin:0.65rem 0; }
+    .relances-box .relance-ligne input { margin-top:0.3rem; }
+    .relances-box .relance-actions { display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1rem; }
     .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.6rem; }
     .stat { background:var(--blanc); border-radius:var(--radius); padding:1.1rem; box-shadow:var(--ombre); text-align:center; border-top:4px solid var(--vert-paix); }
     .stat .n { font-size:2rem; font-weight:800; color:var(--bleu-fonce); }
@@ -128,6 +134,7 @@
           <div class="stat" style="border-top-color:var(--bleu-lagon)"><div class="n">${communes}</div><div class="l">Communes</div></div>
         </div>
 
+        ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<section class="relances-box" id="relances-cotisations"><h3>Relances de cotisations à préparer</h3><p>Détection à l’ouverture de cette page : échéance dans 30 jours ou moins, ou dépassée. Vérifiez les paiements avant envoi. Aucun message n’est envoyé automatiquement.</p><div id="liste-relances"></div><div class="relance-actions"><button type="button" class="btn btn-primaire" onclick="preparerRelances()">Préparer les courriels sélectionnés</button></div><p>Votre messagerie s’ouvrira pour validation et envoi. Les relances déjà envoyées ne sont pas suivies automatiquement.</p></section>' : ""}
         <details class="acc" open>
           <summary><span class="t">Adhérents — cotisations &amp; validation</span><span class="badge-n">${total}</span></summary>
           <div class="corps">
@@ -188,6 +195,7 @@
       document.getElementById("q").addEventListener("input", dessiner);
       document.getElementById("filtre").addEventListener("change", dessiner);
       dessiner();
+      afficherRelances();
       rendreStatsDetail();
       rendreCommunication();
       chargerMessages();
@@ -960,6 +968,7 @@
       if (error) return alert(messageErreur(error));
       const a = ADH.find(x=>x.id===id); a.cotisation_echeance=echeance;
       dessiner();
+      afficherRelances();
     }
     // Coche/décoche "payée" (enregistré aussitôt).
     async function majPayee(id, checked){
@@ -967,6 +976,7 @@
       if (error) return alert(messageErreur(error));
       const a = ADH.find(x=>x.id===id); a.cotisation_payee=checked;
       dessiner();
+      afficherRelances();
     }
     // Valide la cotisation : payée + échéance un an après la date de cotisation
     // saisie (« Cotisé le »). Si la date est vide, on prend aujourd'hui.
@@ -985,7 +995,37 @@
         if (error) return alert(messageErreur(error));
         const a = ADH.find(x=>x.id===id); a.cotisation_payee=true; a.cotisation_echeance=echeance;
         dessiner();
+      afficherRelances();
       });
+    }
+    function relancesEligibles(){
+      const auj = new Date(aujourdHuiISO()+"T12:00:00");
+      return ADH.filter(a => {
+        if (!a.email || !a.cotisation_echeance) return false;
+        const date = new Date(String(a.cotisation_echeance).slice(0,10)+"T12:00:00");
+        const jours = Math.round((date-auj)/86400000);
+        return Number.isFinite(jours) && jours <= 30;
+      }).map(a => {
+        const date = new Date(String(a.cotisation_echeance).slice(0,10)+"T12:00:00");
+        return {a, jours:Math.round((date-auj)/86400000)};
+      });
+    }
+    function afficherRelances(){
+      const zone = document.getElementById("liste-relances");
+      if (!zone) return;
+      const items = relancesEligibles();
+      zone.innerHTML = items.length ? items.map(({a,jours}) =>
+        '<label class="relance-ligne"><input type="checkbox" class="relance-check" value="'+echapper(a.id)+'" checked><span><strong>'+echapper((a.prenom||"")+" "+(a.nom||""))+'</strong> — '+echapper(a.email)+'<br><small>'+(jours<0 ? "Échue depuis "+(-jours)+" jour(s)" : "Échéance dans "+jours+" jour(s)")+' — '+frDate(a.cotisation_echeance)+'</small></span></label>'
+      ).join("") : "<p>Aucune échéance connue dans les 30 prochains jours ou dépassée avec une adresse e-mail.</p>";
+    }
+    function preparerRelances(){
+      const ids = [...document.querySelectorAll(".relance-check:checked")].map(el=>el.value);
+      const candidats = relancesEligibles().filter(x=>ids.includes(String(x.a.id)));
+      const emails = [...new Set(candidats.map(x=>x.a.email.trim().toLowerCase()))];
+      if (!emails.length) return alert("Aucun destinataire sélectionné.");
+      if (!confirm("Préparer un courriel pour "+emails.length+" destinataire(s) en copie cachée ? Vérifiez les règlements et les adresses avant l’envoi.")) return;
+      const corps = "Ia ora na,\n\nVotre cotisation Te Ora Hau arrive à échéance ou est échue. Si vous avez déjà réglé votre cotisation, merci de ne pas tenir compte de ce rappel et de nous le signaler.\n\nPour renouveler : https://nuisancesonore.github.io/te-ora-hau/cotiser.html\n\nMauruuru,\nLe bureau de Te Ora Hau";
+      location.href = "mailto:?bcc="+encodeURIComponent(emails.join(","))+"&subject="+encodeURIComponent("Te Ora Hau - rappel de cotisation")+"&body="+encodeURIComponent(corps);
     }
     function relancer(email){
       const e = decodeURIComponent(email);

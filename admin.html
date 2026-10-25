@@ -171,7 +171,7 @@
         </details>
 
         <details class="acc">
-          <summary><span class="t">Communication aux membres</span></summary>
+          <summary><span class="t">Communication aux adhérents</span></summary>
           <div class="corps"><div id="communication"></div></div>
         </details>
 
@@ -688,17 +688,10 @@
     function destinatairesPour(cible){
       return ADH.filter(a => cible==="ajour" ? estAJour(a) : cible==="retard" ? !estAJour(a) : true);
     }
-    function normTel(t){
-      let n = (t||"").replace(/[^0-9+]/g,"");
-      if (/^\d{8}$/.test(n)) n = "+689"+n;   // numéro local PF à 8 chiffres
-      return n;
-    }
-    function emailsCibles(){ const c=document.getElementById("com-cible").value; return [...new Set(destinatairesPour(c).map(a=>(a.email||"").trim()).filter(Boolean))]; }
-    function telsCibles(){ const c=document.getElementById("com-cible").value; return [...new Set(destinatairesPour(c).map(a=>normTel(a.telephone)).filter(Boolean))]; }
     function majResume(){
       const dest = destinatairesPour(document.getElementById("com-cible").value);
-      const ne = emailsCibles().length, nt = telsCibles().length;
-      document.getElementById("com-resume").innerHTML = `<strong>${dest.length}</strong> membre(s) ciblé(s) · ${ne} avec e-mail · ${nt} avec téléphone`;
+      const ne = new Set(dest.map(a=>(a.email||"").trim().toLowerCase()).filter(Boolean)).size;
+      document.getElementById("com-resume").innerHTML = `<strong>${dest.length}</strong> membre(s) ciblé(s) · ${ne} avec e-mail`;
     }
     function rendreCommunication(){
       document.getElementById("communication").innerHTML = `
@@ -724,60 +717,84 @@
             <button class="btn btn-clair" id="btn-annuler-edit" onclick="annulerEdition()" style="display:none">Annuler la modification</button>
           </div>
 
-          <p class="com-etape">3 · Doubler l'envoi <span style="font-weight:400;color:var(--gris)">(optionnel)</span></p>
-          <p class="com-hint">Pour joindre aussi les membres en dehors du site : ouvre votre messagerie avec le message déjà prêt. Conseillé pour les convocations (e-mail) et les rappels urgents (SMS).</p>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-            <button class="btn btn-clair" onclick="envoyerEmailRapide()">✉️ E-mail (Cci)</button>
-            <button class="btn btn-clair" onclick="envoyerSMSRapide()">📱 SMS</button>
-          </div>
+          <p class="com-etape">3 · Informer un groupe par e-mail</p>
+          <p class="com-hint">Utilisez le message ci-dessus. Les adresses des destinataires restent confidentielles.</p>
+          <div class="champ"><label for="email-groupe">Groupe de destinataires</label>
+            <select id="email-groupe" onchange="majGroupeEmail()">
+              <option value="tous">Tous les inscrits ayant un e-mail</option>
+              <option value="bureau">Bureau</option>
+              <option value="assesseurs">Assesseurs</option>
+              <option value="ajour">Adhérents à jour</option>
+              <option value="retard">Cotisations à renouveler</option>
+            </select></div>
+          <p id="email-resume" class="com-hint" role="status"></p>
+          <button type="button" class="btn btn-vert" style="width:100%;min-height:48px" onclick="preparerEmailGroupe(this)">Prévisualiser l'envoi au groupe</button>
+          <div id="email-apercu" style="margin-top:1rem" aria-live="polite"></div>
           <details class="com-plus">
-            <summary>Autres options ▾</summary>
-            <div class="corps">
-              <button class="btn btn-clair" onclick="copierEmails(this)">Copier les e-mails</button>
-              <button class="btn btn-clair" onclick="copierTels(this)">Copier les numéros</button>
-              <button class="btn btn-clair" onclick="envoyerEmailMasse(this)" title="Nécessite le backend Resend déployé (voir COMMUNICATION.md)">Envoi en masse (à activer)</button>
-            </div>
-            <p class="com-hint" style="margin-top:0.4rem">« Copier » récupère la liste des adresses / numéros de l'audience, à coller où vous voulez. L'« envoi en masse » servira quand l'association comptera des centaines de membres.</p>
+            <summary>Copier les adresses du groupe</summary>
+            <p class="com-hint">Pour préparer un envoi en copie cachée dans votre messagerie.</p>
+            <button type="button" class="btn btn-clair" onclick="copierEmails(this)">Copier les e-mails du groupe</button>
           </details>
         </div>
         <h3 style="color:var(--bleu-fonce);margin-bottom:0.6rem">Annonces publiées</h3>
         <div id="annonces-liste"><p style="color:var(--gris)">Chargement…</p></div>`;
       document.getElementById("com-cible").addEventListener("change", majResume);
       majResume();
+      majGroupeEmail();
       chargerAnnonces();
     }
-    function envoyerEmailRapide(){
-      const sujet = document.getElementById("com-titre").value.trim();
-      const corps = document.getElementById("com-corps").value.trim();
-      const emails = emailsCibles();
-      if (!emails.length) return alert("Aucun destinataire avec e-mail dans cette audience.");
-      const url = `mailto:?bcc=${encodeURIComponent(emails.join(","))}&subject=${encodeURIComponent(sujet)}&body=${encodeURIComponent(corps)}`;
-      if (url.length > 1900 && !confirm(`Liste longue (${emails.length} destinataires) : certains logiciels mail la tronquent. Continuer ? (sinon, « Copier les e-mails » ou « Envoi en masse »)`)) return;
-      window.location.href = url;
+    let EMAIL_PREVU = null;
+    const GROUPES_EMAIL = { tous:"Tous les inscrits ayant un e-mail", bureau:"Bureau", assesseurs:"Assesseurs", ajour:"Adhérents à jour", retard:"Cotisations à renouveler" };
+    function personnesEmailGroupe(cible){
+      return ADH.filter(a => cible==="bureau" ? a.role==="bureau" : cible==="assesseurs" ? a.role==="assesseur" : cible==="ajour" ? estAJour(a) : cible==="retard" ? !estAJour(a) : cible==="tous");
+    }
+    function emailsGroupe(cible){
+      return [...new Set(personnesEmailGroupe(cible).map(a=>(a.email||"").trim().toLowerCase()).filter(e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)))].sort();
+    }
+    function majGroupeEmail(){
+      EMAIL_PREVU=null;
+      const cible=document.getElementById("email-groupe").value;
+      const personnes=personnesEmailGroupe(cible), emails=emailsGroupe(cible);
+      const manquants=personnes.filter(a=>!a.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email.trim())).length;
+      document.getElementById("email-resume").textContent=emails.length+" adresse(s) unique(s)"+(manquants?" · "+manquants+" personne(s) sans e-mail valide":"")+".";
+      document.getElementById("email-apercu").innerHTML="";
     }
     function copier(txt, btn){ navigator.clipboard.writeText(txt).then(()=>{ const t=btn.textContent; btn.textContent="Copié ✓"; setTimeout(()=>btn.textContent=t,1500); }).catch(()=>alert("Copie impossible.")); }
-    function copierEmails(btn){ const e=emailsCibles(); if(!e.length) return alert("Aucun e-mail."); copier(e.join(", "), btn); }
-    function copierTels(btn){ const t=telsCibles(); if(!t.length) return alert("Aucun numéro."); copier(t.join(", "), btn); }
-    function envoyerSMSRapide(){
-      const corps = document.getElementById("com-corps").value.trim();
-      const tels = telsCibles();
-      if (!tels.length) return alert("Aucun destinataire avec téléphone dans cette audience.");
-      // Ouvre l'application de messagerie du téléphone (envoi via votre abonnement).
-      window.location.href = `sms:${tels.join(",")}?&body=${encodeURIComponent(corps)}`;
+    function copierEmails(btn){
+      const emails=emailsGroupe(document.getElementById("email-groupe").value);
+      if(!emails.length)return alert("Aucun e-mail valide dans ce groupe.");
+      copier(emails.join(", "),btn);
     }
-    async function envoyerEmailMasse(btn){
-      const sujet = document.getElementById("com-titre").value.trim();
-      const corps = document.getElementById("com-corps").value.trim();
-      const cible = document.getElementById("com-cible").value;
-      if (!sujet || !corps) return alert("Indiquez un titre et un message.");
-      if (!confirm("Envoyer cet e-mail en masse via le serveur ?")) return;
-      const t = btn.textContent; btn.textContent = "Envoi…";
-      try {
-        const { data, error } = await sb.functions.invoke("diffusion-email", { body: { sujet, corps, cible } });
-        if (error) throw error;
-        alert("Envoi déclenché : " + (data && data.envoyes!=null ? data.envoyes+" e-mail(s)" : "OK"));
-      } catch(e){ alert("L'envoi en masse n'est pas encore activé.\nIl faut déployer le backend Resend (voir COMMUNICATION.md).\nEn attendant, utilisez « E-mail (Cci) » ou « Copier les e-mails »."); }
-      btn.textContent = t;
+    async function preparerEmailGroupe(btn){
+      EMAIL_PREVU=null;
+      const sujet=document.getElementById("com-titre").value.trim(), corps=document.getElementById("com-corps").value.trim();
+      const cible=document.getElementById("email-groupe").value;
+      const zone=document.getElementById("email-apercu");zone.innerHTML="";
+      if(!sujet||!corps)return alert("Renseignez l’objet et le message avant de préparer l’envoi.");
+      if(!emailsGroupe(cible).length)return alert("Aucune adresse e-mail valide dans ce groupe.");
+      return actionBouton(btn,"Vérification du groupe…",async()=>{
+        try{
+          const {data,error}=await sb.functions.invoke("diffusion-email",{body:{action:"preview",sujet,corps,cible}});
+          if(error||!data||!Array.isArray(data.destinataires))throw new Error("Le service d’envoi n’est pas disponible. Aucun e-mail envoyé.");
+          const emails=data.destinataires;
+          EMAIL_PREVU={sujet,corps,cible,emails,requestId:crypto.randomUUID()};
+          zone.innerHTML='<div style="border:1px solid #c6dedd;border-radius:12px;padding:1rem;background:#f5faf9"><h4 style="margin:0 0 0.5rem">Aperçu de l’e-mail</h4><p><strong>Groupe : </strong>'+echapper(GROUPES_EMAIL[cible])+'</p><p><strong>Destinataires : </strong>'+emails.length+' adresse(s) unique(s)</p><details><summary>Vérifier les adresses</summary><p style="overflow-wrap:anywhere">'+emails.map(echapper).join("<br>")+'</p></details><p><strong>Objet : </strong>'+echapper(sujet)+'</p><div style="white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:0.8rem;border-radius:8px">'+echapper(corps)+'</div><p class="com-hint" style="margin-top:0.7rem">Cet envoi par e-mail est distinct de la publication sur le site.</p>'+(data.ready&&emails.length?'<button type="button" class="btn btn-vert" style="width:100%;min-height:48px" onclick="confirmerEmailGroupe(this)">Confirmer l’envoi — '+emails.length+' destinataire(s)</button>':'<p role="status" style="color:#8a5a00;font-weight:700">Envoi direct indisponible : l’expéditeur TOH reste à configurer. Aucun e-mail envoyé.</p>')+'</div>';
+        }catch(e){EMAIL_PREVU=null;zone.textContent=e.message||"Vérification impossible. Aucun e-mail envoyé.";}
+      });
+    }
+    async function confirmerEmailGroupe(btn){
+      const p=EMAIL_PREVU;if(!p)return;
+      if(p.sujet!==document.getElementById("com-titre").value.trim()||p.corps!==document.getElementById("com-corps").value.trim()||p.cible!==document.getElementById("email-groupe").value){majGroupeEmail();return alert("Le message ou le groupe a changé. Prévisualisez à nouveau l’envoi.");}
+      if(!confirm("Envoyer cet e-mail au groupe « "+GROUPES_EMAIL[p.cible]+" » ("+p.emails.length+" destinataires) ?"))return;
+      return actionBouton(btn,"Envoi en cours…",async()=>{
+        try{
+          const {data,error}=await sb.functions.invoke("diffusion-email",{body:{action:"send",sujet:p.sujet,corps:p.corps,cible:p.cible,emails_attendus:p.emails,requestId:p.requestId}});
+          if(error||!data)throw new Error("Résultat non confirmé. Ne relancez pas un nouvel envoi avant vérification.");
+          const n=Number(data.acceptes)||0, echecs=Number(data.echecs)||0;
+          document.getElementById("email-apercu").textContent=n+" destinataire(s) accepté(s) par le service d’envoi"+(echecs?" · "+echecs+" échec(s)":"")+". Cela ne confirme pas la réception ni la lecture.";
+          EMAIL_PREVU=null;
+        }catch(e){document.getElementById("email-apercu").textContent=e.message||"Résultat non confirmé. Vérifiez avant tout nouvel envoi.";EMAIL_PREVU=null;}
+      });
     }
     function toLocalDatetime(iso){
       const d = new Date(iso); if (isNaN(d)) return "";
@@ -1041,3 +1058,4 @@
   </script>
 </body>
 </html>
+

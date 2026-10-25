@@ -18,14 +18,19 @@
     .actualite h2{color:var(--bleu-fonce);margin:.5rem 0 .8rem;font-size:clamp(1.3rem,4vw,1.8rem)}
     .etiquette{color:var(--bleu-fonce);font-size:.85rem;font-weight:700;letter-spacing:.03em}
     .actualite p{max-width:760px;margin-bottom:.9rem}
-    .galerie{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;margin-top:1.2rem}
-    .galerie figure{margin:0;min-width:0;background:var(--fond,#f5f7f7);border-radius:10px;overflow:hidden}
+    .galerie{display:flex;gap:1rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;position:relative;margin-top:1.2rem;border-radius:10px;overscroll-behavior-x:contain;scrollbar-width:thin}
+    .galerie figure{flex:0 0 100%;scroll-snap-align:start;margin:0;min-width:0;background:var(--fond,#f5f7f7);border-radius:10px;overflow:hidden}
     .photo{display:block;background:#eaf0f0}
     .photo img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:contain}
     .photo:focus-visible{outline:3px solid var(--corail);outline-offset:-3px}
     figcaption{padding:.7rem .8rem;font-size:.88rem;color:var(--gris)}
     .a-venir{border-top-color:var(--corail)}
-    @media(max-width:580px){.galerie{grid-template-columns:1fr}}
+    .commandes-photos{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:.8rem}
+    .commandes-photos[hidden]{display:none}
+    .commandes-photos button{min-width:48px;min-height:48px;font-size:1.4rem}
+    .commandes-photos button:disabled{opacity:.35;cursor:default}
+    .compteur-photos{font-weight:700;color:var(--bleu-fonce);min-width:4.5rem;text-align:center}
+    @media(prefers-reduced-motion:reduce){.galerie{scroll-behavior:auto}}
   </style>
 </head>
 <body>
@@ -42,13 +47,18 @@
       <h2>Réunion d’information à Tiaputa, Taravao</h2>
       <p>Le 24 octobre 2026, notre réunion d’information à Tiaputa, Taravao, a donné lieu à des échanges très riches avec un public particulièrement actif. Les témoignages sur les nuisances subies, souvent empreints d’émotion et parfois difficiles à entendre, ont révélé la détresse vécue par les victimes.</p>
       <p>Merci à chacune et chacun pour sa participation et sa confiance. Te Ora Hau remercie également la mairie de Taiarapu-Est pour la mise à disposition de la salle.</p>
-      <p style="font-size:.9rem;color:var(--gris)">Touchez une photo pour l’ouvrir en grand.</p>
-      <div class="galerie">
-        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-01.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 1 : Vue de la salle et des participants à la réunion publique de Te Ora Hau"><img src="images/actualites/reunion-2026-10-24/photo-01-640.webp" width="1536" height="1380" alt="Vue de la salle et des participants à la réunion publique de Te Ora Hau" loading="lazy" decoding="async"></a><figcaption>Vue de la salle et des participants à la réunion publique de Te Ora Hau</figcaption></figure>
-        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-02.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 2 : Échanges avec le public pendant la réunion"><img src="images/actualites/reunion-2026-10-24/photo-02-640.webp" width="1536" height="864" alt="Échanges avec le public pendant la réunion" loading="lazy" decoding="async"></a><figcaption>Échanges avec le public pendant la réunion</figcaption></figure>
-        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-03.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 3 : Présentation des textes sur les nuisances sonores"><img src="images/actualites/reunion-2026-10-24/photo-03-640.webp" width="1536" height="1152" alt="Présentation des textes sur les nuisances sonores" loading="lazy" decoding="async"></a><figcaption>Présentation des textes sur les nuisances sonores</figcaption></figure>
-        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-04.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 4 : Participants réunis autour de la présentation"><img src="images/actualites/reunion-2026-10-24/photo-04-640.webp" width="1536" height="1152" alt="Participants réunis autour de la présentation" loading="lazy" decoding="async"></a><figcaption>Participants réunis autour de la présentation</figcaption></figure>
-        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-05.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 5 : Banderole de Te Ora Hau à l’extérieur"><img src="images/actualites/reunion-2026-10-24/photo-05-640.webp" width="1536" height="1152" alt="Banderole de Te Ora Hau à l’extérieur" loading="lazy" decoding="async"></a><figcaption>Banderole de Te Ora Hau à l’extérieur</figcaption></figure>
+      <p style="font-size:.9rem;color:var(--gris)">Faites glisser les photos à gauche ou à droite, ou utilisez les flèches. Touchez une photo pour l’agrandir.</p>
+      <div class="galerie" id="diaporama-reunion" role="region" aria-roledescription="diaporama" aria-label="Les cinq photos de la réunion" tabindex="0">
+        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-01.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 1 : Vue de la salle et des participants à la réunion publique de Te Ora Hau"><img srcset="images/actualites/reunion-2026-10-24/photo-01-640.webp 640w, images/actualites/reunion-2026-10-24/photo-01.webp 1536w" sizes="(max-width: 700px) 90vw, 1000px" src="images/actualites/reunion-2026-10-24/photo-01-640.webp" width="1536" height="1380" alt="Vue de la salle et des participants à la réunion publique de Te Ora Hau" loading="lazy" decoding="async"></a><figcaption>Vue de la salle et des participants à la réunion publique de Te Ora Hau</figcaption></figure>
+        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-02.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 2 : Échanges avec le public pendant la réunion"><img srcset="images/actualites/reunion-2026-10-24/photo-02-640.webp 640w, images/actualites/reunion-2026-10-24/photo-02.webp 1536w" sizes="(max-width: 700px) 90vw, 1000px" src="images/actualites/reunion-2026-10-24/photo-02-640.webp" width="1536" height="864" alt="Échanges avec le public pendant la réunion" loading="lazy" decoding="async"></a><figcaption>Échanges avec le public pendant la réunion</figcaption></figure>
+        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-03.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 3 : Présentation des textes sur les nuisances sonores"><img srcset="images/actualites/reunion-2026-10-24/photo-03-640.webp 640w, images/actualites/reunion-2026-10-24/photo-03.webp 1536w" sizes="(max-width: 700px) 90vw, 1000px" src="images/actualites/reunion-2026-10-24/photo-03-640.webp" width="1536" height="1152" alt="Présentation des textes sur les nuisances sonores" loading="lazy" decoding="async"></a><figcaption>Présentation des textes sur les nuisances sonores</figcaption></figure>
+        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-04.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 4 : Participants réunis autour de la présentation"><img srcset="images/actualites/reunion-2026-10-24/photo-04-640.webp 640w, images/actualites/reunion-2026-10-24/photo-04.webp 1536w" sizes="(max-width: 700px) 90vw, 1000px" src="images/actualites/reunion-2026-10-24/photo-04-640.webp" width="1536" height="1152" alt="Participants réunis autour de la présentation" loading="lazy" decoding="async"></a><figcaption>Participants réunis autour de la présentation</figcaption></figure>
+        <figure><a class="photo" href="images/actualites/reunion-2026-10-24/photo-05.webp" target="_blank" rel="noopener" aria-label="Agrandir la photo 5 : Banderole de Te Ora Hau à l’extérieur"><img srcset="images/actualites/reunion-2026-10-24/photo-05-640.webp 640w, images/actualites/reunion-2026-10-24/photo-05.webp 1536w" sizes="(max-width: 700px) 90vw, 1000px" src="images/actualites/reunion-2026-10-24/photo-05-640.webp" width="1536" height="1152" alt="Banderole de Te Ora Hau à l’extérieur" loading="lazy" decoding="async"></a><figcaption>Banderole de Te Ora Hau à l’extérieur</figcaption></figure>
+      </div>
+      <div class="commandes-photos" hidden id="commandes-reunion">
+        <button type="button" class="btn btn-clair" id="photo-precedente" aria-label="Photo précédente" aria-controls="diaporama-reunion">←</button>
+        <span class="compteur-photos" id="compteur-reunion" role="status" aria-live="polite">1 / 5</span>
+        <button type="button" class="btn btn-clair" id="photo-suivante" aria-label="Photo suivante" aria-controls="diaporama-reunion">→</button>
       </div>
       <p style="margin-top:1.2rem"><a href="le-bruit.html">Consulter les textes sur les nuisances sonores</a></p>
     </article>
@@ -62,6 +72,36 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
-  <script>initPage("vie-association");</script>
+  <script>
+    initPage("vie-association");
+    (() => {
+      const piste = document.getElementById("diaporama-reunion");
+      const photos = [...piste.querySelectorAll("figure")];
+      const precedent = document.getElementById("photo-precedente");
+      const suivant = document.getElementById("photo-suivante");
+      const compteur = document.getElementById("compteur-reunion");
+      let index = 0, frame;
+      document.getElementById("commandes-reunion").hidden = false;
+      function actualiser() {
+        const gauche = piste.getBoundingClientRect().left;
+        index = photos.reduce((meilleur, photo, i) => Math.abs(photo.getBoundingClientRect().left - gauche) < Math.abs(photos[meilleur].getBoundingClientRect().left - gauche) ? i : meilleur, 0);
+        compteur.textContent = `${index + 1} / ${photos.length}`;
+        precedent.disabled = index === 0;
+        suivant.disabled = index === photos.length - 1;
+      }
+      function deplacer(direction) {
+        const cible = photos[Math.max(0, Math.min(photos.length - 1, index + direction))];
+        piste.scrollTo({left:piste.scrollLeft + cible.getBoundingClientRect().left - piste.getBoundingClientRect().left});
+      }
+      precedent.addEventListener("click", () => deplacer(-1));
+      suivant.addEventListener("click", () => deplacer(1));
+      piste.addEventListener("scroll", () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(actualiser); }, {passive:true});
+      piste.addEventListener("keydown", event => {
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); deplacer(event.key === "ArrowLeft" ? -1 : 1); }
+      });
+      window.addEventListener("resize", actualiser);
+      actualiser();
+    })();
+  </script>
 </body>
 </html>

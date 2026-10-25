@@ -39,20 +39,32 @@ Deno.serve(async (req) => {
     const { data: estBureau } = await asUser.rpc("is_bureau");
     if (!estBureau) return json({ error: "Réservé au bureau" }, 403);
 
-    const { titre, corps, cible, dry_run = false } = await req.json();
+    const input = await req.json();
+    const testPersonnel = input.action === "test_perso";
+    if (input.action && !["send","test_perso"].includes(input.action)) return json({error:"Action invalide"},400);
+    const { titre, corps, cible, dry_run = false } = testPersonnel
+      ? {titre:"Test Te Ora Hau",corps:"Si vous voyez ce message, votre appareil reçoit les notifications Te Ora Hau.",cible:"tous",dry_run:false}
+      : input;
     if (!["tous","ajour","retard"].includes(cible) || typeof titre !== "string" || !titre.trim() || titre.length > 200 || typeof corps !== "string" || corps.length > 4000 || typeof dry_run !== "boolean")
       return json({error:"Message ou groupe invalide"},400);
     const admin = createClient(SB_URL, SERVICE);
 
-    // Membres de l'audience visée
-    const { data: profs, error: profError } = await admin.from("profils").select("id, cotisation_payee, cotisation_echeance, acces_suspendu");
-    if (profError) return json({error:"Lecture des destinataires impossible"},503);
-    const today = new Date().toLocaleDateString("en-CA", {timeZone:"Pacific/Tahiti"});
-    const aJour = (m: any) => m.cotisation_payee && (!m.cotisation_echeance || String(m.cotisation_echeance).slice(0,10) >= today);
-    const ids = (profs || [])
-      .filter((m: any) => !m.acces_suspendu)
-      .filter((m: any) => cible === "ajour" ? aJour(m) : cible === "retard" ? !aJour(m) : true)
-      .map((m: any) => m.id);
+    let ids: string[];
+    if (testPersonnel) {
+      const {data, error} = await asUser.auth.getUser();
+      if (error || !data.user) return json({error:"Connexion requise"},401);
+      // Aucun identifiant envoyé par le navigateur ne peut changer la cible.
+      ids = [data.user.id];
+    } else {
+      const { data: profs, error: profError } = await admin.from("profils").select("id, cotisation_payee, cotisation_echeance, acces_suspendu");
+      if (profError) return json({error:"Lecture des destinataires impossible"},503);
+      const today = new Date().toLocaleDateString("en-CA", {timeZone:"Pacific/Tahiti"});
+      const aJour = (m: any) => m.cotisation_payee && (!m.cotisation_echeance || String(m.cotisation_echeance).slice(0,10) >= today);
+      ids = (profs || [])
+        .filter((m: any) => !m.acces_suspendu)
+        .filter((m: any) => cible === "ajour" ? aJour(m) : cible === "retard" ? !aJour(m) : true)
+        .map((m: any) => m.id);
+    }
     if (!ids.length) return json({ ok: true, envoyes: 0 });
 
     const { data: subs, error: subError } = await admin.from("push_subscriptions").select("endpoint, subscription").in("user_id", ids);
@@ -70,7 +82,7 @@ Deno.serve(async (req) => {
         if (code === 404 || code === 410) await admin.from("push_subscriptions").delete().eq("endpoint", s.endpoint);
       }
     }
-    return json({ ok: echecs === 0, envoyes, echecs });
+    return json({ ok: echecs === 0, envoyes, echecs, test_personnel:testPersonnel });
   } catch (e) {
     return json({ error: "Erreur d'envoi des notifications" }, 500);
   }

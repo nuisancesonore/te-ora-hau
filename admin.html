@@ -734,6 +734,15 @@
     function rendreCommunication(){
       document.getElementById("communication").innerHTML = `
         <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
+          <h3>Vérifier les notifications et les relances</h3>
+          <p class="com-hint">Le test de notification concerne uniquement les appareils de votre compte. La vérification des relances n’envoie aucun e-mail.</p>
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+            <button class="btn btn-clair" onclick="testerServicesTOH('push',this)">Tester mes notifications</button>
+            <button class="btn btn-clair" onclick="testerServicesTOH('rappels',this)">Vérifier les relances e-mail</button>
+          </div>
+          <p id="services-toh-resultat" role="status" aria-live="polite" style="margin-top:0.8rem"></p>
+        </div>
+        <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
 
           <p class="com-etape premiere">1 · Écrire le message</p>
           <div class="champ"><label>Audience</label>
@@ -781,6 +790,30 @@
       majResume();
       majGroupeEmail();
       chargerAnnonces();
+    }
+
+    async function testerServicesTOH(type, bouton) {
+      const zone = document.getElementById("services-toh-resultat");
+      const liberer = boutonOccupe(bouton, "Vérification…");
+      zone.textContent = "Vérification en cours…";
+      try {
+        const fonction = type === "push" ? "envoi-push" : "rappel-cotisation";
+        const body = type === "push" ? {action:"test_perso"} : {dry_run:true};
+        const {data,error} = await sb.functions.invoke(fonction,{body});
+        if (error || !data || data.error) throw new Error(data && data.error || "Contrôle indisponible. Reconnectez-vous puis réessayez.");
+        if (type === "push") {
+          if (!data.test_personnel) throw new Error("Le résultat du test personnel n’a pas été confirmé.");
+          zone.textContent = data.envoyes
+            ? "Test pris en charge pour " + data.envoyes + " appareil(s) de votre compte. Vérifiez la notification « Test Te Ora Hau » sur votre téléphone." + (data.echecs ? " " + data.echecs + " appareil(s) en échec : réactivez leurs notifications depuis Mon espace." : "")
+            : "Aucun envoi de test confirmé. Activez ou réactivez les notifications dans Mon espace, puis réessayez.";
+        } else {
+          if (!data.simulation || data.envoyes !== 0) throw new Error("La vérification sans envoi n’a pas été confirmée.");
+          zone.textContent = data.expediteur_pret
+            ? "Configuration de l’expéditeur détectée. " + data.rappels + " rappel(s) éligible(s). Aucun e-mail envoyé. L’envoi quotidien reste à planifier."
+            : "L’expéditeur des rappels automatiques n’est pas configuré. Aucun e-mail envoyé. La préparation des e-mails depuis votre messagerie reste disponible.";
+        }
+      } catch(e) { zone.textContent = e.message || "Vérification impossible."; }
+      finally { liberer(); }
     }
 
     const GROUPES_EMAIL = { tous:"Tous les inscrits ayant un e-mail", bureau:"Bureau", assesseurs:"Assesseurs", ajour:"Adhérents à jour", retard:"Cotisations à renouveler" };

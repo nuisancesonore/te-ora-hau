@@ -43,8 +43,8 @@ TOH_CHROMIUM permet d'indiquer le binaire du navigateur et TOH_CHROMIUM_ARGS un 
 
 ## Limites restantes
 
-- Rappels automatiques par e-mail : pas encore déployés ni planifiés. Code sécurisé et testé en simulation. L'expéditeur et sa configuration restent à vérifier avant activation.
-- Réception push sur un appareil volontaire : non vérifiée; les contrôles actuels couvrent l'abonnement, l'autorisation, la sélection et les réponses simulées du service.
+- Rappels automatiques par e-mail : fonction déployée, simulation accessible au bureau et aucun envoi quotidien planifié. L'expéditeur et sa configuration restent à vérifier avant activation.
+- Réception push sur un appareil volontaire : non vérifiée; le bouton « Tester mes notifications » cible exclusivement le compte connecté; les contrôles actuels couvrent l'abonnement, l'autorisation, la sélection et les réponses simulées du service.
 - Le snapshot n'est pas un pg_dump intégral : références Auth incluses, mots de passe/identités/sessions et secrets externes exclus. La restauration testée concerne le métier et le schéma applicatif, pas une restauration complète de l'authentification Supabase.
 - Aucun objet Storage présent à la capture : aucun fichier à restaurer.
 - Protection Supabase contre les mots de passe compromis : option Pro non activée; organisation maintenue sur l'offre gratuite.

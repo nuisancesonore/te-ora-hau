@@ -4,10 +4,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const URL_SB=Deno.env.get("SUPABASE_URL")!;
 const SERVICE=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const sb=createClient(URL_SB,SERVICE);
-const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json"}});
+const cors={"Access-Control-Allow-Origin":"https://nuisancesonore.github.io","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
+const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,"Content-Type":"application/json"}});
 function jourTahiti(){return new Date().toLocaleDateString("en-CA",{timeZone:"Pacific/Tahiti"});}
 function joursAvant(echeance:string,today:string){return Math.round((Date.parse(echeance.slice(0,10)+"T12:00:00Z")-Date.parse(today+"T12:00:00Z"))/86400000);}
 Deno.serve(async(req)=>{
+ if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return reply({error:"Méthode non autorisée"},405);
  try{
   const authorization=req.headers.get("Authorization")||"";

@@ -154,11 +154,11 @@
         <div class="stats">
           <div class="stat"><div class="n">${total}</div><div class="l">Adhérents</div></div>
           <div class="stat"><div class="n">${aJour}</div><div class="l">À jour de cotisation</div></div>
-          <div class="stat" style="border-top-color:var(--corail)"><div class="n">${relancesEligibles().length}</div><div class="l">À relancer</div></div>
+          <div class="stat" style="border-top-color:var(--corail)"><div class="n" id="nombre-relances-stat">${relancesEligibles().length}</div><div class="l">À relancer</div></div>
           <div class="stat" style="border-top-color:var(--bleu-lagon)"><div class="n">${communes}</div><div class="l">Communes</div></div>
         </div>
 
-        <section class="relances-box" id="relances-cotisations"><h3>Cotisations à relancer</h3><p id="resume-relances" role="status" aria-live="polite"></p><p>Échéance dans 30 jours ou moins, ou dépassée. Tout membre du bureau peut préparer les relances sélectionnées depuis sa propre messagerie. Vérifiez les paiements avant envoi.</p><div id="liste-relances"></div><div class="relance-actions" id="actions-relances" hidden><button type="button" class="btn btn-primaire" id="btn-relancer" disabled onclick="preparerRelances()">Relancer les adhérents sélectionnés</button></div><p id="info-relances" hidden>Votre messagerie s’ouvrira pour validation et envoi. Vérifiez le compte expéditeur dans le champ « De ». L’ouverture du courriel ne confirme pas son envoi ; les relances manuelles ne sont pas enregistrées automatiquement.</p><p>À 30 jours avant l’échéance, une alerte ChatGPT prévient JB, trésorier. Aucun e-mail de relance ne part automatiquement : le bureau choisit les destinataires et valide l’envoi dans sa messagerie.</p></section>
+        <section class="relances-box" id="relances-cotisations"><h3>Cotisations à relancer</h3><p id="resume-relances" role="status" aria-live="polite"></p><p>Échéance dans 30 jours ou moins, ou dépassée. Tout membre du bureau peut préparer les relances sélectionnées depuis sa propre messagerie. Vérifiez les paiements avant envoi.</p><div id="liste-relances"></div><div class="relance-actions" id="actions-relances" hidden><button type="button" class="btn btn-primaire" id="btn-relancer" disabled onclick="preparerRelances()">Relancer les adhérents sélectionnés</button><button type="button" class="btn btn-clair" id="btn-confirmer-relances" disabled onclick="confirmerRelancesEnvoyees(this)">Confirmer la relance envoyée</button></div><p id="etat-confirmation-relances" role="status" aria-live="polite"></p><p id="info-relances" hidden>Votre messagerie s’ouvrira pour validation et envoi. Vérifiez le compte expéditeur dans le champ « De ». Après avoir envoyé le message, revenez ici et appuyez sur « Confirmer la relance envoyée » pour les mêmes personnes cochées. Cela arrête la relance automatique pour cette échéance. L’ouverture du courriel seule ne confirme pas son envoi.</p><p>À J−30, une alerte prévient le trésorier. Si aucun envoi n’est confirmé par le bureau, une relance automatique part de jbhauata3@gmail.com à partir de J−15, y compris après l’échéance si nécessaire. Une seule relance automatique par échéance. Vérifiez les règlements avant confirmation.</p></section>
         <details class="acc" id="admin-adherents">
           <summary><span class="t">Adhérents — cotisations &amp; validation</span><span class="badge-n">${total}</span></summary>
           <div class="corps">
@@ -736,7 +736,7 @@
       document.getElementById("communication").innerHTML = `
         <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
           <h3>Vérifier les notifications et les relances</h3>
-          <p class="com-hint">Le test de notification concerne uniquement l’appareil que vous utilisez. Une alerte ChatGPT prévient le trésorier à 30 jours avant l’échéance. Les relances aux adhérents restent manuelles.</p>
+          <p class="com-hint">Le test de notification concerne uniquement l’appareil que vous utilisez. Alerte à J−30, puis relais automatique à partir de J−15 si le bureau n’a pas confirmé l’envoi de sa relance.</p>
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
             <button class="btn btn-clair" onclick="testerServicesTOH('push',this)">Tester mes notifications</button>
             <button class="btn btn-clair" onclick="testerServicesTOH('rappels',this)">Voir la programmation des relances</button>
@@ -796,7 +796,7 @@
     async function testerServicesTOH(type, bouton) {
       const zone = document.getElementById("services-toh-resultat");
       if (type === "rappels") {
-        zone.textContent = "Un contrôle silencieux est programmé chaque matin entre 8 h et 9 h (Tahiti) via ChatGPT. JB, trésorier, reçoit une alerte quand une cotisation atteint 30 jours avant l’échéance. Aucun e-mail n’est envoyé automatiquement aux adhérents. Dans « Cotisations à relancer », un membre du bureau sélectionne une ou plusieurs personnes, appuie sur le bouton et valide l’envoi depuis sa propre messagerie. Le suivi de la tâche « Cotisations à relancer — J30 » est dans ChatGPT. Ce panneau décrit la programmation ; il ne vérifie pas son état en direct.";
+        zone.textContent = "Contrôle chaque matin entre 8 h et 9 h (Tahiti) via ChatGPT. À J−30, une alerte prévient JB. Si le bureau n’a pas confirmé une relance, un seul e-mail automatique par échéance peut partir à partir de J−15, ou après l’échéance si nécessaire, depuis jbhauata3@gmail.com, signé Jean-Baptiste HAUATA — Trésorier de Te Ora Hau. Après un envoi manuel, sélectionnez les personnes concernées puis appuyez sur « Confirmer la relance envoyée ». Une cotisation renouvelée avec nouvelle échéance sort de l’ancien rappel. Le suivi de la tâche « Relances Te Ora Hau — relais bureau » est dans ChatGPT. Ce panneau décrit la programmation ; il ne vérifie pas son état en direct.";
         return;
       }
       const liberer = boutonOccupe(bouton, "Vérification…");
@@ -1070,7 +1070,7 @@
     function relancesEligibles(){
       const auj = new Date(aujourdHuiISO()+"T12:00:00");
       return ADH.filter(a => {
-        if (a.acces_suspendu || !a.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email.trim()) || !a.cotisation_echeance) return false;
+        if (a.rappel_30j_pour === a.cotisation_echeance || a.acces_suspendu || !a.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email.trim()) || !a.cotisation_echeance) return false;
         const date = new Date(String(a.cotisation_echeance).slice(0,10)+"T12:00:00");
         const jours = Math.round((date-auj)/86400000);
         return Number.isFinite(jours) && jours <= 30;
@@ -1085,6 +1085,8 @@
       const items = relancesEligibles();
       const nombre = document.getElementById("nombre-relances");
       if (nombre) nombre.textContent = String(items.length);
+      const nombreStat = document.getElementById("nombre-relances-stat");
+      if (nombreStat) nombreStat.textContent = String(items.length);
       const resume = document.getElementById("resume-relances");
       if (resume) resume.textContent = items.length ? items.length + " cotisation(s) à relancer : sélectionnez les adhérents ci-dessous." : "Aucune cotisation à relancer pour le moment.";
       document.getElementById("actions-relances").hidden = items.length === 0;
@@ -1096,7 +1098,31 @@
     }
     function majSelectionRelances(){
       const bouton = document.getElementById("btn-relancer");
-      if (bouton) bouton.disabled = document.querySelectorAll(".relance-check:checked").length === 0;
+      const vide = document.querySelectorAll(".relance-check:checked").length === 0;
+      if (bouton) bouton.disabled = vide;
+      const confirmer = document.getElementById("btn-confirmer-relances");
+      if (confirmer) confirmer.disabled = vide;
+    }
+    async function confirmerRelancesEnvoyees(bouton){
+      const zone = document.getElementById("etat-confirmation-relances");
+      if (!MOI || MOI.role !== "bureau") { zone.textContent = "Confirmation réservée au bureau."; return; }
+      const ids = [...document.querySelectorAll(".relance-check:checked")].map(el=>el.value);
+      const candidats = relancesEligibles().filter(x=>ids.includes(String(x.a.id))).map(x=>({id:x.a.id,email:x.a.email,echeance:x.a.cotisation_echeance}));
+      if (!candidats.length) { zone.textContent = "Sélectionnez les personnes effectivement relancées."; return; }
+      if (!confirm("Confirmez-vous avoir réellement envoyé la relance aux "+candidats.length+" personne(s) sélectionnée(s) ? Cela arrête le relais automatique pour leur échéance actuelle. Ce bouton ne valide aucun paiement.")) return;
+      const liberer = boutonOccupe(bouton, "Enregistrement…");
+      let total = 0;
+      try {
+        for (const a of candidats) {
+          const {data,error} = await sb.from("profils").update({rappel_30j_pour:a.echeance}).eq("id",a.id).eq("cotisation_echeance",a.echeance).eq("email",a.email).select("id");
+          if (error || !data || data.length !== 1) throw new Error("Enregistrement non confirmé pour une personne. Rechargez la page et vérifiez son échéance avant de recommencer.");
+          const local = ADH.find(x=>x.id===a.id);
+          if (local && local.cotisation_echeance===a.echeance) local.rappel_30j_pour=a.echeance;
+          total++;
+        }
+        zone.textContent = total + " relance(s) enregistrée(s). Le relais automatique est arrêté pour ces échéances. Aucun paiement modifié.";
+      } catch(e) { zone.textContent = total + " relance(s) enregistrée(s). " + (e.message || "Enregistrement impossible."); }
+      finally { liberer(); afficherRelances(); }
     }
     function preparerRelances(){
       const ids = [...document.querySelectorAll(".relance-check:checked")].map(el=>el.value);

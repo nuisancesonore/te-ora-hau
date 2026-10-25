@@ -676,7 +676,7 @@
     }
     function rendreStatsDetail(){
       document.getElementById("stats-detail").innerHTML = `<div class="dcards">
-        ${dcard("Par type d'adhésion", compteur(ADH, a=>a.type_adhesion))}
+        ${dcard("Par type d'adhésion", compteur(ADH, a=>a.role === "bureau" ? "Bureau" : a.role === "assesseur" ? "Assesseur" : a.role === "membre" ? "Adhérent" : a.type_adhesion))}
         ${dcard("Par nuisance subie", compteur(ADH, a=>a.type_nuisance))}
         ${dcard("Par commune", compteur(ADH, a=>a.commune))}
         ${dcard("Par statut de cotisation", compteur(ADH, a=>estAJour(a)?"À jour":"En retard"))}

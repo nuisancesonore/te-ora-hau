@@ -141,7 +141,7 @@
           <h3>Accès rapides</h3>
           <div class="admin-nav-grid">
             <a href="#admin-adherents">Adhérents <span aria-hidden="true">↘</span></a>
-            <a href="#relances-cotisations">Cotisations et relances <span aria-hidden="true">↘</span></a>
+            <a href="#relances-cotisations">Cotisations et relances <span id="nombre-relances" class="badge-n">0</span> <span aria-hidden="true">↘</span></a>
             <a href="#admin-demarches">Démarches <span aria-hidden="true">↘</span></a>
             <a href="#admin-missions">Missions <span aria-hidden="true">↘</span></a>
             <a href="#admin-communication">Communication <span aria-hidden="true">↘</span></a>
@@ -157,7 +157,7 @@
           <div class="stat" style="border-top-color:var(--bleu-lagon)"><div class="n">${communes}</div><div class="l">Communes</div></div>
         </div>
 
-        <section class="relances-box" id="relances-cotisations"><h3>Relances manuelles de cotisations</h3><p>Échéance dans 30 jours ou moins, ou dépassée. Tout membre du bureau peut préparer les relances sélectionnées depuis sa propre messagerie. Vérifiez les paiements avant envoi.</p><div id="liste-relances"></div><div class="relance-actions" id="actions-relances" hidden><button type="button" class="btn btn-primaire" onclick="preparerRelances()">Préparer les relances dans ma messagerie</button></div><p id="info-relances" hidden>Votre messagerie s’ouvrira pour validation et envoi. Vérifiez le compte expéditeur dans le champ « De ». L’ouverture du courriel ne confirme pas son envoi ; les relances manuelles ne sont pas enregistrées automatiquement.</p><p>Les rappels automatiques sont envoyés séparément par Jean-Baptiste HAUATA, trésorier, depuis jbhauata3@gmail.com.</p></section>
+        <section class="relances-box" id="relances-cotisations"><h3>Cotisations à relancer</h3><p id="resume-relances" role="status" aria-live="polite"></p><p>Échéance dans 30 jours ou moins, ou dépassée. Tout membre du bureau peut préparer les relances sélectionnées depuis sa propre messagerie. Vérifiez les paiements avant envoi.</p><div id="liste-relances"></div><div class="relance-actions" id="actions-relances" hidden><button type="button" class="btn btn-primaire" onclick="preparerRelances()">Relancer les adhérents sélectionnés</button></div><p id="info-relances" hidden>Votre messagerie s’ouvrira pour validation et envoi. Vérifiez le compte expéditeur dans le champ « De ». L’ouverture du courriel ne confirme pas son envoi ; les relances manuelles ne sont pas enregistrées automatiquement.</p><p>À 30 jours avant l’échéance, une alerte ChatGPT prévient JB, trésorier. Aucun e-mail de relance ne part automatiquement : le bureau choisit les destinataires et valide l’envoi dans sa messagerie.</p></section>
         <details class="acc" id="admin-adherents">
           <summary><span class="t">Adhérents — cotisations &amp; validation</span><span class="badge-n">${total}</span></summary>
           <div class="corps">
@@ -735,7 +735,7 @@
       document.getElementById("communication").innerHTML = `
         <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
           <h3>Vérifier les notifications et les relances</h3>
-          <p class="com-hint">Le test de notification concerne uniquement l’appareil que vous utilisez. Les relances automatiques sont programmées via ChatGPT depuis le compte du trésorier, jbhauata3@gmail.com.</p>
+          <p class="com-hint">Le test de notification concerne uniquement l’appareil que vous utilisez. Une alerte ChatGPT prévient le trésorier à 30 jours avant l’échéance. Les relances aux adhérents restent manuelles.</p>
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
             <button class="btn btn-clair" onclick="testerServicesTOH('push',this)">Tester mes notifications</button>
             <button class="btn btn-clair" onclick="testerServicesTOH('rappels',this)">Voir la programmation des relances</button>
@@ -795,7 +795,7 @@
     async function testerServicesTOH(type, bouton) {
       const zone = document.getElementById("services-toh-resultat");
       if (type === "rappels") {
-        zone.textContent = "Programmation installée le 25/10/2026 : contrôle chaque matin entre 8 h et 9 h (Tahiti) via ChatGPT. Les rappels automatiques partent de jbhauata3@gmail.com au nom de Jean-Baptiste HAUATA, trésorier, dans les périodes de 60 et 30 jours avant l’échéance, une fois par palier et par échéance. Le suivi des exécutions et les éventuels blocages sont dans la tâche ChatGPT « Relances cotisations Te Ora Hau ». Ce panneau décrit la programmation ; il ne vérifie pas son état en direct et n’envoie aucun e-mail.";
+        zone.textContent = "Un contrôle silencieux est programmé chaque matin entre 8 h et 9 h (Tahiti) via ChatGPT. JB, trésorier, reçoit une alerte quand une cotisation atteint 30 jours avant l’échéance. Aucun e-mail n’est envoyé automatiquement aux adhérents. Dans « Cotisations à relancer », un membre du bureau sélectionne une ou plusieurs personnes, appuie sur le bouton et valide l’envoi depuis sa propre messagerie. Le suivi de la tâche « Cotisations à relancer — J30 » est dans ChatGPT. Ce panneau décrit la programmation ; il ne vérifie pas son état en direct.";
         return;
       }
       const liberer = boutonOccupe(bouton, "Vérification…");
@@ -1069,7 +1069,7 @@
     function relancesEligibles(){
       const auj = new Date(aujourdHuiISO()+"T12:00:00");
       return ADH.filter(a => {
-        if (!a.email || !a.cotisation_echeance) return false;
+        if (a.acces_suspendu || !a.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email.trim()) || !a.cotisation_echeance) return false;
         const date = new Date(String(a.cotisation_echeance).slice(0,10)+"T12:00:00");
         const jours = Math.round((date-auj)/86400000);
         return Number.isFinite(jours) && jours <= 30;
@@ -1082,6 +1082,10 @@
       const zone = document.getElementById("liste-relances");
       if (!zone) return;
       const items = relancesEligibles();
+      const nombre = document.getElementById("nombre-relances");
+      if (nombre) nombre.textContent = String(items.length);
+      const resume = document.getElementById("resume-relances");
+      if (resume) resume.textContent = items.length ? items.length + " cotisation(s) à relancer : sélectionnez les adhérents ci-dessous." : "Aucune cotisation à relancer pour le moment.";
       document.getElementById("actions-relances").hidden = items.length === 0;
       document.getElementById("info-relances").hidden = items.length === 0;
       zone.innerHTML = items.length ? items.map(({a,jours}) =>

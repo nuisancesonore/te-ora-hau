@@ -1,19 +1,19 @@
-# Rappels de cotisation — 25 octobre 2026
+# Cotisations à relancer — 25 octobre 2026
 
-## Circuit actif
+## Alerte du trésorier, sans envoi automatique aux adhérents
 
-Une tâche ChatGPT « Relances cotisations Te Ora Hau » est activée quotidiennement, à partir du 26 octobre, entre 8 h et 9 h Pacific/Tahiti. Elle lit les échéances dans Supabase et utilise le Gmail connecté du trésorier Jean-Baptiste HAUATA, jbhauata3@gmail.com. Elle dépend du maintien de ces connexions et de la tâche ChatGPT active ; ce n’est pas un cron Supabase autonome.
+La tâche ChatGPT « Cotisations à relancer — J30 » contrôle les échéances chaque matin entre 8 h et 9 h Pacific/Tahiti, à partir du 26 octobre. Elle notifie JB dans ChatGPT uniquement pour les cotisations qui atteignent 30 jours avant expiration ce jour-là. Le contrôle reste silencieux sinon. La notification regroupe les personnes concernées et renvoie vers Administration > Cotisations à relancer. Aucun outil d’envoi Gmail n’est autorisé dans cette tâche, aucun marqueur de rappel n’est modifié. L’ancien circuit J60/J30 avec envoi automatique est remplacé.
 
-Seuls les membres non suspendus, payés, avec échéance non passée et compte confirmé dont l’adresse correspond au profil sont concernés. Deux fenêtres : 31–60 jours (J60), puis 0–30 jours (J30). Un seul rappel par échéance et par palier, contrôlé par les marqueurs rappel_60j_pour / rappel_30j_pour et une référence déterministe recherchée dans les e-mails envoyés. En cas d’incertitude sur un envoi, pas de nouvelle tentative aveugle. Les marqueurs sont mis à jour seulement après confirmation Gmail.
+Le calcul utilise la date Tahiti, les membres payés non suspendus, une échéance valide et un compte confirmé avec adresse correspondant au profil. La tâche dépend de la connexion Supabase et de son activation dans ChatGPT. Le premier contrôle programmé reste à observer ; le test Gmail précédent ne prouve pas l’exécution future de cette alerte.
 
-Le 25 octobre : aucun membre éligible. Un seul e-mail technique a été envoyé à JB depuis l’association et retrouvé dans sa boîte de réception. Cela valide le trajet de test ; le premier traitement quotidien programmé reste à observer. Aucun autre adhérent contacté pour le test, aucun paiement ni échéance modifié.
+## Relance manuelle par le bureau
 
-Administration > Communication décrit la programmation et renvoie au suivi ChatGPT ; cette information n’est pas une vérification de santé en direct. Les notifications push disposent toujours de leur propre bouton de test sur l’appareil courant.
+Administration affiche le nombre et la liste des cotisations dont l’échéance est dans 30 jours ou moins, y compris les échéances dépassées. Les profils suspendus ou sans adresse valide sont exclus. La liste est recalculée à l’ouverture de la page et après modification d’une cotisation. Elle reste consultable si l’alerte du jour a été manquée.
 
-## Relances manuelles du bureau
+Le membre du bureau vérifie les paiements, sélectionne une ou plusieurs personnes et appuie sur « Relancer les adhérents sélectionnés ». Le message s’ouvre dans sa messagerie, destinataires en copie cachée, pour validation et envoi. Il doit vérifier le champ « De » ; le site ne peut pas imposer le compte de la messagerie par défaut. JB utilise jbhauata3@gmail.com en tant que trésorier ; un autre membre du bureau utilise son propre compte.
 
-La liste et le bouton de préparation des relances sont accessibles à tous les membres du bureau dans Administration. Le courriel s’ouvre dans la messagerie du membre qui agit, pour validation et envoi. Le membre doit vérifier le champ « De » ; le site ne peut pas imposer le compte de la messagerie par défaut. Le lien Gmail de communication utilise l’adresse du profil pour sélectionner le compte. Une ouverture de courriel n’est pas une confirmation d’envoi : aucun marqueur automatique n’est modifié par cette préparation manuelle.
+L’ouverture d’un message n’est pas une confirmation d’envoi : les relances manuelles ne sont pas enregistrées automatiquement. Vérifier les messages envoyés avant une nouvelle relance.
 
 ## Circuit serveur en réserve
 
-La fonction Supabase rappel-cotisation est déployée et protégée, mais son expéditeur Resend n’est pas configuré et elle n’a pas de planificateur. Elle reste inactive pour les envois. Ne pas activer un second circuit sans désactiver le premier et réconcilier les marqueurs pour éviter les doubles rappels. Aucun secret serveur ne doit être placé dans le site ou le dépôt.
+La fonction Supabase rappel-cotisation reste déployée et protégée mais sans expéditeur Resend configuré ni planificateur d’envoi. Ne pas activer d’envois automatiques : la décision et la validation d’envoi appartiennent au bureau.

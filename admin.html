@@ -735,10 +735,10 @@
       document.getElementById("communication").innerHTML = `
         <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
           <h3>Vérifier les notifications et les relances</h3>
-          <p class="com-hint">Le test de notification concerne uniquement l’appareil que vous utilisez. La vérification des relances n’envoie aucun e-mail.</p>
+          <p class="com-hint">Le test de notification concerne uniquement l’appareil que vous utilisez. Les relances sont programmées via ChatGPT et la messagerie de l’association.</p>
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
             <button class="btn btn-clair" onclick="testerServicesTOH('push',this)">Tester mes notifications</button>
-            <button class="btn btn-clair" onclick="testerServicesTOH('rappels',this)">Vérifier les relances e-mail</button>
+            <button class="btn btn-clair" onclick="testerServicesTOH('rappels',this)">Voir la programmation des relances</button>
           </div>
           <p id="services-toh-resultat" role="status" aria-live="polite" style="margin-top:0.8rem"></p>
         </div>
@@ -794,10 +794,14 @@
 
     async function testerServicesTOH(type, bouton) {
       const zone = document.getElementById("services-toh-resultat");
+      if (type === "rappels") {
+        zone.textContent = "Programmation installée le 25/10/2026 : contrôle chaque matin entre 8 h et 9 h (Tahiti) via ChatGPT. Les rappels partent de nuisancesonore987@gmail.com dans les périodes de 60 et 30 jours avant l’échéance, une fois par palier et par échéance. Le suivi des exécutions et les éventuels blocages sont dans la tâche ChatGPT « Relances cotisations Te Ora Hau ». Ce panneau décrit la programmation ; il ne vérifie pas son état en direct et n’envoie aucun e-mail.";
+        return;
+      }
       const liberer = boutonOccupe(bouton, "Vérification…");
       zone.textContent = "Vérification en cours…";
       try {
-        const fonction = type === "push" ? "envoi-push" : "rappel-cotisation";
+        const fonction = "envoi-push";
         let body = {dry_run:true};
         if (type === "push") {
           const etat = await etatNotifications();
@@ -817,11 +821,6 @@
           zone.textContent = data.envoyes
             ? "Test pris en charge pour cet appareil. Vérifiez la notification « Test Te Ora Hau » dans le volet des notifications." + (data.echecs ? " Un échec a également été signalé : réactivez les notifications depuis Mon espace." : "")
             : "Aucun envoi de test confirmé. Activez ou réactivez les notifications dans Mon espace, puis réessayez.";
-        } else {
-          if (!data.simulation || data.envoyes !== 0) throw new Error("La vérification sans envoi n’a pas été confirmée.");
-          zone.textContent = data.expediteur_pret
-            ? "Configuration de l’expéditeur détectée. " + data.rappels + " rappel(s) éligible(s). Aucun e-mail envoyé. L’envoi quotidien reste à planifier."
-            : "L’expéditeur des rappels automatiques n’est pas configuré. Aucun e-mail envoyé. La préparation des e-mails depuis votre messagerie reste disponible.";
         }
       } catch(e) { zone.textContent = e.message || "Vérification impossible."; }
       finally { liberer(); }

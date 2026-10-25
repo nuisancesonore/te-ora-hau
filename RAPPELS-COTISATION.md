@@ -1,12 +1,15 @@
-# État des rappels de cotisation
+# Rappels de cotisation — 25 octobre 2026
 
-Le rappel visible dans Mon espace fonctionne à la connexion.
-La fonction rappel-cotisation est déployée et protégée. Aucun planificateur de rappel n’est encore configuré. Le bouton « Vérifier les relances e-mail » dans Administration > Communication lance seulement une simulation et vérifie la présence de la configuration de l’expéditeur.
+## Circuit actif
 
-Le code serveur est préparé, avec authentification bureau ou serveur, simulation par défaut, calcul des jours en Pacific/Tahiti et clé d’idempotence par échéance et palier. Aucun e-mail de test n’a été envoyé aux adhérents.
+Une tâche ChatGPT « Relances cotisations Te Ora Hau » est activée quotidiennement, à partir du 26 octobre, entre 8 h et 9 h Pacific/Tahiti. Elle lit les échéances dans Supabase et utilise le Gmail connecté de l’association, nuisancesonore987@gmail.com. Elle dépend du maintien de ces connexions et de la tâche ChatGPT active ; ce n’est pas un cron Supabase autonome.
 
-Pour activer l’envoi quotidien, il reste à vérifier/configurer RESEND_API_KEY et MAIL_FROM pour un expéditeur autorisé, puis configurer un appel quotidien authentifié avec dry_run:false. La clé serveur ne doit apparaître ni dans le site ni dans ce dépôt.
+Seuls les membres non suspendus, payés, avec échéance non passée et compte confirmé dont l’adresse correspond au profil sont concernés. Deux fenêtres : 31–60 jours (J60), puis 0–30 jours (J30). Un seul rappel par échéance et par palier, contrôlé par les marqueurs rappel_60j_pour / rappel_30j_pour et une référence déterministe recherchée dans les e-mails envoyés. En cas d’incertitude sur un envoi, pas de nouvelle tentative aveugle. Les marqueurs sont mis à jour seulement après confirmation Gmail.
 
-Ne pas utiliser l’ancien exemple d’appel sans authentification. L’activation effective et la réception d’un rappel n’ont pas encore été validées.
+Le 25 octobre : aucun membre éligible. Un seul e-mail technique a été envoyé à JB depuis l’association et retrouvé dans sa boîte de réception. Cela valide le trajet de test ; le premier traitement quotidien programmé reste à observer. Aucun autre adhérent contacté pour le test, aucun paiement ni échéance modifié.
 
-La simulation dry_run:true indique le nombre de rappels éligibles et si l’expéditeur est configuré, sans envoyer de mail ni retourner les adresses des membres.
+Administration > Communication décrit la programmation et renvoie au suivi ChatGPT ; cette information n’est pas une vérification de santé en direct. Les notifications push disposent toujours de leur propre bouton de test sur l’appareil courant.
+
+## Circuit serveur en réserve
+
+La fonction Supabase rappel-cotisation est déployée et protégée, mais son expéditeur Resend n’est pas configuré et elle n’a pas de planificateur. Elle reste inactive pour les envois. Ne pas activer un second circuit sans désactiver le premier et réconcilier les marqueurs pour éviter les doubles rappels. Aucun secret serveur ne doit être placé dans le site ou le dépôt.

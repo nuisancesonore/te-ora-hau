@@ -141,7 +141,7 @@
           <h3>Accès rapides</h3>
           <div class="admin-nav-grid">
             <a href="#admin-adherents">Adhérents <span aria-hidden="true">↘</span></a>
-            ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<a href="#relances-cotisations">Cotisations et relances <span aria-hidden="true">↘</span></a>' : '<a href="#admin-adherents">Cotisations <span aria-hidden="true">↘</span></a>'}
+            <a href="#relances-cotisations">Cotisations et relances <span aria-hidden="true">↘</span></a>
             <a href="#admin-demarches">Démarches <span aria-hidden="true">↘</span></a>
             <a href="#admin-missions">Missions <span aria-hidden="true">↘</span></a>
             <a href="#admin-communication">Communication <span aria-hidden="true">↘</span></a>
@@ -157,7 +157,7 @@
           <div class="stat" style="border-top-color:var(--bleu-lagon)"><div class="n">${communes}</div><div class="l">Communes</div></div>
         </div>
 
-        ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<section class="relances-box" id="relances-cotisations"><h3>Relances de cotisations à préparer</h3><p>Détection à l’ouverture de cette page : échéance dans 30 jours ou moins, ou dépassée. Vérifiez les paiements avant envoi. Aucun message n’est envoyé automatiquement.</p><div id="liste-relances"></div><div class="relance-actions" id="actions-relances" hidden><button type="button" class="btn btn-primaire" onclick="preparerRelances()">Préparer les courriels sélectionnés</button></div><p id="info-relances" hidden>Votre messagerie s’ouvrira pour validation et envoi. Les relances déjà envoyées ne sont pas suivies automatiquement.</p></section>' : ""}
+        <section class="relances-box" id="relances-cotisations"><h3>Relances manuelles de cotisations</h3><p>Échéance dans 30 jours ou moins, ou dépassée. Tout membre du bureau peut préparer les relances sélectionnées depuis sa propre messagerie. Vérifiez les paiements avant envoi.</p><div id="liste-relances"></div><div class="relance-actions" id="actions-relances" hidden><button type="button" class="btn btn-primaire" onclick="preparerRelances()">Préparer les relances dans ma messagerie</button></div><p id="info-relances" hidden>Votre messagerie s’ouvrira pour validation et envoi. Vérifiez le compte expéditeur dans le champ « De ». L’ouverture du courriel ne confirme pas son envoi ; les relances manuelles ne sont pas enregistrées automatiquement.</p><p>Les rappels automatiques sont envoyés séparément par Jean-Baptiste HAUATA, trésorier, depuis jbhauata3@gmail.com.</p></section>
         <details class="acc" id="admin-adherents">
           <summary><span class="t">Adhérents — cotisations &amp; validation</span><span class="badge-n">${total}</span></summary>
           <div class="corps">
@@ -735,7 +735,7 @@
       document.getElementById("communication").innerHTML = `
         <div class="form-wrap" style="max-width:100%;margin:0 0 1.2rem">
           <h3>Vérifier les notifications et les relances</h3>
-          <p class="com-hint">Le test de notification concerne uniquement l’appareil que vous utilisez. Les relances sont programmées via ChatGPT et la messagerie de l’association.</p>
+          <p class="com-hint">Le test de notification concerne uniquement l’appareil que vous utilisez. Les relances automatiques sont programmées via ChatGPT depuis le compte du trésorier, jbhauata3@gmail.com.</p>
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
             <button class="btn btn-clair" onclick="testerServicesTOH('push',this)">Tester mes notifications</button>
             <button class="btn btn-clair" onclick="testerServicesTOH('rappels',this)">Voir la programmation des relances</button>
@@ -795,7 +795,7 @@
     async function testerServicesTOH(type, bouton) {
       const zone = document.getElementById("services-toh-resultat");
       if (type === "rappels") {
-        zone.textContent = "Programmation installée le 25/10/2026 : contrôle chaque matin entre 8 h et 9 h (Tahiti) via ChatGPT. Les rappels partent de nuisancesonore987@gmail.com dans les périodes de 60 et 30 jours avant l’échéance, une fois par palier et par échéance. Le suivi des exécutions et les éventuels blocages sont dans la tâche ChatGPT « Relances cotisations Te Ora Hau ». Ce panneau décrit la programmation ; il ne vérifie pas son état en direct et n’envoie aucun e-mail.";
+        zone.textContent = "Programmation installée le 25/10/2026 : contrôle chaque matin entre 8 h et 9 h (Tahiti) via ChatGPT. Les rappels automatiques partent de jbhauata3@gmail.com au nom de Jean-Baptiste HAUATA, trésorier, dans les périodes de 60 et 30 jours avant l’échéance, une fois par palier et par échéance. Le suivi des exécutions et les éventuels blocages sont dans la tâche ChatGPT « Relances cotisations Te Ora Hau ». Ce panneau décrit la programmation ; il ne vérifie pas son état en direct et n’envoie aucun e-mail.";
         return;
       }
       const liberer = boutonOccupe(bouton, "Vérification…");
@@ -857,7 +857,7 @@
       const zone=document.getElementById("email-apercu");zone.innerHTML="";
       if(!sujet||!corps)return alert("Renseignez l’objet et le message avant de préparer l’envoi.");
       if(!emails.length)return alert("Aucune adresse e-mail valide dans ce groupe.");
-      zone.innerHTML='<div style="border:1px solid #c6dedd;border-radius:12px;padding:1rem;background:#f5faf9"><h4 style="margin:0 0 0.5rem">Votre e-mail est prêt à préparer</h4><p><strong>Groupe : </strong>'+echapper(GROUPES_EMAIL[cible])+'</p><p><strong>Destinataires en Cci : </strong>'+emails.length+' adresse(s) unique(s)</p><details><summary>Vérifier les adresses</summary><p style="overflow-wrap:anywhere">'+emails.map(echapper).join("<br>")+'</p></details><p><strong>Objet : </strong>'+echapper(sujet)+'</p><div style="white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:0.8rem;border-radius:8px">'+echapper(corps)+'</div><p class="com-hint" style="margin-top:0.7rem">Choisissez votre messagerie. Vous pourrez vérifier le message, ajouter des pièces jointes et appuyer sur Envoyer depuis votre propre compte.</p><div style="display:grid;gap:0.6rem;margin-top:0.8rem"><button type="button" class="btn btn-vert" style="width:100%;min-height:48px" onclick="ouvrirEmailGroupe(\'gmail\')">Ouvrir Gmail</button><button type="button" class="btn btn-clair" style="width:100%;min-height:48px" onclick="ouvrirEmailGroupe(\'messagerie\')">Ouvrir ma messagerie habituelle</button></div><p class="com-hint" style="margin-top:0.7rem">Aucun message n’est envoyé automatiquement. Cet e-mail est indépendant de la publication sur le site.</p></div>';
+      zone.innerHTML='<div style="border:1px solid #c6dedd;border-radius:12px;padding:1rem;background:#f5faf9"><h4 style="margin:0 0 0.5rem">Votre e-mail est prêt à préparer</h4><p><strong>Groupe : </strong>'+echapper(GROUPES_EMAIL[cible])+'</p><p><strong>Destinataires en Cci : </strong>'+emails.length+' adresse(s) unique(s)</p><details><summary>Vérifier les adresses</summary><p style="overflow-wrap:anywhere">'+emails.map(echapper).join("<br>")+'</p></details><p><strong>Objet : </strong>'+echapper(sujet)+'</p><div style="white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:0.8rem;border-radius:8px">'+echapper(corps)+'</div><p class="com-hint" style="margin-top:0.7rem">Choisissez votre messagerie. Vous pourrez vérifier le message et le compte expéditeur dans le champ « De », ajouter des pièces jointes et appuyer sur Envoyer depuis votre propre compte.</p><div style="display:grid;gap:0.6rem;margin-top:0.8rem"><button type="button" class="btn btn-vert" style="width:100%;min-height:48px" onclick="ouvrirEmailGroupe(\'gmail\')">Ouvrir Gmail</button><button type="button" class="btn btn-clair" style="width:100%;min-height:48px" onclick="ouvrirEmailGroupe(\'messagerie\')">Ouvrir ma messagerie habituelle</button></div><p class="com-hint" style="margin-top:0.7rem">Aucun message n’est envoyé automatiquement. Cet e-mail est indépendant de la publication sur le site.</p></div>';
     }
     function ouvrirEmailGroupe(mode){
       const sujet=document.getElementById("com-titre").value.trim(),corps=document.getElementById("com-corps").value.trim();
@@ -865,7 +865,7 @@
       if(!sujet||!corps||!emails.length)return alert("Vérifiez le message et les destinataires.");
       const q=encodeURIComponent;
       const url=mode==="gmail"
-        ? "https://mail.google.com/mail/?view=cm&fs=1&bcc="+q(emails.join(","))+"&su="+q(sujet)+"&body="+q(corps)
+        ? "https://mail.google.com/mail/?authuser="+q(profil.email||"")+"&view=cm&fs=1&bcc="+q(emails.join(","))+"&su="+q(sujet)+"&body="+q(corps)
         : "mailto:?bcc="+q(emails.join(","))+"&subject="+q(sujet)+"&body="+q(corps);
       if(url.length>(mode==="gmail"?6000:1900))return alert("Le message ou le groupe est trop long pour une ouverture fiable. Utilisez « Copier les e-mails du groupe » et « Copier l’objet et le message », puis collez-les dans votre messagerie (destinataires en Cci).");
       if(mode==="gmail"){const fenetre=window.open(url,"_blank","noopener,noreferrer");}

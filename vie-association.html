@@ -25,6 +25,25 @@
     .photo:focus-visible{outline:3px solid var(--corail);outline-offset:-3px}
     figcaption{padding:.7rem .8rem;font-size:.88rem;color:var(--gris)}
     .a-venir{border-top-color:var(--corail)}
+    #photos-rencontres{scroll-margin-top:6rem;margin-bottom:2rem}
+    .evenements-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:1.2rem}
+    .album{min-width:0;border-radius:14px;background:#fff;box-shadow:var(--ombre);overflow:hidden}
+    .album[open]{grid-column:1/-1}
+    .album>summary{cursor:pointer;list-style:none;max-width:340px;position:relative}
+    .album>summary::-webkit-details-marker{display:none}
+    .album>summary:focus-visible{outline:3px solid var(--corail);outline-offset:-3px}
+    .couverture-album{display:block;position:relative;aspect-ratio:1;overflow:hidden;background:var(--bleu-fonce)}
+    .couverture-album img{display:block;width:100%;height:100%;object-fit:cover}
+    .titre-album{position:absolute;inset:auto 0 0;padding:2.5rem 1rem 1rem;background:linear-gradient(transparent,rgba(0,0,0,.85));color:white}
+    .titre-album strong{display:block;font-size:1.2rem;line-height:1.35;margin:.3rem 0}
+    .titre-album time{font-size:.85rem}
+    .ouvrir-album{display:flex;justify-content:space-between;align-items:center;padding:.85rem 1rem;font-weight:700;color:var(--bleu-fonce)}
+    .ouvrir-album::after{content:"＋";font-size:1.3rem}
+    .album[open] .ouvrir-album::after{content:"−"}
+    .album .fermer-texte{display:none}
+    .album[open] .ouvrir-texte{display:none}
+    .album[open] .fermer-texte{display:inline}
+    .album .actualite{box-shadow:none;border-top:1px solid #e3eaea;border-radius:0;margin-bottom:0}
     .commandes-photos{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:.8rem}
     .commandes-photos[hidden]{display:none}
     .commandes-photos button{min-width:48px;min-height:48px;font-size:1.4rem}
@@ -42,7 +61,19 @@
       <a class="btn btn-clair" href="#photos-rencontres">Photos &amp; rencontres</a>
       <a class="btn btn-clair" href="#evenements">Événements à venir</a>
     </nav>
-    <article class="actualite" id="photos-rencontres">
+    <section id="photos-rencontres" aria-labelledby="titre-rencontres">
+      <h2 class="section-titre" id="titre-rencontres">Photos &amp; rencontres</h2>
+      <p class="intro-vie">Choisissez un événement pour découvrir son récit et ses photos.</p>
+      <div class="evenements-grille">
+        <details class="album" id="album-tiaputa">
+          <summary>
+            <span class="couverture-album">
+              <img src="images/actualites/reunion-2026-10-24/photo-04-640.webp" width="640" height="480" alt="Les participants à la réunion d’information de Tiaputa">
+              <span class="titre-album"><time datetime="2026-10-24">24 octobre 2026 · Taravao</time><strong>Réunion d’information à Tiaputa</strong><span>5 photos</span></span>
+            </span>
+            <span class="ouvrir-album"><span class="ouvrir-texte">Découvrir l’événement</span><span class="fermer-texte">Refermer l’événement</span></span>
+          </summary>
+    <article class="actualite">
       <div class="etiquette">PHOTOS &amp; RENCONTRES · <time datetime="2026-10-24">24 octobre 2026</time> · Taravao</div>
       <h2>Réunion d’information à Tiaputa, Taravao</h2>
       <p>Le 24 octobre 2026, notre réunion d’information à Tiaputa, Taravao, a donné lieu à des échanges très riches avec un public particulièrement actif. Les témoignages sur les nuisances subies, souvent empreints d’émotion et parfois difficiles à entendre, ont révélé la détresse vécue par les victimes.</p>
@@ -62,6 +93,9 @@
       </div>
       <p style="margin-top:1.2rem"><a href="le-bruit.html">Consulter les textes sur les nuisances sonores</a></p>
     </article>
+        </details>
+      </div>
+    </section>
     <section class="actualite a-venir" id="evenements" aria-labelledby="titre-evenements">
       <div class="etiquette">ÉVÉNEMENT À VENIR</div>
       <h2 id="titre-evenements">Retrouvez-nous à Papara le 14 novembre</h2>
@@ -98,6 +132,9 @@
       piste.addEventListener("scroll", () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(actualiser); }, {passive:true});
       piste.addEventListener("keydown", event => {
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); deplacer(event.key === "ArrowLeft" ? -1 : 1); }
+      });
+      document.getElementById("album-tiaputa").addEventListener("toggle", event => {
+        if (event.target.open) requestAnimationFrame(actualiser);
       });
       window.addEventListener("resize", actualiser);
       actualiser();

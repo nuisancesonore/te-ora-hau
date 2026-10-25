@@ -282,6 +282,7 @@ async function rendreNav(pageActive) {
 
   const menuHTML = [
     lien("index.html", "Accueil", "accueil"),
+    lien("vie-association.html", "Vie de l’association", "vie-association"),
     comprendre,
     lien("carte.html", "Carte des nuisances", "carte"),
     blocAuth,

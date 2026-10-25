@@ -22,11 +22,14 @@
     .membre .nuis{ font-size:0.86rem; color:var(--gris); margin-top:0.2rem; }
     .membre .nuis strong{ color:var(--texte); font-weight:600; }
     .invite{ background:#fff4ec; border-left:4px solid var(--corail); padding:0.9rem 1.2rem; border-radius:10px; margin-bottom:1.4rem; }
-  </style>
+    .annu-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.65rem;margin:0 0 1.4rem}
+    .annu-nav a{display:flex;align-items:center;justify-content:center;text-align:center;min-height:58px;padding:0.8rem 0.6rem;border-radius:12px;background:#fff;color:var(--bleu-fonce);font-weight:700;text-decoration:none;border:2px solid var(--bleu-lagon);box-shadow:var(--ombre)}
+    .annu-nav a.forum{background:var(--bleu-fonce);color:#fff}
+    .annu-nav a:focus-visible{outline:3px solid var(--corail);outline-offset:3px}  </style>
 </head>
 <body>
   <div id="nav-mount"></div>
-  <main id="contenu"><p style="color:var(--gris)">Chargement…</p></main>
+  <main><div id="annu-nav-mount"><nav class="annu-nav" aria-label="Annuaire et forum"><a href="annuaire.html" aria-current="page">Annuaire des adhérents</a><a class="forum" href="forum.html">Accéder au forum →</a></nav></div><div id="contenu"><p style="color:var(--gris)">Chargement…</p></div></main>
   <div id="footer-mount"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

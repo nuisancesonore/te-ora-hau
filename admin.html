@@ -739,7 +739,7 @@
           <p class="com-hint">Le test de notification concerne uniquement l’appareil que vous utilisez. Alerte à J−30, puis relais automatique à partir de J−15 si le bureau n’a pas confirmé l’envoi de sa relance.</p>
           <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
             <button class="btn btn-clair" onclick="testerServicesTOH('push',this)">Tester mes notifications</button>
-            <button class="btn btn-clair" onclick="testerServicesTOH('rappels',this)">Voir la programmation des relances</button>
+            <button class="btn btn-clair" onclick="testerServicesTOH('rappels',this)">Fonctionnement des relances</button>
           </div>
           <p id="services-toh-resultat" role="status" aria-live="polite" style="margin-top:0.8rem"></p>
         </div>
@@ -796,7 +796,7 @@
     async function testerServicesTOH(type, bouton) {
       const zone = document.getElementById("services-toh-resultat");
       if (type === "rappels") {
-        zone.textContent = "Contrôle chaque matin entre 8 h et 9 h (Tahiti) via ChatGPT. À J−30, une alerte prévient JB. Si le bureau n’a pas confirmé une relance, un seul e-mail automatique par échéance peut partir à partir de J−15, ou après l’échéance si nécessaire, depuis jbhauata3@gmail.com, signé Jean-Baptiste HAUATA — Trésorier de Te Ora Hau. Après un envoi manuel, sélectionnez les personnes concernées puis appuyez sur « Confirmer la relance envoyée ». Une cotisation renouvelée avec nouvelle échéance sort de l’ancien rappel. Le suivi de la tâche « Relances Te Ora Hau — relais bureau » est dans ChatGPT. Ce panneau décrit la programmation ; il ne vérifie pas son état en direct.";
+        zone.textContent = "À 30 jours avant l’échéance, le trésorier est prévenu des cotisations à relancer. Le bureau peut sélectionner une ou plusieurs personnes et préparer la relance dans sa propre messagerie. Après l’envoi réel, appuyez sur « Confirmer la relance envoyée ». Sans confirmation, un seul e-mail automatique par échéance peut partir à partir de 15 jours avant l’échéance, ou après si nécessaire, depuis jbhauata3@gmail.com, au nom de Jean-Baptiste HAUATA, trésorier. Une relance enregistrée arrête le relais automatique pour cette échéance. Une cotisation renouvelée avec nouvelle échéance sort de l’ancien rappel.";
         return;
       }
       const liberer = boutonOccupe(bouton, "Vérification…");

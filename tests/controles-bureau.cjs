@@ -8,7 +8,7 @@ const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('ass
  vm.createContext(ctx);vm.runInContext(source,ctx);
  reply={simulation:true,envoyes:0,rappels:0,expediteur_pret:false};
  await ctx.testerServicesTOH('rappels',btn);
- assert.equal(called,undefined);assert(zone.textContent.includes('via ChatGPT'));assert(zone.textContent.includes('ne vérifie pas son état en direct'));assert.equal(btn.disabled,false);n+=4;
+ assert.equal(called,undefined);assert(zone.textContent.includes('jbhauata3@gmail.com'));assert(zone.textContent.includes('Confirmer la relance envoyée'));assert.equal(btn.disabled,false);n+=4;
  reply={test_personnel:true,envoyes:1,echecs:0};await ctx.testerServicesTOH('push',btn);
  assert.equal(called.name,'envoi-push');assert.deepStrictEqual(Object.keys(called.body),['action','endpoint']);assert.equal(called.body.action,'test_perso');assert(zone.textContent.includes('Vérifiez'));n+=4;
  ctx.etatNotifications=async()=> 'refuse';called=null;await ctx.testerServicesTOH('push',btn);assert.equal(called,null);assert(zone.textContent.includes('bloquées'));n+=2;

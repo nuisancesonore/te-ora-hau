@@ -865,7 +865,7 @@
       if(!sujet||!corps||!emails.length)return alert("Vérifiez le message et les destinataires.");
       const q=encodeURIComponent;
       const url=mode==="gmail"
-        ? "https://mail.google.com/mail/?authuser="+q(profil.email||"")+"&view=cm&fs=1&bcc="+q(emails.join(","))+"&su="+q(sujet)+"&body="+q(corps)
+        ? "https://mail.google.com/mail/?authuser="+q(MOI && MOI.email || "")+"&view=cm&fs=1&bcc="+q(emails.join(","))+"&su="+q(sujet)+"&body="+q(corps)
         : "mailto:?bcc="+q(emails.join(","))+"&subject="+q(sujet)+"&body="+q(corps);
       if(url.length>(mode==="gmail"?6000:1900))return alert("Le message ou le groupe est trop long pour une ouverture fiable. Utilisez « Copier les e-mails du groupe » et « Copier l’objet et le message », puis collez-les dans votre messagerie (destinataires en Cci).");
       if(mode==="gmail"){const fenetre=window.open(url,"_blank","noopener,noreferrer");}

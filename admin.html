@@ -10,6 +10,10 @@
   <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <style>
+    .acces-registre { margin:1.2rem 0 2rem; }
+    .acces-registre a { display:inline-flex; align-items:center; justify-content:space-between; gap:1rem; max-width:100%; box-sizing:border-box; padding:0.95rem 1.25rem; border-radius:12px; background:var(--corail); color:#fff; font-weight:700; text-decoration:none; box-shadow:var(--ombre); }
+    .acces-registre a:hover, .acces-registre a:focus-visible { filter:brightness(0.94); outline-offset:3px; }
+    .acces-registre .indication { display:block; font-size:0.82rem; color:var(--gris); margin-top:0.45rem; }
     .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.6rem; }
     .stat { background:var(--blanc); border-radius:var(--radius); padding:1.1rem; box-shadow:var(--ombre); text-align:center; border-top:4px solid var(--vert-paix); }
     .stat .n { font-size:2rem; font-weight:800; color:var(--bleu-fonce); }
@@ -116,7 +120,7 @@
 
       contenu.innerHTML = `
         <h2 class="section-titre">Tableau de bord du bureau</h2>
-        ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<p><a href="cotisations.html" class="btn btn-primaire">Registre des cotisations</a></p>' : ""}
+        ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<div class="acces-registre"><a href="cotisations.html" aria-label="Ouvrir le registre des cotisations">Ouvrir le registre des cotisations <span aria-hidden="true">→</span></a><span class="indication">Accès réservé au responsable comptable</span></div>' : ""}
         <div class="stats">
           <div class="stat"><div class="n">${total}</div><div class="l">Adhérents</div></div>
           <div class="stat"><div class="n">${aJour}</div><div class="l">À jour de cotisation</div></div>

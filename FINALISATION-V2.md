@@ -25,7 +25,7 @@ La migration supabase/migrations/*_finalisation_acces_et_export.sql contient le 
 - Copie locale PostgreSQL isolée : restauration des 13 tables et 45 lignes du snapshot, comparaison de chaque champ, schéma/fonctions/vues/politiques réinstallés.
 - 35 contrôles d'accès et d'export sur copie restaurée, dont comptes non validés/suspendus, adhérent, assesseur, bureau et propriété des abonnements.
 - Contrôles de lecture et export également effectués dans la base réelle sans modifier les données.
-- 12 contrôles interface/PDF, 10 contrôles lectures/pastilles/export, 16 contrôles push simulés, 10 contrôles de rappels simulés.
+- 12 contrôles interface/PDF, 10 contrôles lectures/pastilles/export, 24 contrôles push simulés, 10 contrôles de rappels simulés.
 - Aucun message, e-mail ou push réel de test envoyé aux adhérents.
 
 Pour reproduire : Node 24+, Playwright avec navigateur Chromium installé et @electric-sql/pglite. Les dépendances de QA sont temporaires, hors du site.
@@ -44,7 +44,9 @@ TOH_CHROMIUM permet d'indiquer le binaire du navigateur et TOH_CHROMIUM_ARGS un 
 ## Limites restantes
 
 - Rappels automatiques par e-mail : fonction déployée, simulation accessible au bureau et aucun envoi quotidien planifié. L'expéditeur et sa configuration restent à vérifier avant activation.
-- Réception push sur un appareil volontaire : non vérifiée; le bouton « Tester mes notifications » cible exclusivement le compte connecté; les contrôles actuels couvrent l'abonnement, l'autorisation, la sélection et les réponses simulées du service.
+- Réception push sur un appareil volontaire : non vérifiée; le bouton « Tester mes notifications » vérifie l’abonnement local et cible exclusivement cet appareil, en contrôlant son propriétaire côté serveur; les contrôles actuels couvrent l'abonnement, l'autorisation, la sélection et les réponses simulées du service.
 - Le snapshot n'est pas un pg_dump intégral : références Auth incluses, mots de passe/identités/sessions et secrets externes exclus. La restauration testée concerne le métier et le schéma applicatif, pas une restauration complète de l'authentification Supabase.
 - Aucun objet Storage présent à la capture : aucun fichier à restaurer.
 - Protection Supabase contre les mots de passe compromis : option Pro non activée; organisation maintenue sur l'offre gratuite.
+
+Le nettoyage automatique des notifications ignore désormais le test (tag toh-test). Le test ne prouve la réception qu’après observation sur l’appareil.

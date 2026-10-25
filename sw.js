@@ -16,6 +16,7 @@ self.addEventListener("push", (event) => {
     icon: "images/icon-192.png",
     badge: "images/icon-192.png",
     data: { url: data.url || "/te-ora-hau/espace.html" },
+    ...(data.tag === "toh-test" ? {tag:"toh-test",requireInteraction:true} : {}),
   };
   event.waitUntil((async () => {
     await self.registration.showNotification(title, options);

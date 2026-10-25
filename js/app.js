@@ -444,7 +444,7 @@ async function fermerNotifsAffichees() {
   try {
     if (!("serviceWorker" in navigator)) return;
     const reg = await navigator.serviceWorker.ready;
-    (await reg.getNotifications()).forEach((n) => n.close());
+    (await reg.getNotifications()).filter(n => n.tag !== "toh-test").forEach((n) => n.close());
   } catch (_) {}
 }
 async function verifierNotifications(profil) {

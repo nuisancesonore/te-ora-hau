@@ -41,6 +41,8 @@ Deno.serve(async (req) => {
 
     const input = await req.json();
     const testPersonnel = input.action === "test_perso";
+    if (testPersonnel && (typeof input.endpoint !== "string" || !input.endpoint.startsWith("https://") || input.endpoint.length > 4096))
+      return json({error:"Abonnement de l’appareil requis. Rechargez la page et réactivez les notifications dans Mon espace."},400);
     if (input.action && !["send","test_perso"].includes(input.action)) return json({error:"Action invalide"},400);
     const { titre, corps, cible, dry_run = false } = testPersonnel
       ? {titre:"Test Te Ora Hau",corps:"Si vous voyez ce message, votre appareil reçoit les notifications Te Ora Hau.",cible:"tous",dry_run:false}
@@ -67,10 +69,12 @@ Deno.serve(async (req) => {
     }
     if (!ids.length) return json({ ok: true, envoyes: 0 });
 
-    const { data: subs, error: subError } = await admin.from("push_subscriptions").select("endpoint, subscription").in("user_id", ids);
+    let query = admin.from("push_subscriptions").select("endpoint, subscription").in("user_id", ids);
+    if (testPersonnel) query = query.eq("endpoint", input.endpoint);
+    const { data: subs, error: subError } = await query;
     if (subError) return json({error:"Lecture des abonnements impossible"},503);
     if (dry_run) return json({ok:true,simulation:true,membres:ids.length,appareils:(subs||[]).length,envoyes:0});
-    const payload = JSON.stringify({ title: titre || "Te Ora Hau", body: corps || "", url: "/te-ora-hau/espace.html" });
+    const payload = JSON.stringify({ title: titre || "Te Ora Hau", body: corps || "", url: "/te-ora-hau/espace.html", ...(testPersonnel ? {tag:"toh-test",requireInteraction:true} : {}) });
 
     let envoyes = 0, echecs = 0;
     for (const s of subs || []) {

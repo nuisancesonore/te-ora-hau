@@ -1,61 +1,62 @@
-// ============================================================
-// Te Ora Hau — Diffusion d'e-mail en masse (réservée au bureau)
-// Reçoit { sujet, corps, cible } et envoie aux adhérents de l'audience
-// (cible : 'tous' | 'ajour' | 'retard') via Resend, en copie cachée (Cci).
-//
-// Déploiement :
-//   supabase functions deploy diffusion-email
-// Secrets requis :
-//   SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (auto),
-//   RESEND_API_KEY, MAIL_FROM ("Te Ora Hau <contact@votre-domaine>")
-// ============================================================
+// TOH : diffusion email par groupes, réservée au bureau.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const URL = Deno.env.get("SUPABASE_URL")!;
-const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
-const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const RESEND = Deno.env.get("RESEND_API_KEY")!;
-const FROM = Deno.env.get("MAIL_FROM") ?? "Te Ora Hau <contact@teorahau.net>";
-
 const cors = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+ "Access-Control-Allow-Origin":"https://nuisancesonore.github.io",
+ "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type",
+ "Access-Control-Allow-Methods":"POST, OPTIONS"
 };
-
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  try {
-    const auth = req.headers.get("Authorization") || "";
-    // Vérifie que l'appelant est bien du bureau (is_bureau() avec son JWT).
-    const asUser = createClient(URL, ANON, { global: { headers: { Authorization: auth } } });
-    const { data: estBureau } = await asUser.rpc("is_bureau");
-    if (!estBureau) return new Response(JSON.stringify({ error: "Réservé au bureau" }), { status: 403, headers: { ...cors, "Content-Type": "application/json" } });
-
-    const { sujet, corps, cible } = await req.json();
-    if (!sujet || !corps) return new Response(JSON.stringify({ error: "sujet/corps requis" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
-
-    const admin = createClient(URL, SERVICE);
-    const { data: membres } = await admin.from("profils")
-      .select("email, cotisation_payee, cotisation_echeance").not("email", "is", null);
-    const aJour = (m: any) => m.cotisation_payee && (!m.cotisation_echeance || new Date(m.cotisation_echeance) >= new Date());
-    const dest = (membres || [])
-      .filter((m: any) => cible === "ajour" ? aJour(m) : cible === "retard" ? !aJour(m) : true)
-      .map((m: any) => m.email).filter(Boolean);
-
-    let envoyes = 0;
-    for (let i = 0; i < dest.length; i += 50) {
-      const lot = dest.slice(i, i + 50);
-      const r = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${RESEND}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: FROM, to: FROM, bcc: lot, subject: sujet, text: corps }),
-      });
-      if (r.ok) envoyes += lot.length;
-      else console.error("Resend", r.status, await r.text());
-    }
-    return new Response(JSON.stringify({ ok: true, envoyes }), { headers: { ...cors, "Content-Type": "application/json" } });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
+const response=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,"Content-Type":"application/json"}});
+const groupes=new Set(["tous","bureau","assesseurs","ajour","retard"]);
+const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+function selection(profils,cible,today){
+ const ajour=p=>Boolean(p.cotisation_payee)&&(!p.cotisation_echeance||String(p.cotisation_echeance).slice(0,10)>=today);
+ const retenus=profils.filter(p=>cible==="bureau"?p.role==="bureau":cible==="assesseurs"?p.role==="assesseur":cible==="ajour"?ajour(p):cible==="retard"?!ajour(p):cible==="tous");
+ return [...new Set(retenus.map(p=>(p.email||"").trim().toLowerCase()).filter(validEmail))].sort();
+}
+Deno.serve(async req=>{
+ if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
+ if(req.method!=="POST")return response({error:"Méthode non autorisée"},405);
+ try{
+  const authorization=req.headers.get("Authorization")||"";
+  const url=Deno.env.get("SUPABASE_URL"),anon=Deno.env.get("SUPABASE_ANON_KEY"),service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if(!url||!anon||!service)return response({error:"Configuration serveur indisponible"},503);
+  const client=createClient(url,anon,{global:{headers:{Authorization:authorization}}});
+  const {data:auth,error:authError}=await client.auth.getUser();
+  if(authError||!auth?.user)return response({error:"Connexion requise"},401);
+  const admin=createClient(url,service);
+  const {data:profil,error:profilError}=await admin.from("profils").select("role").eq("id",auth.user.id).single();
+  if(profilError||profil?.role!=="bureau")return response({error:"Réservé au bureau"},403);
+  let input;try{input=await req.json();}catch{return response({error:"Requête invalide"},400);}
+  const {action,cible,sujet,corps}=input;
+  if(!groupes.has(cible)||!["preview","send"].includes(action))return response({error:"Groupe ou action invalide"},400);
+  if(typeof sujet!=="string"||typeof corps!=="string"||!sujet.trim()||!corps.trim()||sujet.length>250||corps.length>50000)return response({error:"Objet ou message invalide"},400);
+  const {data:profils,error}=await admin.from("profils").select("email,role,cotisation_payee,cotisation_echeance");
+  if(error)return response({error:"Lecture des destinataires impossible"},503);
+  const today=new Date().toLocaleDateString("en-CA",{timeZone:"Pacific/Tahiti"});
+  const dest=selection(profils||[],cible,today);
+  const key=Deno.env.get("RESEND_API_KEY"),from=Deno.env.get("MAIL_FROM");
+  const ready=Boolean(key&&from);
+  if(action==="preview")return response({destinataires:dest,ready});
+  if(!ready)return response({error:"Expéditeur TOH non configuré. Aucun e-mail envoyé."},503);
+  if(!dest.length)return response({error:"Aucun destinataire"},400);
+  if(!/^[0-9a-f-]{36}$/i.test(input.requestId||""))return response({error:"Identifiant d'envoi requis"},400);
+  if(!Array.isArray(input.emails_attendus)||JSON.stringify(input.emails_attendus)!==JSON.stringify(dest))return response({error:"Le groupe a changé : prévisualisez à nouveau. Aucun e-mail envoyé."},409);
+  const payloadKey=JSON.stringify({sujet:sujet.trim(),corps:corps.trim(),dest});
+  const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(payloadKey));
+  const hash=Array.from(new Uint8Array(digest)).map(x=>x.toString(16).padStart(2,"0")).join("");
+  let acceptes=0,echecs=0;const lots=[];
+  for(let i=0;i<dest.length;i+=50){
+   const lot=dest.slice(i,i+50);
+   try{
+    const r=await fetch("https://api.resend.com/emails",{
+     method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json","Idempotency-Key":"toh/"+input.requestId+"/"+hash+"/"+i},
+     body:JSON.stringify({from,to:from,bcc:lot,subject:sujet.trim(),text:corps.trim()})
+    });
+    if(r.ok){const result=await r.json();if(result.id){acceptes+=lot.length;lots.push({index:i,acceptes:lot.length,id:result.id});}else{echecs+=lot.length;lots.push({index:i,echecs:lot.length});}}
+    else{echecs+=lot.length;lots.push({index:i,echecs:lot.length,status:r.status});}
+   }catch{echecs+=lot.length;lots.push({index:i,echecs:lot.length,resultat:"non confirmé"});}
   }
+  return response({ok:echecs===0,acceptes,echecs,lots});
+ }catch{return response({error:"Erreur serveur. Vérifiez le résultat avant toute nouvelle tentative."},500);}
 });
+

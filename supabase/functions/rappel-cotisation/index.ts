@@ -4,11 +4,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const URL_SB=Deno.env.get("SUPABASE_URL")!;
 const SERVICE=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const sb=createClient(URL_SB,SERVICE);
-const cors={"Access-Control-Allow-Origin":"https://nuisancesonore.github.io","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
-const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,"Content-Type":"application/json"}});
+const origines=new Set(["https://nuisancesonore.github.io","https://teorahau.github.io"]);
 function jourTahiti(){return new Date().toLocaleDateString("en-CA",{timeZone:"Pacific/Tahiti"});}
 function joursAvant(echeance:string,today:string){return Math.round((Date.parse(echeance.slice(0,10)+"T12:00:00Z")-Date.parse(today+"T12:00:00Z"))/86400000);}
 Deno.serve(async(req)=>{
+ const origine=req.headers.get("Origin");
+ const cors={"Access-Control-Allow-Origin":origine&&origines.has(origine)?origine:"https://teorahau.github.io","Vary":"Origin","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
+const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{...cors,"Content-Type":"application/json"}});
+ if(origine&&!origines.has(origine))return reply({error:"Origine non autorisée"},403);
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return reply({error:"Méthode non autorisée"},405);
  try{
@@ -39,7 +42,7 @@ Deno.serve(async(req)=>{
   let envoyes=0,echecs=0;
   for(const m of candidats){
    const ech=m.cotisation_echeance.slice(0,10),dateFr=ech.split("-").reverse().join("/");
-   const site=Deno.env.get("SITE_URL")||"https://nuisancesonore.github.io/te-ora-hau";
+   const site=Deno.env.get("SITE_URL")||"https://teorahau.github.io";
    try{
     const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json","Idempotency-Key":`toh-rappel/${m.id}/${ech}/${m.palier}`},body:JSON.stringify({from,to:m.email,subject:`Votre cotisation Te Ora Hau arrive à échéance le ${dateFr}`,text:`Ia ora na ${[m.prenom,m.nom].filter(Boolean).join(" ")},\n\nVotre cotisation arrive à échéance le ${dateFr}. Pour la renouveler :\n${site}/cotiser.html\n\nSi votre renouvellement est en cours, merci de le signaler au bureau.\nMauruuru,\nLe bureau de Te Ora Hau`})});
     if(!response.ok)throw new Error("Envoi refusé");

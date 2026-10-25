@@ -1,11 +1,6 @@
 // TOH : diffusion email par groupes, réservée au bureau.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-const cors = {
- "Access-Control-Allow-Origin":"https://nuisancesonore.github.io",
- "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type",
- "Access-Control-Allow-Methods":"POST, OPTIONS"
-};
-const response=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,"Content-Type":"application/json"}});
+const origines=new Set(["https://nuisancesonore.github.io","https://teorahau.github.io"]);
 const groupes=new Set(["tous","bureau","assesseurs","ajour","retard"]);
 const validEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 function selection(profils,cible,today){
@@ -14,6 +9,14 @@ function selection(profils,cible,today){
  return [...new Set(retenus.map(p=>(p.email||"").trim().toLowerCase()).filter(validEmail))].sort();
 }
 Deno.serve(async req=>{
+ const origine=req.headers.get("Origin");
+ const cors = {
+ "Access-Control-Allow-Origin":origine&&origines.has(origine)?origine:"https://teorahau.github.io","Vary":"Origin",
+ "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type",
+ "Access-Control-Allow-Methods":"POST, OPTIONS"
+};
+const response=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{...cors,"Content-Type":"application/json"}});
+ if(origine&&!origines.has(origine))return response({error:"Origine non autorisée"},403);
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return response({error:"Méthode non autorisée"},405);
  try{

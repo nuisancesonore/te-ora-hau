@@ -130,7 +130,7 @@ async function inscrire(nom, prenom, email, motdepasse, commune, extra) {
   const meta = Object.assign({ nom, prenom: prenom || "", commune: commune || "" }, extra || {});
   const { data, error } = await sb.auth.signUp({
     email, password: motdepasse,
-    options: { data: meta },
+    options: { data: meta, emailRedirectTo: new URL("connexion.html", location.href).href },
   });
   if (error) return { ok: false, msg: traduireErreur(error.message) };
   // Le profil est créé automatiquement par un trigger SQL.
@@ -558,7 +558,7 @@ function masqueDateFr(input) {
 // Partage du site (suggestion d'Eric) : menu de partage du telephone si
 // disponible, sinon copie du lien avec confirmation sur le bouton.
 async function partagerSite(btn) {
-  const url = "https://nuisancesonore.github.io/te-ora-hau/";
+  const url = "https://teorahau.github.io/";
   const texte = "Le bruit vous gêne ? Découvrez Te Ora Hau, l'association polynésienne de lutte contre les nuisances sonores : signalements, courriers prêts à envoyer, suivi de vos démarches.";
   if (navigator.share) {
     try { await navigator.share({ title: "Te Ora Hau", text: texte, url }); } catch (_) {}

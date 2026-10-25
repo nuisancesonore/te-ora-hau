@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     const { data: subs, error: subError } = await query;
     if (subError) return json({error:"Lecture des abonnements impossible"},503);
     if (dry_run) return json({ok:true,simulation:true,membres:ids.length,appareils:(subs||[]).length,envoyes:0});
-    const payload = JSON.stringify({ title: titre || "Te Ora Hau", body: corps || "", url: "/te-ora-hau/espace.html", ...(testPersonnel ? {tag:"toh-test",requireInteraction:true} : {}) });
+    const payload = JSON.stringify({ title: titre || "Te Ora Hau", body: corps || "", url: "espace.html", ...(testPersonnel ? {tag:"toh-test",requireInteraction:true} : {}) });
 
     let envoyes = 0, echecs = 0;
     for (const s of subs || []) {

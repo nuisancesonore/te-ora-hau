@@ -7,4 +7,4 @@ Allow: /
 # On ne les bloque PAS ici : un « Disallow » empêcherait les moteurs de lire
 # cette balise, et l'URL resterait affichée dans les résultats de recherche.
 
-Sitemap: https://nuisancesonore.github.io/te-ora-hau/sitemap.xml
+Sitemap: https://teorahau.github.io/sitemap.xml

@@ -1092,7 +1092,7 @@
       const emails = [...new Set(candidats.map(x=>x.a.email.trim().toLowerCase()))];
       if (!emails.length) return alert("Aucun destinataire sélectionné.");
       if (!confirm("Préparer un courriel pour "+emails.length+" destinataire(s) en copie cachée ? Vérifiez les règlements et les adresses avant l’envoi.")) return;
-      const corps = "Ia ora na,\n\nVotre cotisation Te Ora Hau arrive à échéance ou est échue. Si vous avez déjà réglé votre cotisation, merci de ne pas tenir compte de ce rappel et de nous le signaler.\n\nPour renouveler : https://nuisancesonore.github.io/te-ora-hau/cotiser.html\n\nMauruuru,\nLe bureau de Te Ora Hau";
+      const corps = "Ia ora na,\n\nVotre cotisation Te Ora Hau arrive à échéance ou est échue. Si vous avez déjà réglé votre cotisation, merci de ne pas tenir compte de ce rappel et de nous le signaler.\n\nPour renouveler : https://teorahau.github.io/cotiser.html\n\nMauruuru,\nLe bureau de Te Ora Hau";
       location.href = "mailto:?bcc="+encodeURIComponent(emails.join(","))+"&subject="+encodeURIComponent("Te Ora Hau - rappel de cotisation")+"&body="+encodeURIComponent(corps);
     }
     function relancer(email){
@@ -1101,7 +1101,7 @@
         "Votre cotisation à l'association Te Ora Hau arrive à échéance (ou est échue). "+
         "Merci de penser à la renouveler pour continuer à soutenir notre action contre les nuisances sonores.\n\n"+
         "Pour cotiser, rendez-vous sur :\n"+
-        "https://nuisancesonore.github.io/te-ora-hau/cotiser.html\n\n"+
+        "https://teorahau.github.io/cotiser.html\n\n"+
         "(virement, chèque ou espèces — pensez à indiquer vos NOM et PRÉNOM).\n\n"+
         "Mauruuru,\nLe bureau de Te Ora Hau";
       location.href = `mailto:${e}?subject=${encodeURIComponent("Te Ora Hau — renouvellement de votre cotisation")}`+

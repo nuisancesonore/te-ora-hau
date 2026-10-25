@@ -15,7 +15,7 @@ self.addEventListener("push", (event) => {
     body: data.body || "",
     icon: "images/icon-192.png",
     badge: "images/icon-192.png",
-    data: { url: data.url || "/te-ora-hau/espace.html" },
+    data: { url: data.url || new URL("espace.html", self.registration.scope).href },
     ...(data.tag === "toh-test" ? {tag:"toh-test",requireInteraction:true} : {}),
   };
   event.waitUntil((async () => {
@@ -32,7 +32,10 @@ self.addEventListener("notificationclick", (event) => {
   const defaut = new URL("espace.html", self.registration.scope);
   let cible = defaut;
   try {
-    const candidate = new URL(event.notification.data && event.notification.data.url || defaut.href, self.registration.scope);
+    let chemin = event.notification.data && event.notification.data.url || defaut.href;
+    // Compatibilité avec une notification émise avant le changement d'adresse.
+    if (new URL(self.registration.scope).pathname === "/" && typeof chemin === "string" && chemin.startsWith("/te-ora-hau/")) chemin = chemin.slice("/te-ora-hau/".length);
+    const candidate = new URL(chemin, self.registration.scope);
     if (candidate.origin === defaut.origin && candidate.pathname.startsWith(new URL(self.registration.scope).pathname)) cible = candidate;
   } catch (_) {}
   const url = cible.href;

@@ -35,6 +35,8 @@ permissions:
 
 jobs:
   ping:
+    # L'ancien dépôt reste le seul responsable pendant la migration.
+    if: github.repository == 'nuisancesonore/te-ora-hau'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

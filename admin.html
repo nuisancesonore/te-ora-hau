@@ -718,7 +718,7 @@
           </div>
 
           <p class="com-etape">3 · Informer un groupe par e-mail</p>
-          <p class="com-hint">Utilisez le message ci-dessus. Les adresses des destinataires restent confidentielles.</p>
+          <p class="com-hint">Préparez un e-mail depuis votre propre messagerie. Les destinataires seront placés en copie cachée (Cci).</p>
           <div class="champ"><label for="email-groupe">Groupe de destinataires</label>
             <select id="email-groupe" onchange="majGroupeEmail()">
               <option value="tous">Tous les inscrits ayant un e-mail</option>
@@ -728,12 +728,13 @@
               <option value="retard">Cotisations à renouveler</option>
             </select></div>
           <p id="email-resume" class="com-hint" role="status"></p>
-          <button type="button" class="btn btn-vert" style="width:100%;min-height:48px" onclick="preparerEmailGroupe(this)">Prévisualiser l'envoi au groupe</button>
+          <button type="button" class="btn btn-vert" style="width:100%;min-height:48px" onclick="preparerEmailGroupe(this)">Préparer l’e-mail au groupe</button>
           <div id="email-apercu" style="margin-top:1rem" aria-live="polite"></div>
           <details class="com-plus">
-            <summary>Copier les adresses du groupe</summary>
+            <summary>Copier pour ma messagerie</summary>
             <p class="com-hint">Pour préparer un envoi en copie cachée dans votre messagerie.</p>
             <button type="button" class="btn btn-clair" onclick="copierEmails(this)">Copier les e-mails du groupe</button>
+            <button type="button" class="btn btn-clair" onclick="copierMessageEmail(this)">Copier l’objet et le message</button>
           </details>
         </div>
         <h3 style="color:var(--bleu-fonce);margin-bottom:0.6rem">Annonces publiées</h3>
@@ -743,7 +744,7 @@
       majGroupeEmail();
       chargerAnnonces();
     }
-    let EMAIL_PREVU = null;
+
     const GROUPES_EMAIL = { tous:"Tous les inscrits ayant un e-mail", bureau:"Bureau", assesseurs:"Assesseurs", ajour:"Adhérents à jour", retard:"Cotisations à renouveler" };
     function personnesEmailGroupe(cible){
       return ADH.filter(a => cible==="bureau" ? a.role==="bureau" : cible==="assesseurs" ? a.role==="assesseur" : cible==="ajour" ? estAJour(a) : cible==="retard" ? !estAJour(a) : cible==="tous");
@@ -752,7 +753,6 @@
       return [...new Set(personnesEmailGroupe(cible).map(a=>(a.email||"").trim().toLowerCase()).filter(e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)))].sort();
     }
     function majGroupeEmail(){
-      EMAIL_PREVU=null;
       const cible=document.getElementById("email-groupe").value;
       const personnes=personnesEmailGroupe(cible), emails=emailsGroupe(cible);
       const manquants=personnes.filter(a=>!a.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.email.trim())).length;
@@ -765,36 +765,30 @@
       if(!emails.length)return alert("Aucun e-mail valide dans ce groupe.");
       copier(emails.join(", "),btn);
     }
-    async function preparerEmailGroupe(btn){
-      EMAIL_PREVU=null;
+    function copierMessageEmail(btn){
+      const titre=document.getElementById("com-titre").value.trim(),corps=document.getElementById("com-corps").value.trim();
+      if(!titre||!corps)return alert("Renseignez l’objet et le message.");
+      copier(titre+"\n\n"+corps,btn);
+    }
+    function preparerEmailGroupe(){
       const sujet=document.getElementById("com-titre").value.trim(), corps=document.getElementById("com-corps").value.trim();
-      const cible=document.getElementById("email-groupe").value;
+      const cible=document.getElementById("email-groupe").value, emails=emailsGroupe(cible);
       const zone=document.getElementById("email-apercu");zone.innerHTML="";
       if(!sujet||!corps)return alert("Renseignez l’objet et le message avant de préparer l’envoi.");
-      if(!emailsGroupe(cible).length)return alert("Aucune adresse e-mail valide dans ce groupe.");
-      return actionBouton(btn,"Vérification du groupe…",async()=>{
-        try{
-          const {data,error}=await sb.functions.invoke("diffusion-email",{body:{action:"preview",sujet,corps,cible}});
-          if(error||!data||!Array.isArray(data.destinataires))throw new Error("Le service d’envoi n’est pas disponible. Aucun e-mail envoyé.");
-          const emails=data.destinataires;
-          EMAIL_PREVU={sujet,corps,cible,emails,requestId:crypto.randomUUID()};
-          zone.innerHTML='<div style="border:1px solid #c6dedd;border-radius:12px;padding:1rem;background:#f5faf9"><h4 style="margin:0 0 0.5rem">Aperçu de l’e-mail</h4><p><strong>Groupe : </strong>'+echapper(GROUPES_EMAIL[cible])+'</p><p><strong>Destinataires : </strong>'+emails.length+' adresse(s) unique(s)</p><details><summary>Vérifier les adresses</summary><p style="overflow-wrap:anywhere">'+emails.map(echapper).join("<br>")+'</p></details><p><strong>Objet : </strong>'+echapper(sujet)+'</p><div style="white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:0.8rem;border-radius:8px">'+echapper(corps)+'</div><p class="com-hint" style="margin-top:0.7rem">Cet envoi par e-mail est distinct de la publication sur le site.</p>'+(data.ready&&emails.length?'<button type="button" class="btn btn-vert" style="width:100%;min-height:48px" onclick="confirmerEmailGroupe(this)">Confirmer l’envoi — '+emails.length+' destinataire(s)</button>':'<p role="status" style="color:#8a5a00;font-weight:700">Envoi direct indisponible : l’expéditeur TOH reste à configurer. Aucun e-mail envoyé.</p>')+'</div>';
-        }catch(e){EMAIL_PREVU=null;zone.textContent=e.message||"Vérification impossible. Aucun e-mail envoyé.";}
-      });
+      if(!emails.length)return alert("Aucune adresse e-mail valide dans ce groupe.");
+      zone.innerHTML='<div style="border:1px solid #c6dedd;border-radius:12px;padding:1rem;background:#f5faf9"><h4 style="margin:0 0 0.5rem">Votre e-mail est prêt à préparer</h4><p><strong>Groupe : </strong>'+echapper(GROUPES_EMAIL[cible])+'</p><p><strong>Destinataires en Cci : </strong>'+emails.length+' adresse(s) unique(s)</p><details><summary>Vérifier les adresses</summary><p style="overflow-wrap:anywhere">'+emails.map(echapper).join("<br>")+'</p></details><p><strong>Objet : </strong>'+echapper(sujet)+'</p><div style="white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:0.8rem;border-radius:8px">'+echapper(corps)+'</div><p class="com-hint" style="margin-top:0.7rem">Choisissez votre messagerie. Vous pourrez vérifier le message, ajouter des pièces jointes et appuyer sur Envoyer depuis votre propre compte.</p><div style="display:grid;gap:0.6rem;margin-top:0.8rem"><button type="button" class="btn btn-vert" style="width:100%;min-height:48px" onclick="ouvrirEmailGroupe(\'gmail\')">Ouvrir Gmail</button><button type="button" class="btn btn-clair" style="width:100%;min-height:48px" onclick="ouvrirEmailGroupe(\'messagerie\')">Ouvrir ma messagerie habituelle</button></div><p class="com-hint" style="margin-top:0.7rem">Aucun message n’est envoyé automatiquement. Cet e-mail est indépendant de la publication sur le site.</p></div>';
     }
-    async function confirmerEmailGroupe(btn){
-      const p=EMAIL_PREVU;if(!p)return;
-      if(p.sujet!==document.getElementById("com-titre").value.trim()||p.corps!==document.getElementById("com-corps").value.trim()||p.cible!==document.getElementById("email-groupe").value){majGroupeEmail();return alert("Le message ou le groupe a changé. Prévisualisez à nouveau l’envoi.");}
-      if(!confirm("Envoyer cet e-mail au groupe « "+GROUPES_EMAIL[p.cible]+" » ("+p.emails.length+" destinataires) ?"))return;
-      return actionBouton(btn,"Envoi en cours…",async()=>{
-        try{
-          const {data,error}=await sb.functions.invoke("diffusion-email",{body:{action:"send",sujet:p.sujet,corps:p.corps,cible:p.cible,emails_attendus:p.emails,requestId:p.requestId}});
-          if(error||!data)throw new Error("Résultat non confirmé. Ne relancez pas un nouvel envoi avant vérification.");
-          const n=Number(data.acceptes)||0, echecs=Number(data.echecs)||0;
-          document.getElementById("email-apercu").textContent=n+" destinataire(s) accepté(s) par le service d’envoi"+(echecs?" · "+echecs+" échec(s)":"")+". Cela ne confirme pas la réception ni la lecture.";
-          EMAIL_PREVU=null;
-        }catch(e){document.getElementById("email-apercu").textContent=e.message||"Résultat non confirmé. Vérifiez avant tout nouvel envoi.";EMAIL_PREVU=null;}
-      });
+    function ouvrirEmailGroupe(mode){
+      const sujet=document.getElementById("com-titre").value.trim(),corps=document.getElementById("com-corps").value.trim();
+      const emails=emailsGroupe(document.getElementById("email-groupe").value);
+      if(!sujet||!corps||!emails.length)return alert("Vérifiez le message et les destinataires.");
+      const q=encodeURIComponent;
+      const url=mode==="gmail"
+        ? "https://mail.google.com/mail/?view=cm&fs=1&bcc="+q(emails.join(","))+"&su="+q(sujet)+"&body="+q(corps)
+        : "mailto:?bcc="+q(emails.join(","))+"&subject="+q(sujet)+"&body="+q(corps);
+      if(url.length>(mode==="gmail"?6000:1900))return alert("Le message ou le groupe est trop long pour une ouverture fiable. Utilisez « Copier les e-mails du groupe » et « Copier l’objet et le message », puis collez-les dans votre messagerie (destinataires en Cci).");
+      if(mode==="gmail"){const fenetre=window.open(url,"_blank","noopener,noreferrer");}
+      else window.location.href=url;
     }
     function toLocalDatetime(iso){
       const d = new Date(iso); if (isNaN(d)) return "";

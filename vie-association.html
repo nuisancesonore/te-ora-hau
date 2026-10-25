@@ -30,6 +30,8 @@
     .evenement-resume{display:flex;flex-direction:column;gap:.45rem;padding:1rem 1rem 0;line-height:1.4}
     .evenement-resume>strong{font-size:1.15rem;color:var(--bleu-fonce)}
     .evenement-resume>span:last-child{font-size:.9rem;color:var(--gris)}
+    .liste-reunion{padding-left:1.3rem;max-width:760px;margin:1rem 0}
+    .liste-reunion li{margin-bottom:.5rem}
     .titre-detail-evenement{font-size:1.35rem;color:var(--bleu-fonce);margin-bottom:1rem}
     .affiche-grandir{display:flex;flex-direction:column;align-items:flex-start;gap:.8rem;max-width:440px;margin-top:1.2rem}
     .affiche-grandir>img{display:block;width:100%;height:auto;border-radius:10px}
@@ -129,6 +131,38 @@
       <h2 class="section-titre" id="titre-evenements">Événements à venir</h2>
       <p class="intro-vie">Découvrez nos prochains rendez-vous. Cliquez sur une carte pour en savoir plus.</p>
       <div class="evenements-grille">
+        <details class="album" id="evenement-reunion-taravao-2026">
+          <summary>
+            <span class="couverture-album affiche-evenement">
+              <img src="images/evenements/reunion-publique-taravao-4-novembre-2026-vignette.webp" width="636" height="900" alt="Affiche de la réunion publique Nuisances sonores : discutons ensemble, mercredi 4 novembre à 14 h, à Taravao" loading="lazy" decoding="async">
+            </span>
+            <span class="evenement-resume">
+              <span class="etiquette">MERCREDI 4 NOVEMBRE 2026 · 14 H</span>
+              <strong>Nuisances sonores : discutons ensemble</strong>
+              <span>Réunion publique · Mairie de Taiarapu-Est · Taravao</span>
+            </span>
+            <span class="ouvrir-album"><span class="ouvrir-texte">Découvrir la réunion</span><span class="fermer-texte">Refermer la réunion</span></span>
+          </summary>
+          <article class="actualite a-venir">
+            <h3 class="titre-detail-evenement">Réunion publique sur les nuisances sonores à Taravao</h3>
+            <p><strong><time datetime="2026-11-04T14:00:00-10:00">Mercredi 4 novembre 2026 à 14 h</time></strong><br>Grande salle du conseil municipal, mairie de Taiarapu-Est, à Taravao (Afaahiti).</p>
+            <p>La commune de Taiarapu-Est invite les habitants, les professionnels et les associations à une réunion d’information et d’échanges sur les nuisances sonores. <strong>L’association Te Ora Hau est également invitée à cette rencontre.</strong></p>
+            <p>L’objectif est de réunir les acteurs concernés pour discuter de la réglementation et construire des solutions réalistes contre le bruit dans la commune.</p>
+            <ul class="liste-reunion">
+              <li>Le cadre réglementaire : horaires, niveaux sonores, autorisations et sanctions.</li>
+              <li>Les difficultés rencontrées par les professionnels et les riverains.</li>
+              <li>Les bonnes pratiques pour limiter les impacts sur le voisinage.</li>
+              <li>Le dialogue et le signalement entre mairie, forces de l’ordre, organisateurs et population.</li>
+            </ul>
+            <p>Sont notamment concernés les restaurateurs, exploitants de roulottes et de bars, associations, confessions religieuses, écoles de danse et de musique, organisateurs d’événements et administrés.</p>
+            <p style="font-size:.85rem;color:var(--gris)">Source : affiche et publication de la Commune de Taiarapu-Est.</p>
+            <a class="affiche-grandir" href="images/evenements/reunion-publique-taravao-4-novembre-2026-affiche.jpg" target="_blank" rel="noopener" data-affiche="Affiche officielle · Réunion publique à Taravao, 4 novembre 2026" aria-label="Agrandir l’affiche de la réunion publique du 4 novembre à Taravao">
+              <img src="images/evenements/reunion-publique-taravao-4-novembre-2026-vignette.webp" width="636" height="900" alt="Affiche de la mairie : réunion publique sur les nuisances sonores, le 4 novembre à 14 h" loading="lazy" decoding="async">
+              <span class="btn btn-clair">Agrandir l’affiche</span>
+            </a>
+          </article>
+        </details>
+
         <details class="album" id="evenement-aito-ukulele-2026">
           <summary>
             <span class="couverture-album affiche-evenement">
@@ -147,7 +181,7 @@
             <p>L’association Te Ora Hau soutient la culture et le développement des savoir-faire artistiques et sera donc présente le samedi 14 novembre 2026 à Papara à partir de 10 h lors de la 2ᵉ édition du Concours ‘Aito ‘Ukulele Pōrinetia.</p>
             <p>Ce sera l’occasion de sensibiliser le public aux nuisances sonores et de renseigner les personnes victimes de nuisances sonores.</p>
             <p>Les membres du bureau remercient chaleureusement l’artiste <strong>Tiheni Ena</strong> pour son accueil et son engagement auprès de la jeunesse et de la culture.</p>
-            <a class="affiche-grandir" href="images/evenements/aito-ukulele-porinetia-2026-affiche.jpg" target="_blank" rel="noopener" data-affiche aria-label="Agrandir l’affiche officielle du Concours ‘Aito ‘Ukulele Pōrinetia">
+            <a class="affiche-grandir" href="images/evenements/aito-ukulele-porinetia-2026-affiche.jpg" target="_blank" rel="noopener" data-affiche="Affiche officielle · ‘Aito ‘Ukulele Pōrinetia 2026" aria-label="Agrandir l’affiche officielle du Concours ‘Aito ‘Ukulele Pōrinetia">
               <img src="images/evenements/aito-ukulele-porinetia-2026-vignette.webp" width="640" height="899" alt="Affiche officielle : compétition de ‘ukulele et vivo, deuxième édition, le 14 novembre 2026" loading="lazy" decoding="async">
               <span class="btn btn-clair">Agrandir l’affiche officielle</span>
             </a>
@@ -236,6 +270,13 @@
         lien.addEventListener("click", event => {
           if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || typeof fenetre.showModal !== "function") return;
           event.preventDefault();
+          const titre = lien.dataset.affiche || "Affiche officielle";
+          const image = fenetre.querySelector("img");
+          const original = fenetre.querySelector("p a");
+          fenetre.querySelector("h2").textContent = titre;
+          image.src = lien.href;
+          image.alt = titre;
+          original.href = lien.href;
           fenetre.showModal();
         });
       });

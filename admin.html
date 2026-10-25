@@ -918,7 +918,7 @@
         const debISO = echISO ? isoAnnee(echISO, -1) : "";
         return `
         <tr>
-          <td>${echapper(nomComplet(a))||'—'}${a.role==='bureau'?' <span class="pill ok">bureau</span>':''}</td>
+          <td>${echapper(nomComplet(a))||'—'}${a.role==='bureau'?' <span class="pill ok">bureau</span>':a.role==='assesseur'?' <span class="pill ok">assesseur</span>':''}</td>
           <td>${echapper(a.email)||'—'}</td>
           <td>${echapper(a.commune)||'—'}</td>
           <td>${estAJour(a)?'<span class="pill ok">À jour</span>':'<span class="pill ko">En retard</span>'}</td>

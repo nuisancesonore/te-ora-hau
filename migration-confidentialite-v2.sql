@@ -1,3 +1,4 @@
+-- HISTORIQUE : ne pas réappliquer sur la base actuelle. Voir FINALISATION-V2.md.
 -- Te Ora Hau : réduction des données publiques.
 -- A appliquer dans Supabase après la sauvegarde administrateur.
 -- Transaction : toute erreur annule la migration. Aucune donnée supprimée.

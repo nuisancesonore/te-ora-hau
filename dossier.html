@@ -61,9 +61,12 @@
 
     @media print {
       body { background:#fff; padding-top:0 !important; }
-      .banniere, header.site, footer.site, .barre, #nav-mount { display:none !important; }
+      .banniere, header.site, footer.site, .barre, #nav-mount, #footer-mount, .toh-aide-pdf { display:none !important; }
       .fiche { box-shadow:none; padding:0; max-width:100%; }
       main { padding:0; }
+      .fiche-ent, .resume, .chrono li { break-inside:avoid; }
+      .bloc h2 { break-after:avoid; }
+      @page { size:A4; margin:16mm; }
     }
   </style>
 </head>
@@ -103,6 +106,15 @@
         return;
       }
 
+      let auteur = profil;
+      if (sig.auteur !== profil.id) {
+        const r = await sb.from("profils").select("nom,prenom").eq("id",sig.auteur).single();
+        if (r.error || !r.data) {
+          contenu.innerHTML = '<h1 class="section-titre">Dossier incomplet</h1><p role="alert">L’identité de l’auteur n’a pas pu être chargée. Réessayez avant de préparer votre PDF.</p>';
+          return;
+        }
+        auteur = r.data;
+      }
       let episodes = [], demarches = [], chargementIncomplet = false;
       try {
         const r = await sb.from("journal_bruit").select("*").eq("signalement_id", id).order("date_episode", { ascending: true });
@@ -120,7 +132,9 @@
       }
 
       const reponses = demarches.filter(d => d.reponse === "Réponse reçue").length;
-      const dateFr = d => d ? new Date(String(d).slice(0, 10) + "T00:00:00").toLocaleDateString("fr-FR") : "—";
+      const dateFr = d => !d ? "—" : /^\d{4}-\d{2}-\d{2}$/.test(String(d))
+        ? new Date(d + "T12:00:00").toLocaleDateString("fr-FR")
+        : new Date(d).toLocaleDateString("fr-FR", {timeZone:"Pacific/Tahiti"});
       const classeEtat = e => ({ "Ouvert":"ouvert", "En cours":"encours", "Constaté":"constate",
                                  "Résolu":"resolu", "Classé sans suite":"classe" })[e] || "ouvert";
 
@@ -153,7 +167,7 @@
             <div>
               <h1>Dossier de nuisance sonore</h1>
               <div class="ref">Référence ${echapper(sig.id.slice(0,8).toUpperCase())} ·
-                ouvert le ${dateFr(sig.cree_le)} · ${echapper(nomComplet(profil))}</div>
+                ouvert le ${dateFr(sig.cree_le)} · ${echapper(nomComplet(auteur))}</div>
             </div>
             <span class="etat ${classeEtat(sig.etat)}">${echapper(sig.etat || "Ouvert")}</span>
           </div>
@@ -163,6 +177,11 @@
             <div class="kpi"><div class="n">${demarches.length}</div><div class="l">démarche${demarches.length>1?"s":""} engagée${demarches.length>1?"s":""}</div></div>
             <div class="kpi"><div class="n">${reponses}</div><div class="l">réponse${reponses>1?"s":""} obtenue${reponses>1?"s":""}</div></div>
             <div class="kpi"><div class="n">${sig.personnes_foyer || "—"}</div><div class="l">personnes du foyer</div></div>
+          </div>
+
+          <div class="bloc">
+            <h2>Pièces justificatives</h2>
+            <p>Ce dossier reprend les informations enregistrées sur le site. Les preuves déclarées ne sont pas des fichiers joints : ajoutez séparément les courriers, attestations, photos ou enregistrements utiles lors de la transmission.</p>
           </div>
 
           <div class="bloc">

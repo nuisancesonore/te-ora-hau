@@ -19,3 +19,6 @@ images/image bandeau.png
 # La clé PUBLIQUE, elle, vit dans js/config.js et peut être publiée.
 vapid-keys-*.txt
 ID.txt
+
+# Cache local de la CLI Supabase
+supabase/.temp/

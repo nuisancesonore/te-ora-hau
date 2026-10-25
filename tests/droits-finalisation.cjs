@@ -1,0 +1,68 @@
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const {restaurer}=require('./restauration.cjs');
+(async()=>{
+ const b=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+ const {db}=await restaurer(b);let n=0;
+ const scalar=async sql=>(await db.query(sql)).rows[0].n;
+ const ok=async(sql,expected)=>{assert.deepStrictEqual(await scalar(sql),expected,sql);n++};
+ const denied=async sql=>{let fail=false;try{await db.exec(sql)}catch{fail=true}assert(fail,'autorisé : '+sql);n++};
+ const as=async(id,role='authenticated')=>{await db.exec('reset role;');await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify(id?{sub:id,role}:{})]);await db.exec('set role '+role)};
+ const bureau=b.data.profils.find(p=>p.role==='bureau').id;
+ const assesseur=b.data.profils.find(p=>p.role==='assesseur'&&p.cotisation_echeance).id;
+ const ids={};
+ for(const type of ['valide','attente','suspendu']){
+  const {rows:[{id}]}=await db.query('select gen_random_uuid() id');ids[type]=id;
+  await db.query('insert into auth.users(id,email,email_confirmed_at,created_at) values($1,$2,now(),now())',[id,type+'@example.invalid']);
+  await db.query("update public.profils set cotisation_payee=$2,cotisation_echeance='2099-01-01',acces_suspendu=$3 where id=$1",[id,type!=='attente',type==='suspendu']);
+  if(type==='suspendu') await db.query('update public.profils set acces_suspendu=true where id=$1',[id]);
+ }
+ await as(ids.valide);
+ const avant=await scalar('select count(*)::int n from public.profils');assert(avant>=1);n++;
+ await as(null,'postgres');
+ const migration=fs.readdirSync(path.join(__dirname,'..','supabase/migrations')).find(n=>n.endsWith('_finalisation_acces_et_export.sql'));
+ await db.exec(fs.readFileSync(path.join(__dirname,'..','supabase/migrations',migration),'utf8'));
+ await db.exec("insert into public.missions(titre,pour) values('TEST ouverte','assesseurs'),('TEST bureau','bureau');");
+ await as(null,'anon');
+ await denied('select * from public.annuaire_membres');
+ await denied('select public.export_sauvegarde_application()');
+ await ok('select count(*)::int n from public.profils',0);
+ await ok('select count(*)::int n from public.forum_messages',0);
+ await ok('select count(*)::int n from public.missions',0);
+ for(const type of ['attente','suspendu']){
+  await as(ids[type]);
+  await ok('select count(*)::int n from public.profils',1);
+  await ok('select count(*)::int n from public.annuaire_membres',0);
+  await ok('select count(*)::int n from public.forum_messages',0);
+  await ok('select count(*)::int n from public.missions',0);
+  await denied(`insert into public.forum_messages(auteur,texte) values('${ids[type]}','TEST')`);
+ }
+ await as(ids.valide);
+ await denied('select public.export_sauvegarde_application()');
+ await ok('select count(*)::int n from public.profils',1);
+ await ok('select count(*)::int n from public.annuaire_membres',b.data.profils.filter(p=>p.annuaire_optin&&!p.acces_suspendu).length);
+ const fields=Object.keys((await db.query('select * from public.annuaire_membres limit 1')).rows[0]).sort();
+ assert.deepStrictEqual(fields,['commune','id','nom','prenom','type_nuisance']);n++;
+ await ok('select count(*)::int n from public.forum_messages',b.data.forum_messages.length);
+ await db.exec(`insert into public.forum_messages(auteur,texte) values('${ids.valide}','TEST');`);n++;
+ await denied(`insert into public.forum_messages(auteur,texte) values('${bureau}','TEST');`);
+ await ok('select count(*)::int n from public.missions',0);
+ await db.exec(`insert into public.push_subscriptions(user_id,endpoint,subscription) values('${ids.valide}','https://example.invalid/push','{}') on conflict(endpoint) do update set subscription=excluded.subscription;`);
+ await db.exec(`insert into public.push_subscriptions(user_id,endpoint,subscription) values('${ids.valide}','https://example.invalid/push','{"test":true}') on conflict(endpoint) do update set subscription=excluded.subscription;`);n++;
+ await as(ids.attente);
+ await denied(`insert into public.push_subscriptions(user_id,endpoint,subscription) values('${ids.attente}','https://example.invalid/push','{}') on conflict(endpoint) do update set user_id=excluded.user_id;`);
+ await as(assesseur);
+ await ok('select count(*)::int n from public.missions',1);
+ await db.exec(`update public.missions set assigne_a='${assesseur}',statut='En cours' where titre='TEST ouverte'`);
+ await ok("select count(*)::int n from public.missions where assigne_a=auth.uid() and statut='En cours'",1);
+ await denied(`update public.missions set assigne_a='${bureau}' where titre='TEST ouverte'`);
+ await ok('select count(*)::int n from public.signalements',0);
+ await as(bureau);
+ const sauvegarde=(await db.query('select public.export_sauvegarde_application() data')).rows[0].data;
+ assert.equal(sauvegarde.format,'te-ora-hau-donnees-v1');
+ assert.equal(Object.keys(sauvegarde.tables).length,10);n++;
+ await ok('select count(*)::int n from public.missions',2);
+ await ok('select count(*)::int n from public.journal_bruit',b.data.journal_bruit.length);
+ await ok('select count(*)::int n from public.profils',b.data.profils.length+3);
+ await ok('select count(*)::int n from public.dossiers',b.data.signalements.length);
+ await db.close();console.log('DROITS OK : '+n+' contrôles sur copie restaurée; données de production intactes.');
+})().catch(e=>{console.error(e);process.exitCode=1});

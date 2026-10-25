@@ -57,6 +57,8 @@
           <a href="connexion.html" class="btn btn-primaire">Se connecter</a></div>`;
         return;
       }
+      const acces = verrouAcces(PROFIL);
+      if (acces) { contenu.innerHTML = acces; return; }
       // Le bureau ne « reçoit » pas de missions : il les pilote depuis l'Admin.
       if (PROFIL.role === "bureau" && PROFIL.type_adhesion !== "Assesseur"){
         contenu.innerHTML = `<div class="verrou"><div class="ico">🏛️</div>

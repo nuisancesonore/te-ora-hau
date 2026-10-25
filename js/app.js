@@ -169,10 +169,10 @@ async function monProfil() {
 
 // Statut de cotisation — source de vérité unique (utilisée par Mon espace et Cotiser)
 function statutCotisation(profil) {
-  // Date « AAAA-MM-JJ » lue en heure locale (le suffixe T00:00:00 évite le
-  // décalage d'un jour dû au fuseau UTC — ex. Polynésie -10h).
+  // Comparaison des jours calendaires à Tahiti, échéance incluse.
   const ech = profil.cotisation_echeance ? new Date(String(profil.cotisation_echeance).slice(0,10) + "T00:00:00") : null;
-  const aJour = profil.cotisation_payee && (!ech || ech >= new Date());
+  const aujourdHui = new Intl.DateTimeFormat("en-CA", {timeZone:"Pacific/Tahiti", year:"numeric", month:"2-digit", day:"2-digit"}).format(new Date());
+  const aJour = profil.cotisation_payee && (!profil.cotisation_echeance || String(profil.cotisation_echeance).slice(0,10) >= aujourdHui);
   // La cotisation est annuelle : la période débute un an avant l'échéance.
   let debut = null;
   if (ech) { debut = new Date(ech); debut.setFullYear(debut.getFullYear() - 1); }
@@ -192,7 +192,7 @@ function statutCotisation(profil) {
 // Accès complet au site = cotisation à jour (validée par le bureau),
 // ou être soi-même membre du bureau.
 function aDroitAcces(profil) {
-  return !!(profil && (profil.role === "bureau" || statutCotisation(profil).aJour));
+  return !!(profil && !profil.acces_suspendu && (profil.role === "bureau" || statutCotisation(profil).aJour));
 }
 
 // Verrou pour les pages réservées aux adhérents validés. Renvoie le HTML du
@@ -205,7 +205,10 @@ function verrouAcces(profil) {
       <a href="connexion.html" class="btn btn-primaire">Se connecter</a>
       <a href="inscription.html" class="btn btn-clair">Adhérer</a></div>`;
   }
-  if (profil.role !== "bureau" && !statutCotisation(profil).aJour) {
+  if (profil.acces_suspendu) {
+    return `<div class="verrou"><h2>Accès suspendu</h2><p>Contactez le bureau pour vérifier votre situation.</p><a href="contact.html" class="btn btn-primaire">Contacter le bureau</a></div>`;
+  }
+  if (!aDroitAcces(profil)) {
     return `<div class="verrou"><div class="ico">⏳</div>
       <h2 style="color:var(--bleu-fonce)">Adhésion en attente de validation</h2>
       <p style="color:var(--gris);margin:0.6rem 0 1.2rem">Votre compte est bien créé&nbsp;! L'accès complet se débloque dès que votre <strong>cotisation</strong> a été reçue et <strong>validée par le bureau</strong> de Te Ora Hau.</p>

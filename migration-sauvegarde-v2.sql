@@ -1,3 +1,4 @@
+-- HISTORIQUE : export remplacé par la migration finalisation_acces_et_export.
 -- Export cohérent des données applicatives, réservé au bureau côté serveur.
 -- Ne remplace PAS une sauvegarde PostgreSQL : auth, fichiers Storage,
 -- fonctions, politiques, secrets et schéma ne sont pas inclus.

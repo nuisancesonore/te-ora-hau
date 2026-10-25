@@ -1,35 +1,50 @@
-# Finalisation des parcours
+# Vérification des parcours et de la confidentialité
 
-## Modifications côté site
+## Appliqué dans la base
 
-- Forum : sujets Général, Entraide, Démarches, Vie associative ; messages historiques conservés.
-- Missions : responsable, prochaine action, échéance proche ou dépassée, prise concurrente contrôlée.
-- Signalements : prochaine action, dossiers clos distingués.
-- PDF : état des démarches séparé de la chronologie pour ne pas attribuer une date fictive à une réponse.
-- Notifications : lecture propre à chaque compte, pastilles recalculées, vérification de la souscription enregistrée.
-- Export JSON des données métier réservé au bureau par une fonction serveur.
+- Cartes publiques expurgées et positions arrondies; détails de carte pour les adhérents validés.
+- Signalements complets réservés à leur auteur et au bureau.
+- Fonctions privilégiées de contrôle des rôles dans le schéma privé; interfaces publiques sans privilèges supplémentaires.
+- Annuaire via annuaire_membres : seulement identifiant, nom, prénom, commune et type de nuisance, après consentement. Les autres champs de profils restent privés.
+- Forum et missions : contrôle serveur de l'adhésion validée et de la suspension, en complément des rôles/propriétaires.
+- Lecture du journal par le bureau pour préparer les dossiers.
+- Réactivation des notifications limitée au propriétaire de l'abonnement.
+- Export métier du bureau en SECURITY INVOKER : uniquement les dix tables déjà accessibles au bureau. Les listes techniques d'adresses des rôles sont exclues.
 
-## Activation Supabase restante
+La migration supabase/migrations/*_finalisation_acces_et_export.sql contient le complément de cette passe. Les scripts migration-confidentialite-v2.sql et migration-sauvegarde-v2.sql sont historiques; ne pas les réappliquer sur le projet actuel. Le schéma actuel complet est conservé dans le snapshot privé de sauvegarde, avec les migrations réelles enregistrées dans Supabase.
 
-Ces migrations sont préparées et testées dans PostgreSQL isolé ; leur présence dans Git ne les applique pas à Supabase.
+## Site et notifications
 
-1. Réaliser et vérifier une sauvegarde administrateur du projet, y compris les comptes Auth et les fichiers Storage ; conserver aussi le schéma et les politiques.
-2. Appliquer migration-sauvegarde-v2.sql, exporter les données métier et vérifier les volumes.
-3. Appliquer migration-confidentialite-v2.sql dans le SQL Editor du projet existant.
-4. Contrôler les cas anonyme, membre non validé, membre validé et bureau, puis les dossiers privés d'autrui.
-5. Vérifier que la vue publique ne livre ni description, ni adresse, ni quartier précis ; les coordonnées publiques sont arrondies.
-6. Le serveur de notifications push n'a pas été redéployé et aucun envoi réel aux adhérents n'a été déclenché.
+- Contrôles d'accès alignés sur la suspension et la date de Tahiti, jusqu'au jour d'échéance inclus.
+- PDF : identité du véritable auteur, journal lisible par le bureau, date Tahiti, arrêt si lecture incomplète, mise en page A4 vérifiée sur quatre pages artificielles.
+- Les preuves déclarées restent du texte : aucun fichier justificatif n'est inclus automatiquement dans le PDF.
+- Notifications push : groupes validés, comptes suspendus exclus, erreurs de lecture signalées, simulation sans envoi, bilan des échecs explicite. Fonction envoi-push redéployée.
 
-L'export JSON ne contient ni comptes Auth, ni fichiers Storage, ni secrets, ni abonnements push, ni schéma et ne constitue pas une sauvegarde complète de Supabase. Aucun import automatique n'est ajouté.
+## Validation
 
-## Vérification reproductible
+- Copie locale PostgreSQL isolée : restauration des 13 tables et 45 lignes du snapshot, comparaison de chaque champ, schéma/fonctions/vues/politiques réinstallés.
+- 35 contrôles d'accès et d'export sur copie restaurée, dont comptes non validés/suspendus, adhérent, assesseur, bureau et propriété des abonnements.
+- Contrôles de lecture et export également effectués dans la base réelle sans modifier les données.
+- 12 contrôles interface/PDF, 10 contrôles lectures/pastilles/export, 16 contrôles push simulés, 10 contrôles de rappels simulés.
+- Aucun message, e-mail ou push réel de test envoyé aux adhérents.
 
-Les tests utilisent uniquement des données artificielles. Aucune écriture dans la base de production.
+Pour reproduire : Node 24+, Playwright avec navigateur Chromium installé et @electric-sql/pglite. Les dépendances de QA sont temporaires, hors du site.
 
-Installer Playwright et @electric-sql/pglite depuis npm dans un répertoire temporaire et définir TOH_QA_NODE_MODULES sur son dossier node_modules.
+```
+TOH_PGLITE=/chemin/node_modules/@electric-sql/pglite node tests/restauration.cjs /chemin/snapshot-prive.json
+TOH_PGLITE=/chemin/node_modules/@electric-sql/pglite node tests/droits-finalisation.cjs /chemin/snapshot-prive.json
+TOH_QA_NODE_MODULES=/chemin/node_modules node tests/parcours-fonctions.cjs
+node tests/pdf-et-interface.cjs
+node tests/push-serveur.cjs
+node tests/rappels-serveur.cjs
+```
 
-- node tests/confidentialite.cjs : permissions, masquage public, export réservé au bureau, migrations rejouables.
-- node tests/parcours-fonctions.cjs : lectures par compte, pastilles, sujets, téléchargement JSON et refus des exports incomplets.
-- Réception push sur un appareil volontaire à compléter après activation.
+TOH_CHROMIUM permet d'indiquer le binaire du navigateur et TOH_CHROMIUM_ARGS un tableau JSON d'options spécifiques à l'environnement. Les snapshots contenant des données privées ne doivent jamais être ajoutés au dépôt public.
 
-Références : https://supabase.com/docs/guides/database/postgres/row-level-security et https://www.postgresql.org/docs/16/sql-createview.html
+## Limites restantes
+
+- Rappels automatiques par e-mail : pas encore déployés ni planifiés. Code sécurisé et testé en simulation. L'expéditeur et sa configuration restent à vérifier avant activation.
+- Réception push sur un appareil volontaire : non vérifiée; les contrôles actuels couvrent l'abonnement, l'autorisation, la sélection et les réponses simulées du service.
+- Le snapshot n'est pas un pg_dump intégral : références Auth incluses, mots de passe/identités/sessions et secrets externes exclus. La restauration testée concerne le métier et le schéma applicatif, pas une restauration complète de l'authentification Supabase.
+- Aucun objet Storage présent à la capture : aucun fichier à restaurer.
+- Protection Supabase contre les mots de passe compromis : option Pro non activée; organisation maintenue sur l'offre gratuite.

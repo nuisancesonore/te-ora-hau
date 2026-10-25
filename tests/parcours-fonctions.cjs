@@ -1,7 +1,7 @@
 const fs=require('fs'),path=require('path'),assert=require('assert');
 const {chromium}=require(path.join(process.env.TOH_QA_NODE_MODULES || path.join(process.env.TEMP,'toh-qa/node_modules'),'playwright'));
 (async()=>{
- const browser=await chromium.launch({channel:'msedge',headless:true});
+ const browser=await chromium.launch({headless:true,args:process.env.TOH_CHROMIUM_ARGS?JSON.parse(process.env.TOH_CHROMIUM_ARGS):[], executablePath:process.env.TOH_CHROMIUM || chromium.executablePath()});
  let n=0;
  try {
   const context=await browser.newContext({acceptDownloads:true,serviceWorkers:'block'});
@@ -37,7 +37,7 @@ const {chromium}=require(path.join(process.env.TOH_QA_NODE_MODULES || path.join(
   await page.evaluate(()=>exporterDonneesAssociation(document.getElementById('export')));
   assert((await page.evaluate(()=>window.alerte)).includes('incomplet'));n++;
   await page.evaluate(()=>{
-    const noms=["profils","signalements","journal_bruit","demarches","forum_messages","missions","missions_commentaires","annonces","messages_contact","cotisations","bureau_emails","assesseur_emails"];
+    const noms=["profils","signalements","journal_bruit","demarches","forum_messages","missions","missions_commentaires","annonces","messages_contact","cotisations"];
     const tables={},volumes={};noms.forEach(t=>{tables[t]=[];volumes[t]=0});
     sb={rpc:async()=>({data:{format:'te-ora-hau-donnees-v1',tables,volumes,limites:['Auth et Storage exclus']}})};
   });
@@ -45,7 +45,7 @@ const {chromium}=require(path.join(process.env.TOH_QA_NODE_MODULES || path.join(
   await page.evaluate(()=>exporterDonneesAssociation(document.getElementById('export')));
   const download=await dl, file=await download.path();
   const saved=JSON.parse(fs.readFileSync(file,'utf8'));
-  assert.equal(Object.keys(saved.tables).length,12);assert.equal(saved.format,'te-ora-hau-donnees-v1');n+=2;
+  assert.equal(Object.keys(saved.tables).length,10);assert.equal(saved.format,'te-ora-hau-donnees-v1');n+=2;
   await context.close(); console.log('FONCTIONS OK : '+n+' contrôles, lectures isolées, pastilles actualisées, sujets rétrocompatibles, export complet et erreurs.');
  } finally {await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

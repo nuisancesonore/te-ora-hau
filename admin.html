@@ -880,8 +880,8 @@
           try {
             const { data, error } = await sb.functions.invoke("envoi-push", { body: { titre, corps, cible } });
             if (error) throw error;
-            infoPush = (data && data.envoyes != null) ? `\nNotifications push : ${data.envoyes} envoyée(s).` : "";
-          } catch(_) { infoPush = "\n(Notification push non envoyée — voir PUSH.md.)"; }
+            infoPush = (data && data.envoyes != null) ? `\nNotifications push : ${data.envoyes} envoyée(s).${data.echecs ? ` ${data.echecs} en échec.` : ""}` : "\nEnvoi des notifications non confirmé.";
+          } catch(_) { infoPush = "\nL’annonce est enregistrée, mais l’envoi des notifications n’a pas été confirmé."; }
         }
         annulerEdition();
         alert((wasEdit ? "Annonce mise à jour ✔" : "Annonce publiée ✔ (visible dans l'espace des membres).") + infoPush);

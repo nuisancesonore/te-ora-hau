@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/parcours.css">
   <style>
     .fiche { background:var(--blanc); border-radius:var(--radius); box-shadow:var(--ombre);
              padding:1.6rem 1.8rem; max-width:900px; margin:0 auto; }
@@ -102,15 +103,21 @@
         return;
       }
 
-      let episodes = [], demarches = [];
+      let episodes = [], demarches = [], chargementIncomplet = false;
       try {
         const r = await sb.from("journal_bruit").select("*").eq("signalement_id", id).order("date_episode", { ascending: true });
+        if (r.error) chargementIncomplet = true;
         episodes = r.data || [];
-      } catch (_) {}
+      } catch (_) { chargementIncomplet = true; }
       try {
         const r = await sb.from("demarches").select("*").eq("signalement_id", id).order("date_demarche", { ascending: true });
+        if (r.error) chargementIncomplet = true;
         demarches = r.data || [];
-      } catch (_) {}
+      } catch (_) { chargementIncomplet = true; }
+      if (chargementIncomplet) {
+        contenu.innerHTML = '<h1 class="section-titre">Dossier incomplet</h1><p role="alert">Le journal de bruit ou les démarches n’ont pas pu être chargés. Réessayez avant de préparer votre PDF.</p><p><a href="">Recharger le dossier</a> · <a href="mes-signalements.html">Mes signalements</a></p>';
+        return;
+      }
 
       const reponses = demarches.filter(d => d.reponse === "Réponse reçue").length;
       const dateFr = d => d ? new Date(String(d).slice(0, 10) + "T00:00:00").toLocaleDateString("fr-FR") : "—";
@@ -139,9 +146,10 @@
       contenu.innerHTML = `
         <div class="barre">
           <a href="mes-signalements.html" class="btn btn-clair">← Mes signalements</a>
-          <button class="btn btn-primaire" onclick="window.print()">Imprimer / PDF</button>
+          <button class="btn btn-primaire" onclick="window.print()">Imprimer / enregistrer en PDF</button>
         </div>
 
+        <p class="toh-aide-pdf">Pour créer le fichier, choisissez « Enregistrer au format PDF » dans la fenêtre d’impression. Vérifiez les informations personnelles avant de transmettre le dossier.</p>
         <div class="fiche">
           <div class="fiche-ent">
             <div>
@@ -193,7 +201,7 @@
           <div class="bloc">
             <h2>Renforcer ce dossier</h2>
             <p style="font-size:0.9rem;color:var(--gris);margin-bottom:0.6rem">
-              ${!episodes.length ? "Un <strong>journal de bruit</strong> est la preuve qui pèse le plus auprès des autorités : notez chaque épisode, avec la date et l'heure. " : ""}
+              ${!episodes.length ? "Un <strong>journal de bruit</strong> documente les épisodes : notez chaque date, heure et circonstance. " : ""}
               ${!demarches.length ? "Consignez vos <strong>démarches</strong> (courriers, appels) : elles montrent que vous avez cherché une solution amiable avant d'aller plus loin." : ""}
             </p>
             <div class="barre" style="margin:0">

@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/parcours.css">
   <style>
     .sig { background:#fff; border-radius:var(--radius); box-shadow:var(--ombre); padding:1.1rem 1.3rem; margin-bottom:1rem; border-left:4px solid var(--bleu-lagon); }
     .sig h3 { color:var(--bleu-fonce); font-size:1.05rem; margin-bottom:0.3rem; }
@@ -31,6 +32,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/parcours.js"></script>
   <script>
     // Listes de référence partagées (définies dans js/app.js) — évite toute
     // divergence avec le formulaire de création (signaler.html).
@@ -62,10 +64,12 @@
       if (!data.length){
         html += `<div class="sig">Aucun signalement pour l'instant. <a href="signaler.html">En créer un</a>.</div>`;
       }
+      window.TOH_SIGNALEMENTS = data;
       data.forEach(sg => {
         html += `<div class="sig" id="sig-${sg.id}">${vue(sg)}</div>`;
       });
       contenu.innerHTML = html;
+      tohSignalements();
     }
 
     function vue(sg){
@@ -73,6 +77,7 @@
       const geo = (sg.lat!=null) ? '📍 géolocalisé' : '⚠️ sans point sur la carte';
       return `
         <h3>${echapper(sg.type)||'Signalement'}</h3>
+        <div class="meta">État : <strong>${echapper(sg.etat || "Ouvert")}</strong> · Référence ${echapper(sg.id.slice(0,8).toUpperCase())}</div>
         <div class="meta">${lieu} · ${echapper(sg.horaire)||''} · Intensité ${echapper(sg.intensite)||''} · ${echapper(sg.recurrence)||''}</div>
         <div class="meta">Démarche : <strong>${echapper(sg.constat||'Signalement seul')}</strong>${sg.debut?` · Depuis ${echapper(moisAn(sg.debut))}`:''}${sg.horaire_detail?` · ${echapper(sg.horaire_detail)}`:''}</div>
         ${(sg.voisins_genes || sg.preuves) ? `<div class="meta">${sg.voisins_genes?'Voisins également gênés':''}${sg.voisins_genes&&sg.preuves?' · ':''}${sg.preuves?'Preuves : '+echapper(sg.preuves):''}</div>` : ''}
@@ -89,7 +94,8 @@
 
     const CACHE = {};
     async function editer(id){
-      const { data } = await sb.from("signalements").select("*").eq("id", id).single();
+      const { data, error } = await sb.from("signalements").select("*").eq("id", id).eq("auteur", UID).single();
+      if (error || !data) { alert("Impossible de charger ce signalement. Réessayez."); return; }
       CACHE[id] = data;
       const box = document.getElementById("sig-"+id);
       box.innerHTML = `
@@ -160,12 +166,12 @@
         if (!confirm("Supprimer définitivement ce signalement ?")) return;
         const { error } = await sb.from("signalements").delete().eq("id", id);
         if (error){ alert(messageErreur(error)); return; }
-        const el = document.getElementById("sig-"+id); if (el) el.remove();
+        await charger();
       });
     }
 
     function val(id){ return (document.getElementById(id).value||"").trim(); }
-    function attr(s){ return String(s==null?"":s).replace(/"/g,"&quot;"); }
+    function attr(s){ return echapper(s); }
   </script>
 </body>
 </html>

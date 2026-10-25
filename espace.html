@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/parcours.css">
   <style>
     .bonjour { margin-bottom:0.3rem; font-size:1.6rem; color:var(--bleu-fonce); }
     .statut { color:var(--gris); font-size:0.95rem; margin-bottom:1.4rem; }
@@ -78,6 +79,7 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/parcours.js"></script>
   <script>
     (async function () {
       await initPage("espace");
@@ -130,7 +132,7 @@
         txt: "Votre profil est incomplet : indiquez le type de nuisance que vous subissez.",
         lien: "profil.html", libelle: "Compléter mon profil" });
       if (!profil.telephone) aFaire.push({
-        txt: "Aucun téléphone enregistré : vous ne recevrez pas les SMS de l'association.",
+        txt: "Ajoutez un téléphone si vous souhaitez que le bureau puisse vous joindre.",
         lien: "profil.html", libelle: "Ajouter mon téléphone" });
 
       const blocAFaire = aFaire.length ? `
@@ -160,6 +162,8 @@
                "Générez vos courriers, tenez votre journal de bruit, suivez vos démarches.", cl),
         action("cotiser.html", "💳", "Ma cotisation",
                st.aJour ? "À jour jusqu'au " + st.echeance + "." : "Montant, moyens de paiement et suivi."),
+        action("carte.html", "📍", "Carte des nuisances",
+               "Consultez les signalements et les statistiques de votre commune."),
         action(acces ? "annuaire.html" : "cotiser.html", "🤝", lk + "Annuaire et forum",
                "Retrouvez les adhérents de votre commune et échangez avec eux.", cl),
         action("contact.html", "💬", "Contacter Te Ora Hau",
@@ -175,7 +179,7 @@
         <h1 class="bonjour">Bonjour ${echapper(profil.prenom || profil.nom || "")}</h1>
         <p class="statut">${pastille}${ligneCoti}</p>
         ${blocAFaire}
-        <div class="actions">${actions.join("")}</div>
+        <section><h2 class="titre-bloc">Mon suivi en un coup d’œil</h2><div class="toh-resume" id="resume-activite" aria-live="polite">Chargement du suivi…</div></section><h2 class="titre-bloc">Mes accès rapides</h2><div class="actions">${actions.join("")}</div>
         <div id="annonces"></div>
         <section style="margin-top:1.6rem">
           <h2 class="titre-bloc">Ma carte de membre</h2>
@@ -201,6 +205,9 @@
           <button class="btn btn-clair" id="btn-notif" style="margin-top:0.5rem">Activer les notifications</button>
         </section>`;
 
+      tohResumeEspace(profil).catch(() => {
+        document.getElementById("resume-activite").textContent = "Suivi indisponible. Utilisez les accès rapides ci-dessous.";
+      });
       new QRCode(document.getElementById("qr"), {
         text: "TOH-MEMBRE:" + profil.id, width: 88, height: 88,
         colorDark: "#064a54", colorLight: "#ffffff",

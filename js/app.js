@@ -398,11 +398,12 @@ async function compterNonLus(profil) {
   let missions = 0;
   if (profil.type_adhesion === "Assesseur") try {
     const { data } = await sb.from("missions")
-      .select("cree_le, assigne_a, statut").order("cree_le", { ascending: false }).limit(50);
+      .select("cree_le, assigne_a, statut, pour").order("cree_le", { ascending: false }).limit(50);
     const vu = parseInt(localStorage.getItem("TOH_vu_missions") || "0", 10);
     missions = (data || []).filter(m =>
       new Date(m.cree_le).getTime() > vu &&
       m.statut !== "Terminée" && m.statut !== "Abandonnée" &&
+      (m.pour || "assesseurs") !== "bureau" &&
       (!m.assigne_a || m.assigne_a === profil.id)).length;
   } catch (_) {}
   return { annonces, forum, missions, total: annonces + forum + missions };

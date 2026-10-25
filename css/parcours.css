@@ -1,0 +1,14 @@
+[hidden] { display:none !important; }
+.toh-resume { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:.8rem; margin:1rem 0 1.5rem; }
+.toh-indicateur { display:block; padding:1rem; border:1px solid #b6d6d9; border-radius:12px; background:#fff; color:#064a54; text-decoration:none; }
+.toh-indicateur strong { display:block; font-size:1.7rem; }
+.toh-indicateur span { display:block; margin-top:.5rem; font-size:.85rem; text-decoration:underline; }
+.toh-indicateur:hover { background:#edf7f7; }
+.toh-indicateur:focus-visible { outline:3px solid #0a7d8c; outline-offset:3px; }
+.toh-filtres { display:flex; flex-wrap:wrap; gap:.8rem; padding:1rem; margin:1rem 0; border-radius:12px; background:#fff; border:1px solid #d6e2e3; }
+.toh-filtres>div { flex:1 1 200px; min-width:0; }
+.toh-filtres label { display:block; font-weight:600; margin-bottom:.35rem; color:#064a54; }
+.toh-filtres input,.toh-filtres select { box-sizing:border-box; width:100%; min-height:44px; border:1px solid #a4babc; border-radius:8px; padding:.5rem; font:inherit; }
+.toh-filtres p { flex-basis:100%; margin:0; color:#526466; }
+.toh-aide-pdf { padding:.8rem; background:#edf7f7; border-radius:8px; margin-bottom:1rem; }
+@media print { .toh-aide-pdf {display:none;} .chrono li {break-inside:avoid;} .bloc h2 {break-after:avoid;} #footer-mount {display:none;} }

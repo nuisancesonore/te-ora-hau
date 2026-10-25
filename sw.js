@@ -28,7 +28,13 @@ self.addEventListener("push", (event) => {
 // Clic sur la notification → ouvre (ou ramène) l'app.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || "/te-ora-hau/espace.html";
+  const defaut = new URL("espace.html", self.registration.scope);
+  let cible = defaut;
+  try {
+    const candidate = new URL(event.notification.data && event.notification.data.url || defaut.href, self.registration.scope);
+    if (candidate.origin === defaut.origin && candidate.pathname.startsWith(new URL(self.registration.scope).pathname)) cible = candidate;
+  } catch (_) {}
+  const url = cible.href;
   event.waitUntil((async () => {
     const tousOnglets = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const c of tousOnglets) { if ("focus" in c) { c.navigate(url); return c.focus(); } }

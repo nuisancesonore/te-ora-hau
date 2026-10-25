@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/parcours.css">
 </head>
 <body>
   <div id="nav-mount"></div>
@@ -19,6 +20,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/parcours.js"></script>
   <script>
     (async function() {
       await initPage("forum");
@@ -30,8 +32,12 @@
       await dessiner();
 
       async function dessiner() {
-        const { data: messages } = await sb.from("forum_messages")
+        const { data: messages, error } = await sb.from("forum_messages")
           .select("*").order("cree_le", { ascending: false });
+        if (error) {
+          contenu.innerHTML = '<h1 class="section-titre">Forum des membres</h1><p role="alert">Impossible de charger les échanges. <a href="forum.html">Réessayer</a>.</p>';
+          return;
+        }
         // Marque le forum comme "lu" (efface la pastille / met à jour le badge d'icône).
         try { localStorage.setItem("TOH_vu_forum", String(messages && messages.length ? new Date(messages[0].cree_le).getTime() : Date.now())); } catch(_){}
         try { rafraichirBadge(profil); } catch(_){}

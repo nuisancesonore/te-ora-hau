@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://alaesbkvfprgpngrowbt.supabase.co" crossorigin>
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/parcours.css">
   <style>
     .sect-titre { color:var(--bleu-fonce); font-size:1.15rem; margin:1.6rem 0 0.7rem; }
     .mission { background:#fff; border-radius:12px; box-shadow:var(--ombre); padding:1rem 1.2rem; margin-bottom:0.9rem; border-left:4px solid var(--bleu-lagon); }
@@ -42,6 +43,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/parcours.js"></script>
   <script>
     let PROFIL = null, UID = null, MISSIONS = [], COMS = {};
     (async function(){
@@ -81,7 +83,7 @@
         .order("echeance", { ascending:true, nullsFirst:false }).order("cree_le", { ascending:false });
       if (error){
         contenu.innerHTML = `<h2 class="section-titre">Mes missions</h2>
-          <div class="message ok" style="display:block">Les missions ne sont pas encore activées (le bureau doit lancer <strong>migration-missions.sql</strong>).</div>`;
+          <div class="message err" style="display:block" role="alert">Impossible de charger les missions. <a href="missions.html">Réessayer</a> ou <a href="contact.html">contacter le bureau</a>.</div>`;
         return;
       }
       MISSIONS = data || [];

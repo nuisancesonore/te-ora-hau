@@ -97,13 +97,15 @@
       // Le bureau voit l'identité des auteurs (suivi des dossiers) ; les autres
       // lisent la vue publique, sans aucune donnée personnelle.
       const estBureau = !!(profil && profil.role === "bureau");
-      const COLS = "id,type,commune,quartier,intensite,horaire,recurrence,constat,debut,adresse_source,description,lat,lng";
+      const COLS = aDroitAcces(profil)
+        ? "id,type,commune,quartier,intensite,horaire,recurrence,constat,debut,adresse_source,description,lat,lng"
+        : "id,type,commune,intensite,lat,lng";
       let data, error;
       if (estBureau) {
         ({ data, error } = await sb.from("signalements").select("*"));
       } else {
         ({ data, error } = await sb.from("signalements_publics").select(COLS));
-        if (error && profil) ({ data, error } = await sb.from("signalements").select("*"));
+        // Aucun repli vers les lignes privées hors bureau.
       }
       if (error){
         etat.innerHTML = `<div class="message ${profil?'err':'ok'}" style="display:block">${
@@ -135,11 +137,13 @@
                        : c==="Constat d'autorité" ? {color:"#0a7d8c", weight:3}
                        : {color:"#ffffff", weight:2};
       const moisAn = moisAnnee; // formateur "AAAA-MM" -> "mois AAAA" (js/app.js)
+      const pointsCarte = [];
       geoloc.forEach(s => {
         const b = plein ? bord(s.constat) : { color:"#ffffff", weight:2 };
         const m = L.circleMarker([s.lat, s.lng], {
           radius:9, color:b.color, weight:b.weight, fillColor:couleur(s.intensite), fillOpacity:0.9,
         }).addTo(map);
+        pointsCarte.push({commune:(s.commune || "").trim(), marker:m});
         // Détail complet (cause, démarche, adresse) réservé aux adhérents validés.
         if (plein) {
           let html =
@@ -208,6 +212,13 @@
       }
 
       function rendreStats(filtre){
+        const visibles = pointsCarte.filter(p => !filtre || p.commune === filtre);
+        pointsCarte.forEach(p => {
+          if (!filtre || p.commune === filtre) p.marker.addTo(map);
+          else map.removeLayer(p.marker);
+        });
+        if (filtre && visibles.length) map.fitBounds(L.latLngBounds(visibles.map(p => p.marker.getLatLng())), {padding:[30,30], maxZoom:14});
+        else if (!filtre) map.setView([-17.62,-149.46],11);
         const sous = filtre ? data.filter(s => (s.commune||"").trim() === filtre) : data;
         const n = sous.length;
         const p = x => n ? Math.round(x/n*100) : 0;
@@ -254,6 +265,7 @@
            </select>
          </div>
          <div id="stats-corps"></div>`;
+      document.getElementById("map").before(document.getElementById("stats").querySelector(".filtre-bar"));
       document.getElementById("sel-commune-stats").addEventListener("change", e => rendreStats(e.target.value));
       rendreStats("");
     })();

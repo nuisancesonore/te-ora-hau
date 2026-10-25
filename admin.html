@@ -156,7 +156,7 @@
           <div class="stat" style="border-top-color:var(--bleu-lagon)"><div class="n">${communes}</div><div class="l">Communes</div></div>
         </div>
 
-        ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<section class="relances-box" id="relances-cotisations"><h3>Relances de cotisations à préparer</h3><p>Détection à l’ouverture de cette page : échéance dans 30 jours ou moins, ou dépassée. Vérifiez les paiements avant envoi. Aucun message n’est envoyé automatiquement.</p><div id="liste-relances"></div><div class="relance-actions"><button type="button" class="btn btn-primaire" onclick="preparerRelances()">Préparer les courriels sélectionnés</button></div><p>Votre messagerie s’ouvrira pour validation et envoi. Les relances déjà envoyées ne sont pas suivies automatiquement.</p></section>' : ""}
+        ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<section class="relances-box" id="relances-cotisations"><h3>Relances de cotisations à préparer</h3><p>Détection à l’ouverture de cette page : échéance dans 30 jours ou moins, ou dépassée. Vérifiez les paiements avant envoi. Aucun message n’est envoyé automatiquement.</p><div id="liste-relances"></div><div class="relance-actions" id="actions-relances" hidden><button type="button" class="btn btn-primaire" onclick="preparerRelances()">Préparer les courriels sélectionnés</button></div><p id="info-relances" hidden>Votre messagerie s’ouvrira pour validation et envoi. Les relances déjà envoyées ne sont pas suivies automatiquement.</p></section>' : ""}
         <details class="acc" id="admin-adherents">
           <summary><span class="t">Adhérents — cotisations &amp; validation</span><span class="badge-n">${total}</span></summary>
           <div class="corps">
@@ -1037,9 +1037,11 @@
       const zone = document.getElementById("liste-relances");
       if (!zone) return;
       const items = relancesEligibles();
+      document.getElementById("actions-relances").hidden = items.length === 0;
+      document.getElementById("info-relances").hidden = items.length === 0;
       zone.innerHTML = items.length ? items.map(({a,jours}) =>
         '<label class="relance-ligne"><input type="checkbox" class="relance-check" value="'+echapper(a.id)+'" checked><span><strong>'+echapper((a.prenom||"")+" "+(a.nom||""))+'</strong> — '+echapper(a.email)+'<br><small>'+(jours<0 ? "Échue depuis "+(-jours)+" jour(s)" : "Échéance dans "+jours+" jour(s)")+' — '+frDate(a.cotisation_echeance)+'</small></span></label>'
-      ).join("") : "<p>Aucune échéance connue dans les 30 prochains jours ou dépassée avec une adresse e-mail.</p>";
+      ).join("") : "<p>Aucune cotisation à relancer pour le moment parmi les adhérents ayant une échéance et une adresse e-mail enregistrées.</p>";
     }
     function preparerRelances(){
       const ids = [...document.querySelectorAll(".relance-check:checked")].map(el=>el.value);

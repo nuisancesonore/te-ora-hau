@@ -150,10 +150,10 @@
            <span class="ico">${ico}</span><span><b>${titre}</b><span>${desc}</span></span></a>`;
 
       const actions = [
-        action(acces ? "signaler.html" : "cotiser.html", "🔊", lk + "Signaler une nuisance",
-               "Placez le bruit sur la carte : c'est le point de départ de tout dossier.", " signaler" + cl),
         action("profil.html", "👤", "Mon profil",
                "Vos coordonnées, votre commune, la nuisance que vous subissez."),
+        action(acces ? "signaler.html" : "cotiser.html", "🔊", lk + "Signaler une nuisance",
+               "Placez le bruit sur la carte : c'est le point de départ de tout dossier.", " signaler" + cl),
         action(acces ? "mes-signalements.html" : "cotiser.html", "📁", lk + "Mes signalements",
                "Vos signalements, leur chronologie et leur état d'avancement.", cl),
         action(acces ? "outils.html" : "cotiser.html", "✍️", lk + "Mes démarches et courriers",

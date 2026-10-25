@@ -25,6 +25,22 @@
     .photo:focus-visible{outline:3px solid var(--corail);outline-offset:-3px}
     figcaption{padding:.7rem .8rem;font-size:.88rem;color:var(--gris)}
     .a-venir{border-top-color:var(--corail)}
+    .affiche-evenement{background:#f1eee8}
+    .affiche-evenement img{object-fit:contain}
+    .evenement-resume{display:flex;flex-direction:column;gap:.45rem;padding:1rem 1rem 0;line-height:1.4}
+    .evenement-resume>strong{font-size:1.15rem;color:var(--bleu-fonce)}
+    .evenement-resume>span:last-child{font-size:.9rem;color:var(--gris)}
+    .titre-detail-evenement{font-size:1.35rem;color:var(--bleu-fonce);margin-bottom:1rem}
+    .affiche-grandir{display:flex;flex-direction:column;align-items:flex-start;gap:.8rem;max-width:440px;margin-top:1.2rem}
+    .affiche-grandir>img{display:block;width:100%;height:auto;border-radius:10px}
+    .affiche-dialog{border:0;border-radius:12px;padding:1rem;max-width:96vw;max-height:94vh;max-height:94dvh;overflow:auto;background:#fff;margin:auto}
+    .affiche-dialog::backdrop{background:rgba(0,0,0,.8)}
+    .affiche-dialog h2{font-size:1rem;margin:0;color:var(--bleu-fonce)}
+    .affiche-dialog-barre{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.7rem}
+    .affiche-dialog button{min-width:48px;min-height:48px}
+    .affiche-dialog img{display:block;max-width:100%;height:auto;max-height:74vh;max-height:74dvh;object-fit:contain;margin:auto}
+    .affiche-dialog p{font-size:.85rem;margin:.7rem 0 0}
+
     .tee-prix{display:inline-block;font-size:1.5rem;font-weight:800;color:var(--bleu-fonce);margin:.2rem 0 1rem}
     .tee-modeles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem;margin:1rem 0}
     .tee-modele{min-width:0;border:1px solid #dbe5e5;border-radius:12px;padding:.8rem}
@@ -109,10 +125,35 @@
         </details>
       </div>
     </section>
-    <section class="actualite a-venir" id="evenements" aria-labelledby="titre-evenements">
-      <div class="etiquette">ÉVÉNEMENT À VENIR</div>
-      <h2 id="titre-evenements">Retrouvez-nous à Papara le 14 novembre</h2>
-      <p>Te Ora Hau tiendra un stand à <strong>Papara le <time datetime="2026-11-14">14 novembre 2026</time></strong>. Les horaires et le lieu précis seront annoncés ici.</p>
+    <section id="evenements" aria-labelledby="titre-evenements" style="scroll-margin-top:6rem;margin-bottom:2rem">
+      <h2 class="section-titre" id="titre-evenements">Événements à venir</h2>
+      <p class="intro-vie">Découvrez nos prochains rendez-vous. Cliquez sur une carte pour en savoir plus.</p>
+      <div class="evenements-grille">
+        <details class="album" id="evenement-aito-ukulele-2026">
+          <summary>
+            <span class="couverture-album affiche-evenement">
+              <img src="images/evenements/aito-ukulele-porinetia-2026-vignette.webp" width="640" height="899" alt="Affiche officielle de la 2ᵉ édition du Concours ‘Aito ‘Ukulele Pōrinetia, samedi 14 novembre 2026" loading="lazy" decoding="async">
+            </span>
+            <span class="evenement-resume">
+              <span class="etiquette">SAMEDI 14 NOVEMBRE 2026 · DÈS 10 H</span>
+              <strong>Concours ‘Aito ‘Ukulele Pōrinetia</strong>
+              <span>2ᵉ édition · Papara · Présence de Te Ora Hau</span>
+            </span>
+            <span class="ouvrir-album"><span class="ouvrir-texte">Découvrir l’événement</span><span class="fermer-texte">Refermer l’événement</span></span>
+          </summary>
+          <article class="actualite a-venir">
+            <h3 class="titre-detail-evenement">Te Ora Hau au Concours ‘Aito ‘Ukulele Pōrinetia</h3>
+            <p><strong>Samedi <time datetime="2026-11-14T10:00:00-10:00">14 novembre 2026 à partir de 10 h</time> · Papara</strong></p>
+            <p>L’association Te Ora Hau soutient la culture et le développement des savoir-faire artistiques et sera donc présente le samedi 14 novembre 2026 à Papara à partir de 10 h lors de la 2ᵉ édition du Concours ‘Aito ‘Ukulele Pōrinetia.</p>
+            <p>Ce sera l’occasion de sensibiliser le public aux nuisances sonores et de renseigner les personnes victimes de nuisances sonores.</p>
+            <p>Les membres du bureau remercient chaleureusement l’artiste <strong>Tiheni Ena</strong> pour son accueil et son engagement auprès de la jeunesse et de la culture.</p>
+            <a class="affiche-grandir" href="images/evenements/aito-ukulele-porinetia-2026-affiche.jpg" target="_blank" rel="noopener" data-affiche aria-label="Agrandir l’affiche officielle du Concours ‘Aito ‘Ukulele Pōrinetia">
+              <img src="images/evenements/aito-ukulele-porinetia-2026-vignette.webp" width="640" height="899" alt="Affiche officielle : compétition de ‘ukulele et vivo, deuxième édition, le 14 novembre 2026" loading="lazy" decoding="async">
+              <span class="btn btn-clair">Agrandir l’affiche officielle</span>
+            </a>
+          </article>
+        </details>
+      </div>
     </section>
     <section class="actualite" id="nous-soutenir" aria-labelledby="titre-tee-shirts">
       <div class="etiquette">NOUS SOUTENIR</div>
@@ -144,6 +185,14 @@
       <p style="font-size:.9rem;color:var(--gris);margin-top:.7rem">Indiquez la couleur, la taille et la quantité souhaitées dans votre message.</p>
     </section>
   </main>
+  <dialog class="affiche-dialog" id="affiche-papara" aria-labelledby="titre-affiche-papara">
+    <div class="affiche-dialog-barre">
+      <h2 id="titre-affiche-papara">Affiche officielle · ‘Aito ‘Ukulele Pōrinetia 2026</h2>
+      <form method="dialog"><button class="btn btn-clair" aria-label="Fermer l’affiche agrandie">Fermer ×</button></form>
+    </div>
+    <img src="images/evenements/aito-ukulele-porinetia-2026-affiche.jpg" width="1094" height="1536" alt="Affiche officielle intégrale du concours, samedi 14 novembre 2026" loading="lazy">
+    <p><a href="images/evenements/aito-ukulele-porinetia-2026-affiche.jpg" target="_blank" rel="noopener">Ouvrir l’affiche originale dans un nouvel onglet pour zoomer</a></p>
+  </dialog>
   <div id="footer-mount"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
@@ -180,6 +229,21 @@
       });
       window.addEventListener("resize", actualiser);
       actualiser();
+    })();
+    (() => {
+      const fenetre = document.getElementById("affiche-papara");
+      document.querySelectorAll("a[data-affiche]").forEach(lien => {
+        lien.addEventListener("click", event => {
+          if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || typeof fenetre.showModal !== "function") return;
+          event.preventDefault();
+          fenetre.showModal();
+        });
+      });
+      fenetre.addEventListener("click", event => {
+        if (event.target !== fenetre) return;
+        const r = fenetre.getBoundingClientRect();
+        if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) fenetre.close();
+      });
     })();
   </script>
 </body>

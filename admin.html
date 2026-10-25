@@ -20,6 +20,15 @@
     .relances-box .relance-ligne { display:flex; gap:0.65rem; align-items:flex-start; margin:0.65rem 0; }
     .relances-box .relance-ligne input { margin-top:0.3rem; }
     .relances-box .relance-actions { display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1rem; }
+    .admin-nav { margin:1rem 0 1.5rem; }
+    .admin-nav h3 { color:var(--bleu-fonce); font-size:1rem; margin:0 0 0.65rem; }
+    .admin-nav-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0.65rem; }
+    .admin-nav-grid a { display:flex; align-items:center; justify-content:space-between; gap:0.4rem; min-height:52px; padding:0.75rem 0.85rem; border:1px solid #dce8e6; border-radius:12px; background:#fff; color:var(--bleu-fonce); text-decoration:none; font-size:0.88rem; font-weight:700; box-shadow:0 2px 7px rgba(0,0,0,0.05); }
+    .admin-nav-grid a:focus-visible,.admin-nav-grid a:hover { border-color:var(--bleu-lagon); outline-offset:2px; }
+    .admin-nav-grid a span { color:var(--bleu-lagon); flex-shrink:0; }
+    #contenu [id^="admin-"],#relances-cotisations { scroll-margin-top:110px; }
+    .stats { margin-top:0.5rem; }
+    @media (min-width:720px){.admin-nav-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
     .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.6rem; }
     .stat { background:var(--blanc); border-radius:var(--radius); padding:1.1rem; box-shadow:var(--ombre); text-align:center; border-top:4px solid var(--vert-paix); }
     .stat .n { font-size:2rem; font-weight:800; color:var(--bleu-fonce); }
@@ -126,7 +135,20 @@
 
       contenu.innerHTML = `
         <h2 class="section-titre">Tableau de bord du bureau</h2>
-        ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<div class="acces-registre"><a href="cotisations.html" aria-label="Ouvrir le registre des cotisations">Ouvrir le registre des cotisations <span aria-hidden="true">→</span></a><span class="indication">Accès réservé au responsable comptable</span></div>' : ""}
+        ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<div class="acces-registre" id="admin-cotisations"><a href="cotisations.html" aria-label="Ouvrir le registre des cotisations">Ouvrir le registre des cotisations <span aria-hidden="true">→</span></a><span class="indication">Accès réservé au responsable comptable</span></div>' : ""}
+        <nav class="admin-nav" aria-label="Accès rapides du bureau">
+          <h3>Accès rapides</h3>
+          <div class="admin-nav-grid">
+            <a href="#admin-adherents">Adhérents <span aria-hidden="true">↘</span></a>
+            ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<a href="#relances-cotisations">Cotisations et relances <span aria-hidden="true">↘</span></a>' : '<a href="#admin-adherents">Cotisations <span aria-hidden="true">↘</span></a>'}
+            <a href="#admin-demarches">Démarches <span aria-hidden="true">↘</span></a>
+            <a href="#admin-missions">Missions <span aria-hidden="true">↘</span></a>
+            <a href="#admin-communication">Communication <span aria-hidden="true">↘</span></a>
+            <a href="#admin-messages">Messages <span aria-hidden="true">↘</span></a>
+            <a href="#admin-rapports">Rapports <span aria-hidden="true">↘</span></a>
+            <a href="#admin-statistiques">Statistiques <span aria-hidden="true">↘</span></a>
+          </div>
+        </nav>
         <div class="stats">
           <div class="stat"><div class="n">${total}</div><div class="l">Adhérents</div></div>
           <div class="stat"><div class="n">${aJour}</div><div class="l">À jour de cotisation</div></div>
@@ -135,7 +157,7 @@
         </div>
 
         ${((profil.email || "").toLowerCase() === "jbhauata3@gmail.com") ? '<section class="relances-box" id="relances-cotisations"><h3>Relances de cotisations à préparer</h3><p>Détection à l’ouverture de cette page : échéance dans 30 jours ou moins, ou dépassée. Vérifiez les paiements avant envoi. Aucun message n’est envoyé automatiquement.</p><div id="liste-relances"></div><div class="relance-actions"><button type="button" class="btn btn-primaire" onclick="preparerRelances()">Préparer les courriels sélectionnés</button></div><p>Votre messagerie s’ouvrira pour validation et envoi. Les relances déjà envoyées ne sont pas suivies automatiquement.</p></section>' : ""}
-        <details class="acc" open>
+        <details class="acc" id="admin-adherents">
           <summary><span class="t">Adhérents — cotisations &amp; validation</span><span class="badge-n">${total}</span></summary>
           <div class="corps">
             <div class="barre">
@@ -153,12 +175,12 @@
           </div>
         </details>
 
-        <details class="acc">
+        <details class="acc" id="admin-statistiques">
           <summary><span class="t">Statistiques des adhérents</span></summary>
           <div class="corps"><div id="stats-detail"></div></div>
         </details>
 
-        <details class="acc">
+        <details class="acc" id="admin-rapports">
           <summary><span class="t">Dossier pour les autorités</span></summary>
           <div class="corps">
             <p style="color:var(--gris);margin:0 0 0.8rem;font-size:0.9rem">Transforme les signalements en <strong>rapport PDF prêt à remettre</strong> : demande d'intervention à la mairie, signalement à la gendarmerie, éléments pour le Procureur, ou chiffres clés pour la presse. Données anonymisées — aucun nom d'adhérent n'apparaît.</p>
@@ -166,7 +188,7 @@
           </div>
         </details>
 
-        <details class="acc">
+        <details class="acc" id="admin-demarches">
           <summary><span class="t">Démarches des adhérents</span><span class="badge-n" id="cnt-demarches"></span></summary>
           <div class="corps">
             <p style="color:var(--gris);margin:0 0 0.8rem;font-size:0.9rem">Les démarches que les adhérents consignent depuis leurs outils (courrier amiable, mise en demeure, mairie, gendarmerie, plainte…) — pour suivre et appuyer leurs dossiers.</p>
@@ -174,7 +196,7 @@
           </div>
         </details>
 
-        <details class="acc">
+        <details class="acc" id="admin-missions">
           <summary><span class="t">Missions des assesseurs</span><span class="badge-n" id="cnt-missions"></span></summary>
           <div class="corps">
             <p style="color:var(--gris);margin:0 0 0.8rem;font-size:0.9rem">Confiez des missions aux assesseurs (à un assesseur précis, ou ouverte à tous : le premier qui la prend se l'attribue). Ils rendent compte depuis leur page « Mes missions ».</p>
@@ -182,16 +204,17 @@
           </div>
         </details>
 
-        <details class="acc">
+        <details class="acc" id="admin-communication">
           <summary><span class="t">Communication aux adhérents</span></summary>
           <div class="corps"><div id="communication"></div></div>
         </details>
 
-        <details class="acc">
+        <details class="acc" id="admin-messages">
           <summary><span class="t">Messages de contact</span><span class="badge-n" id="cnt-messages"></span></summary>
           <div class="corps"><div id="messages"><p style="color:var(--gris)">Chargement…</p></div></div>
         </details>`;
 
+      document.querySelectorAll(".admin-nav-grid a").forEach(a => a.addEventListener("click", () => { const cible = document.getElementById(a.getAttribute("href").slice(1)); if (cible && cible.tagName === "DETAILS") cible.open = true; }));
       document.getElementById("q").addEventListener("input", dessiner);
       document.getElementById("filtre").addEventListener("change", dessiner);
       dessiner();

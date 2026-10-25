@@ -104,7 +104,10 @@
       if (estBureau) {
         ({ data, error } = await sb.from("signalements").select("*"));
       } else {
-        ({ data, error } = await sb.from("signalements_publics").select(COLS));
+        ({ data, error } = await sb.from(aDroitAcces(profil) ? "signalements_membres" : "signalements_publics").select(COLS));
+        if (error && aDroitAcces(profil)) {
+          ({ data, error } = await sb.from("signalements_publics").select("id,type,commune,intensite,lat,lng"));
+        }
         // Aucun repli vers les lignes privées hors bureau.
       }
       if (error){

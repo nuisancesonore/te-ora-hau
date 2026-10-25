@@ -38,13 +38,15 @@
           contenu.innerHTML = '<h1 class="section-titre">Forum des membres</h1><p role="alert">Impossible de charger les échanges. <a href="forum.html">Réessayer</a>.</p>';
           return;
         }
+        const lectureAvant = luJusqua("forum",profil);
         // Marque le forum comme "lu" (efface la pastille / met à jour le badge d'icône).
-        try { localStorage.setItem("TOH_vu_forum", String(messages && messages.length ? new Date(messages[0].cree_le).getTime() : Date.now())); } catch(_){}
+        try { noterLecture("forum", profil, messages && messages.length ? new Date(messages[0].cree_le).getTime() : Date.now()); } catch(_){}
         try { rafraichirBadge(profil); } catch(_){}
         const liste = (messages || []).map(m => `
-          <div class="msg-forum">
+          <div class="msg-forum" data-sujet="${echapper(sujetForum(m.texte).sujet)}">
             <div class="meta"><strong>${echapper(m.auteur_nom)}</strong> · ${new Date(m.cree_le).toLocaleString("fr-FR")}</div>
-            <div>${echapper(m.texte)}</div>
+            <p class="meta">${echapper(sujetForum(m.texte).sujet)}${new Date(m.cree_le).getTime() > lectureAvant ? ' · Nouveau' : ''}</p>
+            <div>${echapper(sujetForum(m.texte).texte)}</div>
           </div>`).join("") || "<p style='color:var(--gris)'>Aucun message pour le moment. Lancez la discussion !</p>";
 
         contenu.innerHTML = `
@@ -53,6 +55,9 @@
           <div class="form-wrap" style="max-width:100%;margin-bottom:2rem">
             <div id="msg-forum" class="message" role="status" aria-live="polite"></div>
             <form id="form-msg">
+              <div class="champ"><label for="sujet-message">Sujet de votre message</label>
+                <select id="sujet-message">${TOH_SUJETS.map(s => '<option>' + echapper(s) + '</option>').join('')}</select>
+              </div>
               <div class="champ">
                 <label for="texte">Votre message</label>
                 <textarea id="texte" rows="3" required placeholder="Décrivez votre situation, posez une question…"></textarea>
@@ -66,8 +71,10 @@
           e.preventDefault();
           if (envoiEnCours(e.target)) return;   // publication déjà en cours
           const zone = document.getElementById("msg-forum");
-          const texte = document.getElementById("texte").value.trim();
-          if (!texte) {
+          const corps = document.getElementById("texte").value.trim();
+          const sujet = document.getElementById("sujet-message").value;
+          const texte = (sujet === "Général" ? "" : "[" + sujet + "] ") + corps;
+          if (!corps) {
             zone.className = "message err";
             zone.textContent = "Votre message est vide.";
             return;

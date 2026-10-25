@@ -106,7 +106,7 @@
       // Marque comme vues (efface la pastille de notification)
       try {
         const plusRecente = MISSIONS.length ? Math.max(...MISSIONS.map(m => new Date(m.cree_le).getTime())) : Date.now();
-        localStorage.setItem("TOH_vu_missions", String(plusRecente));
+        noterLecture("missions", PROFIL, plusRecente);
         rafraichirBadge(PROFIL);
       } catch(_){}
 
@@ -132,8 +132,13 @@
       return `<span class="pill ${cl}">${st}</span>`;
     }
     function carte(m, mode){
-      const ech = m.echeance ? new Date(m.echeance) : null;
-      const proche = ech && (ech.getTime() - Date.now()) < 7 * 86400000;
+      const ech = m.echeance ? new Date(String(m.echeance).slice(0,10) + "T00:00:00") : null;
+      const aujourdhui = new Date(); aujourdhui.setHours(0,0,0,0);
+      const retard = ech && ech < aujourdhui;
+      const proche = ech && (ech.getTime() - aujourdhui.getTime()) < 7 * 86400000;
+      const etape = mode === "ouverte" ? "Un assesseur peut prendre cette mission."
+        : m.statut === "À faire" ? "Démarrez la mission, puis passez-la « En cours »."
+        : "Ajoutez un commentaire de suivi ou mettez à jour l’avancement.";
       const coms = COMS[m.id] || [];
       const blocComs = `
         <details class="coms" ${coms.length ? "" : ""}>
@@ -147,6 +152,8 @@
       return `<div class="mission ${mode === "ouverte" ? "ouverte" : ""} ${mode === "finie" ? "finie" : ""}">
         <h3>${echapper(m.titre)}</h3>
         <div class="meta">${pill(m.statut)}${m.echeance ? ` · échéance <span class="${proche ? "echeance-proche" : ""}">${new Date(m.echeance).toLocaleDateString("fr-FR")}</span>` : ""}${m.cree_par_nom ? ` · confiée par ${echapper(m.cree_par_nom)}` : ""}</div>
+        <p class="meta"><strong>Responsable :</strong> ${mode === "mienne" ? "Vous" : "À attribuer"}${retard ? " · Échéance dépassée" : proche ? " · Échéance proche" : ""}</p>
+        <p class="meta"><strong>Prochaine action :</strong> ${etape}</p>
         ${m.description ? `<div class="desc">${echapper(m.description)}</div>` : ""}
         <div class="m-actions">
           ${mode === "ouverte" ? `<button class="btn btn-vert" onclick="prendre('${m.id}', this)">Je prends cette mission</button>` : ""}
@@ -161,9 +168,10 @@
 
     async function prendre(id, btn){
       return actionBouton(btn, "…", async () => {
-        const { error } = await sb.from("missions")
-          .update({ assigne_a: UID, statut: "En cours" }).eq("id", id).is("assigne_a", null);
+        const { data, error } = await sb.from("missions")
+          .update({ assigne_a: UID, statut: "En cours" }).eq("id", id).is("assigne_a", null).select("id");
         if (error) return alert(messageErreur(error));
+        if (!data || !data.length) alert("Cette mission n’est plus disponible. La liste va être actualisée.");
         await charger();
       });
     }

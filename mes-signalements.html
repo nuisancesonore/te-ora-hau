@@ -74,6 +74,10 @@
 
     function vue(sg){
       const lieu = (echapper(sg.commune)||'') + (sg.quartier?' — '+echapper(sg.quartier):'');
+      const prochaine = ["Résolu","Classé sans suite"].includes(sg.etat)
+        ? "Consulter et conserver le dossier."
+        : !sg.preuves ? "Documenter les épisodes et les preuves disponibles."
+        : "Compléter le suivi des démarches et les réponses obtenues.";
       const geo = (sg.lat!=null) ? '📍 géolocalisé' : '⚠️ sans point sur la carte';
       return `
         <h3>${echapper(sg.type)||'Signalement'}</h3>
@@ -85,6 +89,7 @@
         ${sg.adresse_plaignant?`<div class="meta">Plaignant : ${echapper(sg.adresse_plaignant)}</div>`:''}
         ${sg.description?`<div style="margin-top:0.3rem">${echapper(sg.description)}</div>`:''}
         <div class="meta" style="margin-top:0.3rem">${geo} · ${new Date(sg.cree_le).toLocaleDateString('fr-FR')}</div>
+        <p class="meta"><strong>Prochaine action :</strong> ${echapper(prochaine)}</p>
         <div class="actions">
           <a class="mini" style="background:var(--bleu-lagon);color:#fff;text-decoration:none;display:inline-block" href="dossier.html?id=${sg.id}">📁 Voir le dossier</a>
           <button class="mini vert" onclick="editer('${sg.id}')">✏️ Modifier</button>

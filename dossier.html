@@ -134,10 +134,8 @@
       demarches.forEach(d => {
         evts.push({ q: d.date_demarche || d.cree_le, cls: "dem", t: d.type,
           d: [d.mode, d.destinataire, d.note].filter(Boolean).join(" · ") });
-        if (d.reponse && d.reponse !== "En attente") {
-          evts.push({ q: d.date_demarche || d.cree_le, cls: d.reponse === "Réponse reçue" ? "rep" : "dem",
-            t: "Suite : " + d.reponse, d: d.destinataire || "" });
-        }
+        // Le modèle ne possède pas de date de réponse : son état est présenté
+        // séparément, sans créer d'événement à la date de la démarche.
       });
       evts.sort((a, b) => new Date(String(a.q).slice(0,10)) - new Date(String(b.q).slice(0,10)));
 
@@ -187,6 +185,11 @@
             ${sig.description ? `<div style="margin-top:0.8rem;font-size:0.92rem">${echapper(sig.description)}</div>` : ""}
           </div>
 
+          <div class="bloc">
+            <h2>Suivi des démarches</h2>
+            ${demarches.length ? demarches.map(d => '<p><strong>' + echapper(d.type) + '</strong> · ' + echapper(d.destinataire || '') + ' : ' + echapper(d.reponse || 'En attente') + '</p>').join('') : '<p>Aucune démarche enregistrée.</p>'}
+            <p class="vide">Les états ci-dessus ne constituent pas une date de réception des réponses.</p>
+          </div>
           <div class="bloc">
             <h2>Chronologie</h2>
             ${evts.length ? `<ul class="chrono">${evts.map(e => `

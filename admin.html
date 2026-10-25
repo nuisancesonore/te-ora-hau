@@ -103,6 +103,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/sauvegarde.js"></script>
   <!-- jsPDF ecrit du VRAI texte dans le PDF. html2pdf photographiait la page
        avec html2canvas, qui rendait une image vide : le rapport produit pesait
        toujours 3058 octets, soit une page blanche. -->
@@ -168,6 +169,7 @@
                 <option value="ko">En retard</option>
               </select>
               <button class="btn btn-clair" onclick="exportCSV(this)" title="Fichier Excel : un dossier par signalement (victime + nuisance + démarches)">Exporter (Excel)</button>
+              <button type="button" class="btn btn-clair" onclick="exporterDonneesAssociation(this)" title="Export privé des données métier ; ne remplace pas la sauvegarde complète Supabase">Exporter les données (JSON)</button>
               <a class="btn btn-clair" href="guide-bureau.html" title="Mode d'emploi du bureau">Mode d'emploi</a>
             </div>
             <p class="hint-scroll"><span class="fl">↔</span> Faites glisser le tableau pour voir toutes les colonnes</p>

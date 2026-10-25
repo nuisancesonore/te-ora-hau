@@ -81,7 +81,15 @@ async function etatNotifications() {
   if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) return "non-supporte";
   if (!TOH_VAPID) return "non-configure";
   if (Notification.permission === "denied") return "refuse";
-  try { const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription(); return sub ? "actif" : "inactif"; }
+  try {
+    const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+    if (!sub) return "inactif";
+    const session = await sessionActive();
+    if (!session) return "inactif";
+    const {data,error} = await sb.from("push_subscriptions").select("endpoint").eq("user_id",session.user.id).eq("endpoint",sub.endpoint).limit(1);
+    if (error) return "erreur";
+    return data && data.length ? "actif" : "inactif";
+  }
   catch (_) { return "inactif"; }
 }
 async function activerNotifications() {
@@ -104,7 +112,13 @@ async function desactiverNotifications() {
   try {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
-    if (sub) { try { await sb.from("push_subscriptions").delete().eq("endpoint", sub.endpoint); } catch (_) {} await sub.unsubscribe(); }
+    if (sub) {
+      const session = await sessionActive();
+      if (!session) { alert("Reconnectez-vous pour gérer les notifications."); return false; }
+      const {error} = await sb.from("push_subscriptions").delete().eq("endpoint", sub.endpoint).eq("user_id",session.user.id);
+      if (error) { alert("La désactivation n’a pas pu être enregistrée. Réessayez."); return false; }
+      await sub.unsubscribe();
+    }
     return true;
   } catch (_) { return false; }
 }
@@ -367,12 +381,24 @@ function majBadgeApp(total) {
   } catch (_) {}
 }
 // Compte les éléments non lus : annonces ciblées (hors événements passés) + forum.
+function cleLecture(categorie, profil) {
+  return "TOH_vu_" + categorie + "_" + (profil && profil.id || "invite");
+}
+function luJusqua(categorie, profil) {
+  try { return Number(localStorage.getItem(cleLecture(categorie, profil))) || 0; }
+  catch (_) { return 0; }
+}
+function noterLecture(categorie, profil, horodatage) {
+  try { localStorage.setItem(cleLecture(categorie, profil), String(horodatage)); }
+  catch (_) {}
+}
 async function compterNonLus(profil) {
-  let annonces = 0, forum = 0;
-  if (!sb) return { annonces, forum, total: 0 };
+  let annonces = 0, forum = 0, indisponible = false;
+  if (!sb || !profil) return { annonces, forum, missions:0, total:0 };
   try {
-    const { data } = await sb.from("annonces")
+    const { data, error } = await sb.from("annonces")
       .select("cree_le, cible, date_evenement").order("cree_le", { ascending: false }).limit(30);
+    if (error) throw error;
     const now = new Date();
     const st = statutCotisation(profil);
     const voitTout = profil.role === "bureau";
@@ -382,31 +408,33 @@ async function compterNonLus(profil) {
       if (a.date_evenement && new Date(a.date_evenement) < now) return false;
       return true;
     });
-    const vu = parseInt(localStorage.getItem("TOH_vu_annonces") || "0", 10);
+    const vu = luJusqua("annonces", profil);
     annonces = visibles.filter(a => new Date(a.cree_le).getTime() > vu).length;
-  } catch (_) {}
+  } catch (_) { indisponible = true; }
   // Forum : compté uniquement si le membre y a accès (cotisation validée),
   // sinon la pastille ne pourrait jamais s'effacer.
   if (aDroitAcces(profil)) try {
-    const { data } = await sb.from("forum_messages")
+    const { data, error } = await sb.from("forum_messages")
       .select("cree_le").order("cree_le", { ascending: false }).limit(100);
-    const vu = parseInt(localStorage.getItem("TOH_vu_forum") || "0", 10);
+    if (error) throw error;
+    const vu = luJusqua("forum", profil);
     forum = (data || []).filter(m => new Date(m.cree_le).getTime() > vu).length;
-  } catch (_) {}
+  } catch (_) { indisponible = true; }
   // Missions : nouvelles missions qui concernent l'assesseur (le bureau, lui,
   // pilote les missions depuis l'Administration).
   let missions = 0;
   if (profil.type_adhesion === "Assesseur") try {
-    const { data } = await sb.from("missions")
+    const { data, error } = await sb.from("missions")
       .select("cree_le, assigne_a, statut, pour").order("cree_le", { ascending: false }).limit(50);
-    const vu = parseInt(localStorage.getItem("TOH_vu_missions") || "0", 10);
+    if (error) throw error;
+    const vu = luJusqua("missions", profil);
     missions = (data || []).filter(m =>
       new Date(m.cree_le).getTime() > vu &&
       m.statut !== "Terminée" && m.statut !== "Abandonnée" &&
       (m.pour || "assesseurs") !== "bureau" &&
       (!m.assigne_a || m.assigne_a === profil.id)).length;
-  } catch (_) {}
-  return { annonces, forum, missions, total: annonces + forum + missions };
+  } catch (_) { indisponible = true; }
+  return { annonces, forum, missions, indisponible, total: annonces + forum + missions };
 }
 // Retire les notifications encore affichées dans la barre du téléphone.
 async function fermerNotifsAffichees() {
@@ -418,20 +446,20 @@ async function fermerNotifsAffichees() {
 }
 async function verifierNotifications(profil) {
   const c = await compterNonLus(profil);
-  if (c.annonces > 0) marquerNotif("nav-espace-trigger", c.annonces);
-  if (c.forum > 0 && !document.getElementById("nav-forum")) marquerNotif("nav-espace-trigger", c.forum);
-  else if (c.forum > 0) marquerNotif("nav-forum", c.forum);
-  if (c.missions > 0 && !document.getElementById("nav-missions")) marquerNotif("nav-espace-trigger", c.missions);
-  else if (c.missions > 0) marquerNotif("nav-missions", c.missions);
+  if (c.indisponible) return;
+  document.querySelectorAll(".notif-dot,.notif-point").forEach(el => el.remove());
+  const sansLien = c.annonces + (!document.getElementById("nav-forum") ? c.forum : 0)
+    + (!document.getElementById("nav-missions") ? c.missions : 0);
+  if (sansLien > 0) marquerNotif("nav-espace-trigger", sansLien);
+  if (c.forum > 0 && document.getElementById("nav-forum")) marquerNotif("nav-forum", c.forum);
+  if (c.missions > 0 && document.getElementById("nav-missions")) marquerNotif("nav-missions", c.missions);
   majBadgeApp(c.total);
   if (c.total === 0) fermerNotifsAffichees();   // plus rien à lire → on nettoie tout
 }
 // À appeler après lecture (Mon espace / Forum) : met à jour le chiffre ET
 // retire les bannières de notification affichées (le membre est en train de lire).
 async function rafraichirBadge(profil) {
-  const c = await compterNonLus(profil);
-  majBadgeApp(c.total);
-  fermerNotifsAffichees();
+  await verifierNotifications(profil);
 }
 
 function afficherBanniereConfig() {

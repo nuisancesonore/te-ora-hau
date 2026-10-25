@@ -220,16 +220,20 @@
           if (e === "non-supporte") { btn.style.display = "none"; txt.textContent = "Les notifications ne sont pas disponibles sur cet appareil."; }
           else if (e === "non-configure") { btn.style.display = "none"; txt.textContent = "Les notifications ne sont pas encore configurées par l'association."; }
           else if (e === "refuse") { btn.style.display = "none"; txt.textContent = "Notifications bloquées par votre navigateur — réactivez-les dans ses réglages."; }
+          else if (e === "erreur") { btn.textContent = "Réessayer"; txt.textContent = "Impossible de vérifier les notifications. Réessayez lorsque la connexion est rétablie."; }
           else if (e === "actif") { btn.textContent = "Désactiver les notifications"; txt.textContent = "Notifications activées sur cet appareil."; }
           else { btn.textContent = "Activer les notifications"; txt.textContent = "Recevez une alerte quand l'association publie une annonce."; }
         };
         (async () => refl(await etatNotifications()))();
         btn.addEventListener("click", async () => {
           const rendre = boutonOccupe(btn, "…");
-          const actif = (await etatNotifications()) === "actif";
-          if (actif) await desactiverNotifications(); else await activerNotifications();
-          rendre();
-          refl(await etatNotifications());
+          try {
+            const actif = (await etatNotifications()) === "actif";
+            if (actif) await desactiverNotifications(); else await activerNotifications();
+          } finally {
+            rendre();
+            refl(await etatNotifications());
+          }
         });
       })();
 
@@ -246,7 +250,7 @@
           return true;
         });
         try {
-          localStorage.setItem("TOH_vu_annonces", String(vis.length ? new Date(vis[0].cree_le).getTime() : Date.now()));
+          noterLecture("annonces", profil, vis.length ? new Date(vis[0].cree_le).getTime() : Date.now());
           rafraichirBadge(profil);
         } catch (_) {}
         if (!vis.length) return;

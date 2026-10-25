@@ -87,6 +87,7 @@
         ${(sg.voisins_genes || sg.preuves) ? `<div class="meta">${sg.voisins_genes?'Voisins également gênés':''}${sg.voisins_genes&&sg.preuves?' · ':''}${sg.preuves?'Preuves : '+echapper(sg.preuves):''}</div>` : ''}
         ${sg.adresse_source?`<div class="meta">Source : ${echapper(sg.adresse_source)}</div>`:''}
         ${sg.adresse_plaignant?`<div class="meta">Plaignant : ${echapper(sg.adresse_plaignant)}</div>`:''}
+        <div class="meta">Téléphone sur la carte : ${sg.afficher_telephone ? 'partage autorisé avec les adhérents' : 'réservé au bureau'}</div>
         ${sg.description?`<div style="margin-top:0.3rem">${echapper(sg.description)}</div>`:''}
         <div class="meta" style="margin-top:0.3rem">${geo} · ${new Date(sg.cree_le).toLocaleDateString('fr-FR')}</div>
         <p class="meta"><strong>Prochaine action :</strong> ${echapper(prochaine)}</p>
@@ -121,6 +122,10 @@
           <div class="pleine"><label>Adresse de la source du bruit</label><input id="e-source-${id}" value="${attr(data.adresse_source)}"></div>
           <div class="pleine"><label>Votre adresse <span style="font-weight:400;color:var(--gris)">(vous qui subissez)</span></label><input id="e-plaignant-${id}" value="${attr(data.adresse_plaignant)}"></div>
           <div class="pleine"><label>Description</label><textarea id="e-desc-${id}" rows="2">${echapper(data.description)}</textarea></div>
+          <div class="pleine">
+            <label style="display:flex;align-items:flex-start;gap:0.5rem"><input type="checkbox" id="e-telephone-${id}" ${data.afficher_telephone?'checked':''} style="width:auto;margin-top:0.2rem" aria-describedby="e-telephone-aide-${id}"> Afficher mon téléphone aux autres adhérents sur ce signalement</label>
+            <p id="e-telephone-aide-${id}" class="meta">Le numéro utilisé est celui de <a href="profil.html">votre profil</a>. Sans numéro renseigné, aucun téléphone n'est affiché. Le bureau peut toujours le consulter ; les visiteurs publics ne le voient jamais.</p>
+          </div>
         </div>
         <div id="emsg-${id}" class="message"></div>
         <div class="actions">
@@ -143,6 +148,7 @@
           preuves: val("e-preuves-"+id),
           adresse_source: val("e-source-"+id), adresse_plaignant: val("e-plaignant-"+id),
           description: val("e-desc-"+id),
+          afficher_telephone: document.getElementById("e-telephone-"+id).checked,
         };
         const m = document.getElementById("emsg-"+id);
         let { error } = await sb.from("signalements").update(maj).eq("id", id);

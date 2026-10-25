@@ -91,9 +91,8 @@
       const etat = document.getElementById("etat");
       const profil = await monProfil();
 
-      // Carte publique : on lit la vue "signalements_publics" (sans données
-      // personnelles — l'adresse du plaignant n'y figure pas). Repli sur la
-      // table pour les membres connectés si la vue n'est pas encore déployée.
+      // Les vues limitent les données côté serveur. Aucun repli vers la table
+      // privée hors bureau ; le téléphone nécessite un consentement explicite.
       // Le bureau voit l'identité des auteurs (suivi des dossiers) ; les autres
       // lisent la vue publique, sans aucune donnée personnelle.
       const estBureau = !!(profil && profil.role === "bureau");
@@ -128,6 +127,15 @@
       }
 
       const plein = aDroitAcces(profil);
+      const telephonesParSignalement = {};
+      if (plein && !estBureau) {
+        const { data: contacts, error: erreurContacts } = await sb
+          .from("signalements_telephones").select("id,telephone");
+        if (!erreurContacts) (contacts || []).forEach(c => {
+          telephonesParSignalement[c.id] = c.telephone;
+        });
+        // Si le chargement échoue, les contacts restent masqués.
+      }
 
       // La carte est toujours affichée avec les points (couleur = intensité).
       const map = L.map("map").setView([-17.62, -149.46], 11);
@@ -161,6 +169,12 @@
             (s.adresse_source?`<br>📍 ${echapper(s.adresse_source)}`:"")+
             (s.description?`<br><em>${echapper(s.description)}</em>`:"");
           // Identité de l'auteur — réservée au bureau.
+          const telephonePartage = telephonesParSignalement[s.id];
+          if (!estBureau && telephonePartage) {
+            html += `<div style="margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid #e6e6e6">`+
+              `<strong>Contacter l'adhérent :</strong> <a href="tel:${encodeURIComponent(telephonePartage)}">${echapper(telephonePartage)}</a>`+
+              `<br><small>Numéro partagé avec les adhérents pour ce signalement.</small></div>`;
+          }
           if (estBureau && s.auteur && profilsParId[s.auteur]) {
             const a = profilsParId[s.auteur];
             const age = ageProfil(a.date_naissance);

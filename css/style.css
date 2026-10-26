@@ -468,3 +468,10 @@ a, .btn, button { transition: background 0.15s ease, color 0.15s ease, opacity 0
 .franchie { background: #e3f5ea; border: 1px solid #b6e2c6; color: #1d6b3f;
             border-radius: 12px; padding: 0.9rem 1.1rem; margin-bottom: 1.4rem; }
 .franchie strong { display: block; font-size: 1.02rem; margin-bottom: 0.2rem; }
+/* Menu mobile : une seule colonne, defilement vertical. */
+@media (max-width: 860px) {
+  nav.menu { flex-wrap: nowrap; min-width: 0; max-width: 100%; }
+  nav.menu.ouvert { overflow-x: hidden; overflow-y: auto; align-content: stretch; }
+  nav.menu > * { flex-shrink: 0; min-width: 0; max-width: 100%; }
+  nav.menu a { white-space: normal; overflow-wrap: anywhere; }
+}
